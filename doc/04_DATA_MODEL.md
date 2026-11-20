@@ -1,0 +1,55 @@
+# Logical data model
+
+This is a schema specification, not executable DDL. Codex must create reviewed migrations and test them on real disposable PostgreSQL.
+
+Use UUIDs for business IDs; preserve the auth library's supported ID type. Business rows normally include organization_id, timestamps and actor fields. Events use timestamptz, membership/due dates use date. Money uses BIGINT minor units plus currency; serialize as decimal strings, not unsafe JS numbers.
+
+Scoped parents have unique (organization_id, id); child foreign keys include the same organization_id. Branch references must belong to that organization. This prevents cross-gym references even with valid global UUIDs.
+
+| Table | Important fields/constraints |
+| --- | --- |
+| app_auth user/session/account/verification | Library-generated private identity/session tables; preserve hashes/IDs |
+| organizations | name, unique slug, currency, time_zone, locale, settings_version |
+| branches | org, code/name/address, active; org+code unique |
+| staff_memberships | org, auth_user_id, role, active; org+user unique |
+| staff_branch_grants | org, staff_membership_id, branch_id; unique grant |
+| staff_invitations | org, email/role/grants, token_hash, expires_at, accepted_at |
+| members | org, home_branch_id, unique org+member_code, name, normalized_phone, email, joined_on, archived_at |
+| member_contacts / member_notes | org/member, emergency contact; note author/content/visibility |
+| plans / plan_versions | Stable plan code; immutable used version, amount/currency, duration unit/count, access rules |
+| memberships | org/member/plan_version, home branch, start_on/end_on_exclusive, lifecycle, price/name snapshots, cancellation_effective_on |
+| membership_freezes | org/membership, date range, reason, extension_days, reversed_at |
+| invoices / invoice_items | org/member/membership, originating_branch_id snapshot, unique number, issue/due dates, currency, total, draft/issued/void; line snapshots |
+| credit_notes | org/invoice, unique number, amount, reason, actor; immutable |
+| payments | org/member, received_at, amount/currency/method/reference, unique receipt_number, actor |
+| payment_allocations | org/payment/invoice, amount; same member/currency |
+| refunds / refund_allocations | original payment/allocation, cash date, amount, reason, approving actor/reference |
+| attendance_visits | org/branch/member, check-in/out instants, eligibility snapshot, override actor/reason |
+| trainers / trainer_assignments | org, optional auth linkage, specialty/active; member assignment dates |
+| trainer_sessions | org/trainer/member/branch, instants/state; Release B |
+| classes / class_sessions | org/class/branch/trainer/room, instants/capacity/state; Release B |
+| class_bookings | org/session/member/status; one active booking per pair |
+| enquiries / follow_up_tasks | org/branch/contact/stage/assignee/permission/converted_member, due/completed dates |
+| expense_categories / expenses | org/branch/category, cash date, positive amount/currency/method, attachment, reversal linkage |
+| attachments | org, opaque object_key, filename/type/size/actor; private |
+| audit_events | org/actor/action/entity, sanitized before/after/reason/time; insert-only runtime access |
+| idempotency_records | org/actor/operation/key/request_hash/result_reference; scoped unique |
+| number_counters | org/kind/value; atomic numbering |
+| import_batches | org/source fingerprint/state/summary/actor/commit time |
+
+All business table names above live in gym. Create deferred tables with their module, not merely because they appear here.
+
+## Enforced invariants
+
+- Date ranges are [start, end), end > start. A member may have at most one effective base membership at a time: reject overlapping pending/active non-cancelled ranges. Serialize period writes by locking the member row and validating cancellation/freeze effects.
+- Freeze is prospective, non-overlapping, extends once. If extension overlaps an existing future period, reject and require renewal rescheduling.
+- Partial unique index permits one open attendance visit per org/member across branches. Checkout cannot predate check-in.
+- Issued invoices/payments/refunds/credits are immutable except controlled correction operations. Member archival never cascade-deletes finance.
+- Allocation sums equal payment total in MVP; no unapplied wallet credits. Refund allocation sums equal refund total. Aggregate caps require transaction locks/procedures, not a row CHECK pretending to validate another table.
+- Credit cannot exceed original charge or create negative outstanding; pair settled-charge refund/credit atomically when required.
+- Idempotency and audit commit/roll back with the operation. Number issuance uses counters/sequences, never row count.
+- Safe deletes/archive behavior and unique/scoped references are explicitly migrated and tested.
+
+Indexes start with org and common filters: members normalized_phone/name; membership member/start; invoices member/due; payments received_at; visits branch/check-in; audit time; child FKs and scoped uniqueness. Use actual EXPLAIN evidence before extra search extensions.
+
+Seed fictional Crown Fitness and an unrelated second gym. Include active/expired/frozen/unpaid cases, overlapping display codes across gyms, consistent financial data. Generate demo credentials locally; no shared production password. Seed/reset tools must refuse production.
