@@ -44,3 +44,5 @@ P0: leakage, permission bypass, financial corruption, destructive data loss, bro
 - Non-blocking environment observations: Next reports a slow filesystem; npm warns about legacy tool dependencies/install-script review metadata. CLI generation/build/test commands actually ran successfully. No live deployment or recovery/restore test was performed.
 
 Authentication local lifecycle now passes real DB/browser recovery checks. R04 production email delivery remains unresolved: production recovery intentionally fails until an adapter is configured. GYM owner setup awaits user-chosen identity and password via auth:bootstrap. SEC-01 active membership, role/action/branch checks remain release blockers. Git smart-HTTP initial push stalled; verify actual remote ref before claiming GitHub updated.
+
+GitHub publishing issue resolved: all original references and verified source published, exact tree equality checked, local and remote histories reconciled without force. Ongoing pushes target origin/main. No outstanding source-publishing blocker; live app release blockers (SEC-01, owner setup, actual email delivery and operational workflows) remain.
