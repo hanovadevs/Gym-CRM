@@ -2,6 +2,7 @@ import "server-only";
 import type { PoolClient } from "pg";
 import type { z } from "zod";
 import type { createSecurity, Scope } from "@/server/security/service";
+import { audit } from "@/server/audit";
 import { BusinessError } from "./errors";
 import {
   settingsFields,
@@ -43,29 +44,6 @@ function parse<T>(schema: z.ZodType<T>, raw: unknown): T {
         ].join(", "),
     );
   return result.data;
-}
-async function audit(
-  db: PoolClient,
-  scope: Scope,
-  action: string,
-  entityId: string,
-  reason: string,
-  before: unknown,
-  after: unknown,
-) {
-  await db.query(
-    'insert into gym.audit_events(organization_id,actor_user_id,action,entity_id,request_id,reason,"before","after") values($1,$2,$3,$4,$5,$6,$7::jsonb,$8::jsonb)',
-    [
-      scope.organizationId,
-      scope.userId,
-      action,
-      entityId,
-      scope.requestId,
-      reason,
-      JSON.stringify(before),
-      JSON.stringify(after),
-    ],
-  );
 }
 async function checkGrants(
   db: PoolClient,

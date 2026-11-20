@@ -52,7 +52,8 @@ test("real staff login persists across reload and logout revokes access", async 
   page,
 }) => {
   test.setTimeout(60000);
-  await page.goto("/workspace");
+  // Browser uses the loopback alias while the test server is configured for 127.0.0.1.
+  await page.goto("http://localhost:3100/workspace");
   await expect(page).toHaveURL(/sign-in/);
   await page.getByLabel("Work email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
@@ -77,6 +78,40 @@ test("real staff login persists across reload and logout revokes access", async 
     data: { name: "Intruder", email: "not-allowed@example.invalid", password },
   });
   expect(response.status()).toBe(400);
+});
+test("sign-in honors the server retry countdown and preserves credentials", async ({
+  page,
+}) => {
+  await page.goto("/sign-in");
+  let attempts = 0;
+  await page.route("**/api/auth/sign-in/email", (route) => {
+    attempts++;
+    return route.fulfill({
+      status: 429,
+      contentType: "application/json",
+      headers: { "X-Retry-After": "2" },
+      body: JSON.stringify({ message: "Too many requests" }),
+    });
+  });
+  await page
+    .getByLabel("Work email", { exact: true })
+    .fill("cooldown@example.invalid");
+  await page
+    .getByLabel("Password", { exact: true })
+    .fill("Fictional test password");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: /Try again in/ }),
+  ).toBeDisabled();
+  await expect(page.getByLabel("Work email", { exact: true })).toHaveValue(
+    "cooldown@example.invalid",
+  );
+  await page.getByLabel("Password", { exact: true }).press("Enter");
+  expect(attempts).toBe(1);
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeEnabled({ timeout: 5000 });
+  expect(attempts).toBe(1);
 });
 for (const width of [390, 768, 1280, 1440])
   test(`sign-in visual ${width}`, async ({ page }) => {

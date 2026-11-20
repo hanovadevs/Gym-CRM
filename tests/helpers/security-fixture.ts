@@ -28,6 +28,14 @@ export async function securityFixture(
   > = {};
   async function cleanup() {
     await admin.query(
+      "delete from gym.members where organization_id=any($1::uuid[])",
+      [[orgA, orgB]],
+    );
+    await admin.query(
+      "delete from gym.number_counters where organization_id=any($1::uuid[])",
+      [[orgA, orgB]],
+    );
+    await admin.query(
       "delete from gym.audit_events where organization_id=any($1::uuid[])",
       [[orgA, orgB]],
     );

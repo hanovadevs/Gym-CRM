@@ -1,0 +1,25 @@
+import type { DirectoryQuery, MemberValues } from "./schemas";
+export type Member = MemberValues & {
+  id: string;
+  memberCode: string;
+  branchName: string;
+  version: number;
+};
+export type DuplicateMatch = {
+  id: string;
+  memberCode: string;
+  name: string;
+  branchName: string;
+};
+export type Directory = {
+  organization: { id: string; name: string; locale: string; timeZone: string };
+  branches: { id: string; name: string }[];
+  members: Member[];
+  total: number;
+  page: number;
+  pageSize: number;
+  today: string;
+  canManageSettings: boolean;
+  query: DirectoryQuery;
+  requestId: string;
+};

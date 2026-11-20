@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { SectionTitle } from "./ui/section-title";
@@ -13,6 +13,15 @@ export function AuthForm({
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [visible, setVisible] = useState(false);
+  const [retrySeconds, setRetrySeconds] = useState(0);
+  useEffect(() => {
+    if (retrySeconds <= 0) return;
+    const timer = setTimeout(
+      () => setRetrySeconds((s) => Math.max(0, s - 1)),
+      1000,
+    );
+    return () => clearTimeout(timer);
+  }, [retrySeconds]);
   const title =
     mode === "sign-in"
       ? "Welcome back"
@@ -32,6 +41,7 @@ export function AuthForm({
         <form
           onSubmit={async (event) => {
             event.preventDefault();
+            if (pending || retrySeconds > 0) return;
             setPending(true);
             setError("");
             setMessage("");
@@ -42,12 +52,28 @@ export function AuthForm({
                   email: String(data.get("email")),
                   password: String(data.get("password")),
                   rememberMe: data.has("remember"),
+                  fetchOptions: {
+                    onError: ({ response }) => {
+                      if (response.status === 429) {
+                        const seconds =
+                          Number(
+                            response.headers.get("X-Retry-After") ??
+                              response.headers.get("Retry-After"),
+                          ) || 60;
+                        setRetrySeconds(
+                          Math.max(1, Math.min(300, Math.ceil(seconds))),
+                        );
+                      }
+                    },
+                  },
                 });
                 if (result.error)
                   setError(
                     result.error.status === 429
-                      ? "Too many attempts. Wait a minute and try again."
-                      : "Unable to sign in. Check your email and password.",
+                      ? "Too many attempts. Please wait for the retry countdown."
+                      : result.error.status === 403
+                        ? "Sign-in was blocked for this app address. Contact your administrator."
+                        : "Unable to sign in. Check your email and password.",
                   );
                 else {
                   router.replace("/workspace");
@@ -161,14 +187,20 @@ export function AuthForm({
               {message}
             </p>
           ) : null}
-          <button className="primary" disabled={pending} type="submit">
+          <button
+            className="primary"
+            disabled={pending || retrySeconds > 0}
+            type="submit"
+          >
             {pending
               ? "Please wait…"
-              : mode === "sign-in"
-                ? "Sign in"
-                : mode === "forgot"
-                  ? "Request reset instructions"
-                  : "Update password"}
+              : retrySeconds > 0
+                ? `Try again in ${retrySeconds}s`
+                : mode === "sign-in"
+                  ? "Sign in"
+                  : mode === "forgot"
+                    ? "Request reset instructions"
+                    : "Update password"}
           </button>
           <p className="auth-footer">
             {mode === "sign-in" ? (

@@ -39,6 +39,10 @@ Unit tests cover period/date/time-zone rules, money parsing/balance math, eligib
 | T31 | Concurrent owner removal/duplicate identity creation | One active owner remains; one identity provisioning winner |
 | T32 | Audit failure/settings failure/refresh failure | Atomic rollback; inputs retained; confirmed commit requires reload |
 | T33 | Saved access/receipt policy in operational consumers | SUB-01/PAY-02/ATT-01 must verify behavior; pending consumers |
+| T34 | Shared member contact and scoped duplicate suggestions | Warn/confirm; family allowed; no foreign branch/gym details |
+| T35 | Concurrent registration/code and lost HTTP response | Unique org codes; same actor/key replays one member; changed body conflicts |
+| T36 | Concurrent contact edits and failed member audit | One stale edit rejected; member/counter/audit roll back atomically |
+| T37 | Search wildcard, pagination/filter and slow browser response | Literal matching; consistent count/page; latest request wins |
 
 Foundation should define actual project scripts for lint/typecheck/unit/integration/browser/build/db:generate/db:migrate/db:seed. These are desired interfaces, not a claim that scripts already exist. Reuse existing package manager/lockfile. CI uses isolated known data and credentials; browser tests assert visible behavior and remain independent.
 

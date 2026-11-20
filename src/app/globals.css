@@ -1284,6 +1284,221 @@ input[type="checkbox"] {
   margin: 0;
   min-width: 0;
 }
+
+.members-main {
+  max-width: 1500px;
+}
+.member-count {
+  color: var(--muted);
+  margin: -4px 0 28px;
+}
+.members-directory > .section-title {
+  margin-bottom: 22px;
+}
+.member-filters {
+  display: flex;
+  align-items: end;
+  gap: 16px;
+  margin: 22px 0;
+}
+.member-filters .field {
+  margin: 0;
+  min-width: 165px;
+}
+.directory-search {
+  flex: 1;
+}
+.member-filters input,
+.member-filters select {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  min-height: 46px;
+  background: var(--surface);
+  font-size: 15px;
+}
+.member-single-branch {
+  padding: 14px 8px;
+  color: var(--muted);
+}
+.member-table-panel {
+  padding: 0;
+  overflow: hidden;
+}
+.member-table-panel .table-scroll {
+  margin: 0;
+}
+.member-table-panel table {
+  min-width: 850px;
+  margin-top: 0;
+  font-size: 15px;
+}
+.member-table-panel th {
+  background: #f4f6f4;
+}
+.member-table-panel th,
+.member-table-panel td {
+  padding: 20px 22px;
+}
+.member-table-panel td {
+  overflow-wrap: anywhere;
+  max-width: 280px;
+}
+.member-table-panel .text-action {
+  white-space: normal;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 10px 0;
+}
+.member-identity {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 190px;
+}
+.member-initials {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  background: var(--selected);
+  color: var(--accent);
+  font-weight: 600;
+}
+.member-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 24px;
+}
+.member-pagination > div {
+  display: flex;
+  gap: 12px;
+}
+.member-pagination span {
+  color: var(--muted);
+}
+.member-empty {
+  text-align: center;
+  padding: 64px 24px;
+}
+.member-empty p {
+  margin: 14px 0 20px;
+}
+.member-editor .section-title {
+  margin-bottom: 24px;
+}
+.member-editor .support {
+  margin: 8px 0 20px;
+}
+.member-editor-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 26px;
+  flex-wrap: wrap;
+}
+.registration-summary {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 18px 14px;
+  margin: 28px 0;
+}
+.registration-summary dt {
+  color: var(--muted);
+}
+.registration-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.registration-note {
+  background: var(--canvas);
+  padding: 20px;
+  border-radius: 14px;
+}
+.duplicate-review {
+  background: #faf5e9;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 22px;
+}
+.duplicate-review h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+.duplicate-review ul {
+  padding: 0;
+  list-style: none;
+  margin: 0 0 22px;
+}
+.duplicate-review li {
+  margin-bottom: 14px;
+  overflow-wrap: anywhere;
+}
+.duplicate-review li span {
+  display: block;
+  color: var(--muted);
+  margin-top: 6px;
+  font-size: 13px;
+}
+.duplicate-review > label:not(.field) {
+  display: flex;
+  align-items: start;
+  gap: 10px;
+  line-height: 1.6;
+}
+.duplicate-review .field {
+  margin-top: 20px;
+}
+.workspace-members-link {
+  margin-left: 24px;
+}
+@media (max-width: 1100px) {
+  .member-filters {
+    flex-wrap: wrap;
+  }
+  .directory-search {
+    flex-basis: 100%;
+  }
+}
+@media (max-width: 599px) {
+  .member-count {
+    margin-top: 8px;
+  }
+  .member-filters {
+    align-items: stretch;
+  }
+  .member-filters .field,
+  .member-filters > button {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  .member-filters .member-single-branch {
+    padding-left: 0;
+  }
+  .members-main .member-table-panel {
+    padding: 0;
+  }
+  .member-pagination {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 20px;
+  }
+  .member-pagination > div > button {
+    flex: 1;
+  }
+  .registration-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .registration-summary dd {
+    margin-bottom: 12px;
+  }
+}
 .staff-pagination {
   display: flex;
   align-items: center;

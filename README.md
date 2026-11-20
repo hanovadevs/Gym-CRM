@@ -1,8 +1,10 @@
 # Jym CRM
 
-Gym administration on local PostgreSQL: staff authentication, scoped workspaces, persisted settings, branch and staff access administration. Member, attendance and financial workflows are still upcoming; the development dashboard uses fictional data.
+Gym administration on local PostgreSQL: staff authentication, scoped workspaces, persisted settings, staff/branch administration, and member registration/directory. Full member profiles, memberships, attendance and financial workflows are upcoming; the development dashboard uses fictional data.
 
 Run npm.cmd ci, then npm.cmd run dev. Open http://localhost:3000/sign-in after owner setup below. The dashboard reference preview is at /dashboard.
+
+Local development also accepts http://127.0.0.1:3000 on the same configured port. Production trusts only the configured APP_URL origin. Sign-in respects the server's retry delay and shows a countdown after throttling.
 
 Node 24 and PostgreSQL are required. This workstation uses PostgreSQL 18.4. Generated credentials are in ignored .env.local. Never commit or print it. On another machine copy .env.example and provision separate migration/runtime roles. The one-time scripts/provision-local.mjs helper refuses existing roles; do not rerun it here.
 
@@ -16,7 +18,7 @@ Schemas: gym for business, app_auth for Better Auth, drizzle for migration histo
 
 No Supabase account, keys, Docker or cloud database needed. Future hosting changes retain services and IDs. See doc/ for scope and verification evidence.
 
-Authentication is now implemented locally. Choose an owner identity before signing in; no shared account/password was seeded. In PowerShell, set OWNER_NAME, OWNER_EMAIL, GYM_NAME and GYM_SLUG to your chosen values. Read OWNER_PASSWORD securely, then run npm.cmd run auth:bootstrap:
+Authentication is implemented locally. This workstation's first owner was created under the user's explicit setup instruction; access details are private in ignored .local/owner-access.json. Do not rerun bootstrap here. For a NEW database, set OWNER_NAME, OWNER_EMAIL, GYM_NAME and GYM_SLUG to your chosen values in PowerShell. Read OWNER_PASSWORD securely, then run npm.cmd run auth:bootstrap:
 
     $ownerSecret = Read-Host 'Choose owner password (12–128 characters)' -AsSecureString
     $env:OWNER_PASSWORD = [System.Net.NetworkCredential]::new('', $ownerSecret).Password
@@ -33,4 +35,8 @@ SET-01 is connected at /settings through Open settings in the workspace. Owners 
 
 Migrations 0004_settings_staff_audit and 0005_settings_audit_security add configuration versions, policies and tenant-scoped append-only audit. Apply all six migrations on a new database using the existing migration scripts. No schema push/reset is used. Run npm.cmd run test:settings for real database settings, permission, audit rollback and concurrency checks. All tests use gym_test and clean their fictional data; GYM is never seeded by the suite.
 
-Branding currently uses saved gym name and derived initials. Private logo uploads belong to the file workflow. Saved access policies require future enrollment/attendance consumers; receipt settings currently drive a formatting example, with paid receipts and atomic numbering reserved for billing. SaaS billing and notifications controls are hidden. The next local task is MEM-01.
+Branding currently uses saved gym name and derived initials. Private logo uploads belong to the file workflow. Saved access policies require future enrollment/attendance consumers; receipt settings currently drive a formatting example, with paid receipts and atomic numbering reserved for billing. SaaS billing and notifications controls are hidden.
+
+MEM-01 is connected at /members through Open members in the workspace. Owners, managers and receptionists register/edit members only in permitted active branches. Registration requires name, usable phone or email, home branch and a gym-local joining date. Review then save assigns an org-unique member code. Possible shared contacts require a reasoned confirmation; existing family contacts remain valid. No membership, invoice, payment or account login is created for the member. Full profiles/notes/archive are MEM-02.
+
+Directory search matches name/code/phone/email; branch and sort filters, 25/page pagination and counts are server-side. Search stays in the tab while branch/order/page are retained in the URL. Edits require a reason/version. Registration retry uses the same actor-scoped key, so a lost response does not duplicate the person; changing a completed registration payload conflicts. Member/counter/audit commit atomically, with tenant RLS and composite branch FK. Migrations 0006_member_directory and 0007_member_security bring the journal to eight entries. Run npm.cmd run test:members for the real-session PostgreSQL suite. The next task is MEM-02.

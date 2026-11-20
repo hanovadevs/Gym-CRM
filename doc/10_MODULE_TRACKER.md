@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 20 November 2026 (Asia/Karachi): local identity/security and persisted gym/staff administration verified. Member, attendance and financial workflows remain unimplemented.
+Updated 20 November 2026 (Asia/Karachi): identity/security, settings/staff administration and member registration/directory verified locally. Full profiles, membership, attendance and finance remain upcoming.
 
 ## State rules
 
@@ -8,10 +8,10 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | MEM-01 |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | MEM-02 |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | VERIFYING | VERIFYING | R04 live mail before release |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SET-01 DONE; policy/receipt consumers in SUB-01/PAY-02/ATT-01 |
-| M03 | Members & profiles | A | M01 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | MEM-01 → MEM-02 |
+| M03 | Members & profiles | A | M01 + M02 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | MEM-01 DONE; MEM-02 next |
 | M04 | Plans & memberships | A | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAN-01 → SUB-01 |
 | M05 | Billing, payments & receipts | A | M04 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PAY-01 → PAY-03 |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
@@ -90,3 +90,17 @@ QA: test:settings passes on actual restricted PostgreSQL with real sessions, two
 Production build passes. Production smoke: workspace/settings/staff/branch APIs reject anonymous reads/writes with 401/no-store; workspace redirects to sign-in; fixture dashboard disabled; 16 client assets contain no configured database URLs/auth secret. T29–T32 pass within SET-01; T33 remains pending with the listed consumer tasks.
 
 Connected effects: saved name/time zone/currency reach actual authorized workspace data; locale/currency/prefix/footer drive formatting; staff/grant/branch changes affect existing sessions on the next operation. SET-01 configuration task DONE. M02 QA/overall remain VERIFYING for cross-module effects: SUB-01/PAY-02/ATT-01 must consume saved policy and receipt settings and add operational acceptance tests. Those services do not exist yet; no access decision, paid receipt or numbering guarantee is claimed from this page. Logo uploads await private file handling (IMP-01); SaaS billing deferred. Live recovery/invitation mail remains R04, and GYM owner identity must still be chosen through auth:bootstrap. Next eligible local task MEM-01.
+
+## MEM-01 evidence — 20 November 2026, Asia/Karachi
+
+Completed task slice: authorized persisted member directory/registration/contact edit, search by name/code/phone/email, active permitted branch filter, stable allowlisted sorting and 25/page pagination. Counts/page clamping/rows share one SQL snapshot. Registration collects name, usable phone or email, home branch and local joining date; review precedes commit. Shared contacts warn with only permitted matches, then allow an explicit reasoned confirmation. Unchanged shared contacts do not trigger redundant edit warnings. Codes use an atomic org counter; actor-scoped registration key/hash safely replays a lost response and rejects a changed payload. UUID business IDs and org+code uniqueness allow the same display code in different gyms. Contact edits use version conflicts, authorized source/destination branches and atomic sanitized audit.
+
+Files: src/modules/members/*; /members; GET/POST/PATCH /api/members; shared workspace frame; workspace/settings navigation; shared server errors/HTTP/audit extracted without changing existing settings behavior. Migrations 0006_member_directory and 0007_member_security applied to GYM and gym_test (8 journal entries each). Member scoped FK, usable-contact/name/version constraints; runtime SELECT/INSERT/UPDATE under tenant RLS, no DELETE. Number counter mutation and audit roll back with registration.
+
+Checks: test:members PASS with real Better Auth sessions, two gyms and restricted PostgreSQL. Covers persisted reload/search/pagination, foreign/forbidden IDs, assigned branches, role/grant/branch revocation, literal wildcard search, phone normalization, shared-contact confirmation, same-key and same-contact concurrency, unique concurrent codes, stale-edit race, audit/counter rollback, missing context, FK and DELETE denial. Unit suite 15 PASS; final full browser suite 30 PASS (1.3m), including seven member workflows, local alias login/mutation and throttle countdown, plus prior auth/dashboard/settings/security checks. Browser lost-response case actually commits through the server, drops the response, then verifies retry leaves one member. Older search response cannot replace latest results. Lint/typecheck/build pass; baseline DB/auth/security/settings suites pass; db:generate no changes.
+
+Visual review: doc/evidence/members-{390,768,1280,1440}.png, member-registration-390.png, members-refresh-error-390.png; all four widths opened. Internal table scroll on narrow screens; no page overflow. Registration drawer, info popover keyboard/Escape, empty/no-match/invalid filter/permission/stale edit/network/commit-refresh failures checked. Fixed a legacy search CSS collision; no Demo indicators, fake membership states/balances or decorative dots. Reference plan/expiry/payment/export controls remain hidden until their real services exist.
+
+M03 remains IN_PROGRESS for MEM-02: full profiles, emergency contact, scoped notes, archival and their QA/schema. No enrollment/payment/access is created or claimed from registration. M02 policy-consumer verification and R04 live email remain open. During this session the user explicitly authorized selecting setup values; the controlled local bootstrap created the first GYM owner/workspace. Real owner login/workspace/empty directory verified; credentials stay in ignored .local/owner-access.json and the private user reply, never Git. GYM now has one real workspace/owner and zero fictional members; gym_test fixtures cleaned to zero. Next MEM-02.
+
+Local sign-in fix: server logs identified rejected 127.0.0.1 Origin against configured localhost, followed by rate limiting on retries. Exact same-port loopback aliases are now permitted only outside production, for auth and business writes. Sign-in respects Retry-After countdown without auto-retries. Actual GYM owner browser login/directory/registration drawer/sign-out passed on both localhost and 127.0.0.1. No throttle or CSRF protection disabled; production alias denial remains verified separately. ADR-022/023.

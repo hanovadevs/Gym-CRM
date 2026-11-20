@@ -13,6 +13,8 @@ export function getAuth() {
     {
       secret: env.BETTER_AUTH_SECRET,
       baseURL: env.APP_URL,
+      allowLocalAliases:
+        env.APP_ENV !== "production" && process.env.NODE_ENV !== "production",
       sendReset: async (message) => {
         if (
           process.env.NODE_ENV === "production" ||

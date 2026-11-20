@@ -144,7 +144,8 @@ export default async function Workspace({
             {workspace.actions.includes("settings.read")
               ? "Manage your gym preferences and permitted staff settings. "
               : "Your workspace access is active. "}
-            Member and financial workflows are the next modules to be added.
+            Register and maintain members in your permitted branches. Membership
+            and financial workflows are upcoming.
           </p>
           {workspace.actions.includes("settings.read") ? (
             <a
@@ -152,6 +153,20 @@ export default async function Workspace({
               href={"/settings?organizationId=" + workspace.organization.id}
             >
               Open settings
+            </a>
+          ) : null}
+          {workspace.actions.includes("members.manage") ? (
+            <a
+              className="text-action workspace-members-link"
+              href={
+                "/members?organizationId=" +
+                workspace.organization.id +
+                (typeof selected === "string" && selected
+                  ? "&branchId=" + selected
+                  : "")
+              }
+            >
+              Open members
             </a>
           ) : null}
         </section>

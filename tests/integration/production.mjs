@@ -52,6 +52,35 @@ try {
   const org = "00000000-0000-4000-8000-000000000001";
   for (const [path, method, body] of [
     ["/api/settings", "GET"],
+    ["/api/members", "GET"],
+    [
+      "/api/members",
+      "POST",
+      {
+        organizationId: org,
+        registrationKey: org,
+        name: "Blocked member",
+        phone: "",
+        email: "blocked@example.invalid",
+        homeBranchId: org,
+        joinedOn: "2026-01-01",
+      },
+    ],
+    [
+      "/api/members",
+      "PATCH",
+      {
+        organizationId: org,
+        id: org,
+        version: 1,
+        name: "Blocked edit",
+        phone: "",
+        email: "blocked@example.invalid",
+        homeBranchId: org,
+        joinedOn: "2026-01-01",
+        reason: "Anonymous denial check",
+      },
+    ],
     [
       "/api/settings",
       "PATCH",
@@ -99,12 +128,34 @@ try {
     assert.equal(result.headers.get("cache-control"), "no-store");
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
-  const protectedPage = await fetch("http://127.0.0.1:3200/workspace");
-  // Next inserts a meta redirect when the loading boundary has already streamed.
-  assert.ok(
-    protectedPage.url.endsWith("/sign-in") ||
-      (await protectedPage.text()).includes("url=/sign-in"),
-  );
+  for (const path of ["/workspace", "/members", "/settings"]) {
+    const protectedPage = await fetch("http://127.0.0.1:3200" + path);
+    // Next inserts a meta redirect when the loading boundary has already streamed.
+    assert.ok(
+      protectedPage.url.endsWith("/sign-in") ||
+        (await protectedPage.text()).includes("url=/sign-in"),
+    );
+  }
+  const configured = new URL(process.env.APP_URL);
+  if (["localhost", "127.0.0.1"].includes(configured.hostname)) {
+    configured.hostname =
+      configured.hostname === "localhost" ? "127.0.0.1" : "localhost";
+    const rejected = await fetch("http://127.0.0.1:3200/api/members", {
+      method: "POST",
+      headers: {
+        Origin: configured.origin,
+        "Content-Type": "application/json",
+      },
+      body: "{}",
+    });
+    assert.equal(
+      rejected.status,
+      403,
+      "Production rejects the unconfigured loopback alias",
+    );
+    const rejectedAuth=await fetch("http://127.0.0.1:3200/api/auth/sign-in/email",{method:"POST",headers:{Origin:configured.origin,"Content-Type":"application/json"},body:JSON.stringify({email:"blocked@example.invalid",password:"Fictional test password"})});
+    assert.equal(rejectedAuth.status,403,"Production auth rejects the unconfigured alias");
+  }
   const files = await readdir(".next/static", {
     recursive: true,
     withFileTypes: true,
@@ -126,7 +177,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; workspace/settings/staff/branch APIs 401/no-store and page sign-in redirect; ${count} client assets contain no configured database URLs/auth secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch/member APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth secret.`,
   );
 } finally {
   server.kill();
