@@ -38,6 +38,9 @@ test.afterAll(async () => {
     await db.query("delete from gym.branches where organization_id=$1", [
       owner.organizationId,
     ]);
+    await db.query("delete from gym.audit_events where organization_id=$1", [
+      owner.organizationId,
+    ]);
     await db.query("delete from gym.organizations where id=$1", [
       owner.organizationId,
     ]);

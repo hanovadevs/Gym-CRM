@@ -1,14 +1,14 @@
 # Jym CRM
 
-Local PostgreSQL foundation and fictional dashboard preview. Staff authentication works locally; live gym workflows are not available yet.
+Gym administration on local PostgreSQL: staff authentication, scoped workspaces, persisted settings, branch and staff access administration. Member, attendance and financial workflows are still upcoming; the development dashboard uses fictional data.
 
-Run npm.cmd ci, then npm.cmd run dev. Open http://localhost:3000/dashboard.
+Run npm.cmd ci, then npm.cmd run dev. Open http://localhost:3000/sign-in after owner setup below. The dashboard reference preview is at /dashboard.
 
 Node 24 and PostgreSQL are required. This workstation uses PostgreSQL 18.4. Generated credentials are in ignored .env.local. Never commit or print it. On another machine copy .env.example and provision separate migration/runtime roles. The one-time scripts/provision-local.mjs helper refuses existing roles; do not rerun it here.
 
 Checks: npm.cmd run lint, npm.cmd run typecheck, npm.cmd test, npm.cmd run test:integration, npm.cmd run test:e2e, npm.cmd run build. Install browser once using npx.cmd playwright install chromium.
 
-Migrations: npm.cmd run db:generate; review SQL; npm.cmd run db:migrate. Apply separately to isolated tests using node scripts/migrate.mjs --test. Never edit applied migrations. db:seed explicitly refuses until controlled owner provisioning exists.
+Migrations: npm.cmd run db:generate; review SQL; npm.cmd run db:migrate. Apply separately to isolated tests using node scripts/migrate.mjs --test. Never edit applied migrations. db:seed deliberately refuses generic seeding; use controlled auth:bootstrap for first-owner setup.
 
 Set DEMO_MODE=false to disable fictional UI. Production plus demo mode fails validation. No database error falls back to demo rows.
 
@@ -27,4 +27,10 @@ The CLI uses separate migration credentials and refuses an initialized workspace
 
 SEC-01 is now connected: /workspace and GET /api/workspace revalidate staff membership, action permission, organization and active branch scope against PostgreSQL on every operation. Owners have all active branches in their gym; other roles need explicit branch grants. Inaccessible selections return non-disclosing errors. Organization/branch selectors are kept in the URL. No role or scope supplied by the browser is trusted.
 
-Run npm.cmd run test:security for the real-session two-gym suite. Its react-server condition respects the server-only package boundary; the test uses only guarded gym_test fixtures. Future business services must use getSecurity().run with a fixed server action, then filter repository rows by Scope.branchIds and validate resource-specific ownership/assignments. Runtime RLS is tenant defense in depth, not automatic branch filtering or protection against arbitrary SQL using compromised runtime credentials. Settings/staff administration is SET-01; actual production recovery mail is still a release blocker.
+Run npm.cmd run test:security for the real-session two-gym suite. Its react-server condition respects the server-only package boundary; the test uses only guarded gym_test fixtures. Future business services must use getSecurity().run with a fixed server action, then filter repository rows by Scope.branchIds and validate resource-specific ownership/assignments. Runtime RLS is tenant defense in depth, not automatic branch filtering or protection against arbitrary SQL using compromised runtime credentials. Actual production recovery mail is still a release blocker.
+
+SET-01 is connected at /settings through Open settings in the workspace. Owners save branding/contact, currency/locale/time zone, receipt and access policy; manage branches; create new staff accounts; and change roles, active status and branch grants. Managers may edit phone, gym email, address and receipt footer. Settings, staff and branch writes require a reason and reject stale versions. The latest administrative activity is read-only. Staff creation uses Better Auth with an owner-chosen initial password; no email is sent, and an existing global account cannot be attached or reset from another gym. Staff access is checked again on the next operation.
+
+Migrations 0004_settings_staff_audit and 0005_settings_audit_security add configuration versions, policies and tenant-scoped append-only audit. Apply all six migrations on a new database using the existing migration scripts. No schema push/reset is used. Run npm.cmd run test:settings for real database settings, permission, audit rollback and concurrency checks. All tests use gym_test and clean their fictional data; GYM is never seeded by the suite.
+
+Branding currently uses saved gym name and derived initials. Private logo uploads belong to the file workflow. Saved access policies require future enrollment/attendance consumers; receipt settings currently drive a formatting example, with paid receipts and atomic numbering reserved for billing. SaaS billing and notifications controls are hidden. The next local task is MEM-01.

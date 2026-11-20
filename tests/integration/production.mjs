@@ -49,6 +49,56 @@ try {
   assert.equal(denied.status, 401);
   assert.equal(denied.headers.get("cache-control"), "no-store");
   assert.equal((await denied.json()).error.code, "UNAUTHENTICATED");
+  const org = "00000000-0000-4000-8000-000000000001";
+  for (const [path, method, body] of [
+    ["/api/settings", "GET"],
+    [
+      "/api/settings",
+      "PATCH",
+      {
+        organizationId: org,
+        version: 1,
+        changes: { phone: "0300-0000000" },
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      "/api/staff",
+      "PATCH",
+      {
+        organizationId: org,
+        id: org,
+        version: 1,
+        role: "owner",
+        active: true,
+        branchIds: [],
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      "/api/branches",
+      "POST",
+      {
+        organizationId: org,
+        name: "Blocked branch",
+        code: "BLOCKED",
+        active: true,
+        reason: "Anonymous denial check",
+      },
+    ],
+  ]) {
+    const result = await fetch("http://127.0.0.1:3200" + path, {
+      method,
+      headers: {
+        Origin: new URL(process.env.APP_URL).origin,
+        "Content-Type": "application/json",
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    assert.equal(result.status, 401, path + " requires authentication");
+    assert.equal(result.headers.get("cache-control"), "no-store");
+    assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
+  }
   const protectedPage = await fetch("http://127.0.0.1:3200/workspace");
   // Next inserts a meta redirect when the loading boundary has already streamed.
   assert.ok(
@@ -76,7 +126,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; protected API 401/no-store and page sign-in redirect; ${count} client assets contain no configured database URLs/auth secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch APIs 401/no-store and page sign-in redirect; ${count} client assets contain no configured database URLs/auth secret.`,
   );
 } finally {
   server.kill();

@@ -17,6 +17,7 @@ const staff = [
 ] as const;
 export const permissions = {
   "workspace.read": staff,
+  "settings.read": ["owner", "manager"],
   "settings.manage": ["owner", "manager"],
   "staff.manage": ["owner"],
   "members.manage": ["owner", "manager", "receptionist"],

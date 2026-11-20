@@ -29,6 +29,20 @@
       "when": 1795181957218,
       "tag": "0003_accessible_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795183351510,
+      "tag": "0004_settings_staff_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795183353442,
+      "tag": "0005_settings_audit_security",
+      "breakpoints": true
     }
   ]
 }

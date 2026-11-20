@@ -4,10 +4,12 @@ export function Drawer({
   title,
   children,
   onClose,
+  busy = false,
 }: {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  busy?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -25,7 +27,12 @@ export function Drawer({
       ref={ref}
       className="drawer"
       aria-labelledby={titleId}
-      onCancel={onClose}
+      aria-busy={busy}
+      tabIndex={-1}
+      onCancel={(event) => {
+        event.preventDefault();
+        if (!busy) onClose();
+      }}
       onKeyDown={(event) => {
         if (event.key !== "Tab") return;
         const controls = Array.from(
@@ -35,6 +42,11 @@ export function Drawer({
         );
         const first = controls[0];
         const last = controls.at(-1);
+        if (!first) {
+          event.preventDefault();
+          event.currentTarget.focus();
+          return;
+        }
         if (event.shiftKey && document.activeElement === first) {
           event.preventDefault();
           last?.focus();
@@ -46,7 +58,7 @@ export function Drawer({
     >
       <header>
         <h2 id={titleId}>{title}</h2>
-        <button onClick={onClose} aria-label="Close drawer">
+        <button onClick={onClose} aria-label="Close drawer" disabled={busy}>
           Close
         </button>
       </header>

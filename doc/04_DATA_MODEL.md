@@ -53,3 +53,9 @@ All business table names above live in gym. Create deferred tables with their mo
 Indexes start with org and common filters: members normalized_phone/name; membership member/start; invoices member/due; payments received_at; visits branch/check-in; audit time; child FKs and scoped uniqueness. Use actual EXPLAIN evidence before extra search extensions.
 
 Seed fictional Crown Fitness and an unrelated second gym. Include active/expired/frozen/unpaid cases, overlapping display codes across gyms, consistent financial data. Generate demo credentials locally; no shared production password. Seed/reset tools must refuse production.
+
+## Implemented SET-01 schema
+
+Migrations 0004_settings_staff_audit and 0005_settings_audit_security add organization contact, receipt prefix/footer, paid_activation, grace_days, debt_blocks_access and settings_version; branches and staff_memberships have version. Grace is bounded 0–30; versions are positive. gym.audit_events has org/actor FKs, UUID entity/request IDs, action/reason, bounded service payloads in before/after JSON and occurred_at timestamptz, with org/time index. Runtime SELECT/INSERT are tenant-scoped; UPDATE/DELETE are not granted. All administrative services commit audit and mutation atomically. Organization/staff/branch version changes are checked under locks; the organization administrative mutex serializes last-owner and last-active-branch checks.
+
+Only these core/admin tables currently exist; the logical member/finance/attendance model above is still planned. GYM contains no invented business data. Tests create and clean fictional two-gym fixtures only in gym_test.

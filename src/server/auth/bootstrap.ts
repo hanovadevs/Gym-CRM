@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Client } from "pg";
 import { configureAuth } from "./configure";
@@ -58,6 +59,21 @@ export async function bootstrapOwner(
     await client.query(
       "insert into gym.staff_branch_grants(organization_id,staff_membership_id,branch_id) values($1,$2,$3)",
       [orgId, staff.rows[0].id, branch.rows[0].id],
+    );
+    await client.query(
+      'insert into gym.audit_events(organization_id,actor_user_id,action,entity_id,request_id,reason,"after") values($1,$2,$3,$1,$4,$5,$6::jsonb)',
+      [
+        orgId,
+        result.user.id,
+        "organization.bootstrap",
+        randomUUID(),
+        "Controlled local owner setup",
+        JSON.stringify({
+          role: "owner",
+          active: true,
+          branchId: branch.rows[0].id,
+        }),
+      ],
     );
     await client.query("COMMIT");
     return { userId: result.user.id, organizationId: orgId };

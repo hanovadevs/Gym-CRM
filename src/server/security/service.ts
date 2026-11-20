@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import type { Pool, PoolClient } from "pg";
 import {
@@ -25,6 +26,7 @@ type DirectoryRow = {
   organization_name: string;
 };
 export type Scope = Readonly<{
+  requestId: string;
   userId: string;
   organizationId: string;
   membershipId: string;
@@ -90,6 +92,11 @@ export function createSecurity(
       await client.query("select set_config('app.organization_id',$1,true)", [
         chosen.organization_id,
       ]);
+      if (action === "staff.manage" || action === "settings.manage")
+        await client.query(
+          "select pg_advisory_xact_lock(hashtextextended($1,0))",
+          ["gym-admin:" + chosen.organization_id],
+        );
       // Shared row lock serializes membership revocation/role edits with this operation.
       const membership = await client.query(
         "select role from gym.staff_memberships where id=$1 and auth_user_id=$2 and active=true for share",
@@ -112,6 +119,7 @@ export function createSecurity(
         throw new AccessError("NOT_FOUND");
       if (!branchIds.length) throw new AccessError("FORBIDDEN");
       const scope: Scope = Object.freeze({
+        requestId: randomUUID(),
         userId: identity.user.id,
         organizationId: chosen.organization_id,
         membershipId: chosen.membership_id,

@@ -138,12 +138,22 @@ export default async function Workspace({
         <section className="panel workspace-next">
           <SectionTitle
             title="Your workspace"
-            help="Your session, gym and branch scope are connected to persisted records. Settings and operational modules will appear when their services are implemented and your role permits access."
+            help="Your session, gym and branch scope are connected to persisted records. Owners and managers can open settings. Other workflows become available as their modules are implemented."
           />
           <p>
-            Staff access is connected. Gym settings and daily operations are the
-            next modules to be added.
+            {workspace.actions.includes("settings.read")
+              ? "Manage your gym preferences and permitted staff settings. "
+              : "Your workspace access is active. "}
+            Member and financial workflows are the next modules to be added.
           </p>
+          {workspace.actions.includes("settings.read") ? (
+            <a
+              className="text-action"
+              href={"/settings?organizationId=" + workspace.organization.id}
+            >
+              Open settings
+            </a>
+          ) : null}
         </section>
       </main>
     </div>

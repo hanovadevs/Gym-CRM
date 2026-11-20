@@ -22,7 +22,8 @@
     "test:production": "node tests/integration/production.mjs",
     "auth:bootstrap": "tsx scripts/bootstrap-owner.ts",
     "test:auth": "tsx tests/integration/auth-lifecycle.ts",
-    "test:security": "node --conditions=react-server --import tsx tests/integration/security.ts"
+    "test:security": "node --conditions=react-server --import tsx tests/integration/security.ts",
+    "test:settings": "node --conditions=react-server --import tsx tests/integration/settings.ts"
   },
   "keywords": [],
   "author": "",

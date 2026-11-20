@@ -37,3 +37,12 @@ Same key/payload returns original result; changed payload conflicts. Concurrent 
 Authenticate every export/receipt/file download and validate ownership. Bound/stream large exports; neutralize formulas. Stage uploads to avoid missing-byte pointers; cleanup unused staged objects.
 
 UI consumes DTOs, not raw tables. Revalidate changed list/detail/metrics after success. Preserve form data on failure. Avoid optimistic financial/access changes unless rollback semantics are proven. Catching a database exception must never become a successful empty list or demo data.
+
+## Implemented SET-01 interfaces
+
+- GET /api/settings: optional validated organizationId/branchId and staffPage (positive integer, default 1); owner/manager. Returns validated values/version/editable fields and permitted branch metadata. Owners additionally receive staff (25/page, total/page) and latest 20 administrative audit events. No password/hash/session data in DTOs.
+- PATCH /api/settings: organizationId, version, nonempty allowlisted changes, reason. Manager fields: phone/email/address/receiptFooter. Owner controls other configuration. Version mismatch 409; no partial save.
+- POST/PATCH /api/staff: owner only. POST creates a new identity/membership/grants using maintained auth; existing email is refused. PATCH requires tenant staff ID/version and changes role/active/branchIds. No password/profile edits for existing identities. Protect final active owner.
+- POST/PATCH /api/branches: owner only. Name/code/active/reason; existing branch ID/version for edits. Unique code per gym and at least one active branch. No deletion endpoint.
+
+Mutation interfaces require trusted same origin and JSON, reject cross-site requests and bound request bodies to 32KiB. Strict schemas reject role/field injection; active grants must resolve to active tenant branches. Responses use sanitized error codes/messages, request IDs and no-store. getSecurity().run supplies the transaction client and trusted scope; audit is atomic. A committed save followed by failed client refresh is reported as saved and requires reload before further edits; it must not silently retry provisioning or overwrite a stale version.
