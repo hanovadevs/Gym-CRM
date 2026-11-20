@@ -15,6 +15,20 @@
       "when": 1795179111606,
       "tag": "0001_tenant_security",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795181677823,
+      "tag": "0002_staff_directory",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1795181957218,
+      "tag": "0003_accessible_directory",
+      "breakpoints": true
     }
   ]
 }

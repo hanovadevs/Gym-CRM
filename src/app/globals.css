@@ -860,3 +860,129 @@ th {
     gap: 12px;
   }
 }
+.secure-workspace {
+  min-height: 100dvh;
+}
+.secure-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 40px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  gap: 16px;
+}
+.secure-header .brand {
+  padding: 0;
+}
+.secure-main {
+  max-width: 1180px;
+  padding: 40px 32px;
+}
+.secure-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.access-details {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 20px;
+  font-size: 14px;
+  margin: 28px 0 8px;
+}
+.access-details dt {
+  color: var(--muted);
+}
+.access-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.role-name {
+  text-transform: capitalize;
+}
+.branch-list {
+  list-style: none;
+  padding: 0;
+  margin: 20px 0 0;
+}
+.branch-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 0;
+  font-size: 14px;
+}
+.branch-list span {
+  color: var(--muted);
+}
+.workspace-next {
+  margin-top: 24px;
+}
+.workspace-next > p {
+  margin-top: 20px;
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.scope-selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.scope-selectors form {
+  display: flex;
+  gap: 12px;
+  align-items: end;
+}
+.scope-selectors .field {
+  margin: 0;
+}
+.scope-selectors select {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  max-width: 260px;
+  min-height: 44px;
+}
+.access-state {
+  max-width: 700px;
+}
+.access-state .text-action {
+  display: inline-block;
+  margin-right: 24px;
+  text-decoration: underline;
+  color: var(--accent);
+}
+@media (max-width: 600px) {
+  .secure-header {
+    padding: 20px 16px;
+  }
+  .secure-header .brand {
+    font-size: 22px;
+  }
+  .secure-main {
+    padding: 28px 16px;
+  }
+  .secure-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .scope-selectors form {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .scope-selectors .field {
+    flex: 1;
+    min-width: 180px;
+  }
+  .scope-selectors select {
+    max-width: 100%;
+  }
+  .access-state .text-action {
+    display: block;
+    margin-bottom: 24px;
+  }
+}

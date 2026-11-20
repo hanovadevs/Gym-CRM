@@ -10,7 +10,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | DB-01 | M01 | FND-02 | Discover local PG; safe dev/test roles/schemas/connections | DONE | GYM + isolated gym_test; distinct non-owner runtime/migration roles; restricted-role checks pass |
 | DB-02 | M01 | DB-01 | Reviewed initial/core/auth migrations; clean-DB apply | DONE | 0000_aberrant_vance_astro + 0001_tenant_security applied to both DBs; FK/RLS/auth adapter checks pass |
 | AUTH-01 | M01 | DB-02 | Real staff login/logout/recovery/provisioning; no public signup | DONE | Local lifecycle DB/browser checks pass; real owner setup requires chosen identity |
-| SEC-01 | M01 | AUTH-01 | Org/branch context, RBAC, runtime RLS, two-gym negative checks | NOT_STARTED | None yet |
+| SEC-01 | M01 | AUTH-01 | Org/branch context, RBAC, runtime RLS, two-gym negative checks | DONE | Real session/DB/browser isolation and revocation pass; 0002/0003; next SET-01 |
 | SET-01 | M02 | SEC-01 | Persisted settings/staff grants/owner safeguards/audit | NOT_STARTED | None yet |
 | MEM-01 | M03 | SET-01 | Persisted list/create/edit/search/registration | NOT_STARTED | None yet |
 | MEM-02 | M03 | MEM-01 | Profile/contact/notes scope/archive/required states | NOT_STARTED | None yet |
@@ -62,3 +62,10 @@ Next: AUTH-01 controlled owner setup, actual sign-in/logout/recovery with no pub
 | UI-02 | M00 | FND-03 | Remove Demo indicators; accessible section info icons | DONE | 9 dashboard popovers; keyboard/Escape and no-Demo-text browser check pass; ADR-016 |
 
 AUTH-01 verification: real DB lifecycle and 13-browser-test suite pass; local recovery capture/reset UI verified. No real owner auto-created; run auth:bootstrap with chosen identity. Production mail is still a release blocker. Next SEC-01.
+
+
+## SEC-01 evidence card
+
+Status: DONE (local service/security scope). Dependencies AUTH-01/DB-01/02 verified. Implementation: src/server/security/*, /workspace, GET /api/workspace; migrations 0002_staff_directory and 0003_accessible_directory. Acceptance checks T01–T06 within existing operations pass; future member/finance/file/export routes must add module-specific tests when implemented, not inherit a claimed pass.
+
+Actual checks: test:security passes against real gym_test with a max-1 runtime pool and real sessions; test:unit 8 pass; test:e2e 16 pass; lint/typecheck/build/production smoke pass; baseline database/auth integration pass; db:generate no changes. Role/grant/membership revocation is rechecked while cookies remain valid, branch scope is enforced by the workspace repository, no-context direct business access is denied, and cross-tenant mutation attempts affect zero rows. Shared-lock revocation ordering verified on actual PostgreSQL. See module card and session log for files/evidence/limits. Next eligible local task: SET-01.

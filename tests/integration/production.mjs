@@ -45,6 +45,16 @@ try {
   assert.ok(html.includes("dashboard preview is disabled"));
   assert.ok(!html.includes("Good afternoon, Ali"));
   assert.ok(!html.includes("Demo data"));
+  const denied = await fetch("http://127.0.0.1:3200/api/workspace");
+  assert.equal(denied.status, 401);
+  assert.equal(denied.headers.get("cache-control"), "no-store");
+  assert.equal((await denied.json()).error.code, "UNAUTHENTICATED");
+  const protectedPage = await fetch("http://127.0.0.1:3200/workspace");
+  // Next inserts a meta redirect when the loading boundary has already streamed.
+  assert.ok(
+    protectedPage.url.endsWith("/sign-in") ||
+      (await protectedPage.text()).includes("url=/sign-in"),
+  );
   const files = await readdir(".next/static", {
     recursive: true,
     withFileTypes: true,
@@ -66,7 +76,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; HTTP 200 unavailable-workspace state; ${count} client assets contain no configured database URLs/auth secret.`,
+    `PASS: production preview disabled; protected API 401/no-store and page sign-in redirect; ${count} client assets contain no configured database URLs/auth secret.`,
   );
 } finally {
   server.kill();
