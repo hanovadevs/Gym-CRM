@@ -9,7 +9,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | FND-03 | M00 | FND-02 | Reference shell/primitives and labeled fixture dashboard | DONE | Shared preview shell/primitives, explicit fixtures; 6 browser tests pass; doc/evidence/ |
 | DB-01 | M01 | FND-02 | Discover local PG; safe dev/test roles/schemas/connections | DONE | GYM + isolated gym_test; distinct non-owner runtime/migration roles; restricted-role checks pass |
 | DB-02 | M01 | DB-01 | Reviewed initial/core/auth migrations; clean-DB apply | DONE | 0000_aberrant_vance_astro + 0001_tenant_security applied to both DBs; FK/RLS/auth adapter checks pass |
-| AUTH-01 | M01 | DB-02 | Real staff login/logout/recovery/provisioning; no public signup | NOT_STARTED | None yet |
+| AUTH-01 | M01 | DB-02 | Real staff login/logout/recovery/provisioning; no public signup | DONE | Local lifecycle DB/browser checks pass; real owner setup requires chosen identity |
 | SEC-01 | M01 | AUTH-01 | Org/branch context, RBAC, runtime RLS, two-gym negative checks | NOT_STARTED | None yet |
 | SET-01 | M02 | SEC-01 | Persisted settings/staff grants/owner safeguards/audit | NOT_STARTED | None yet |
 | MEM-01 | M03 | SET-01 | Persisted list/create/edit/search/registration | NOT_STARTED | None yet |
@@ -57,3 +57,8 @@ Checks: npm.cmd run lint (0 errors/warnings); npm.cmd run typecheck (pass); npm.
 | QA-FND-01 | M00 | FND-03 | User-requested implementation/UI bug review | DONE | Fixed drawer focus restoration/trap, config error handling and production demo guard; screenshots at 4 widths and clean browser runtime check |
 
 Next: AUTH-01 controlled owner setup, actual sign-in/logout/recovery with no public signup; then SEC-01 session/org/branch scope and membership-directory bootstrap.
+
+
+| UI-02 | M00 | FND-03 | Remove Demo indicators; accessible section info icons | DONE | 9 dashboard popovers; keyboard/Escape and no-Demo-text browser check pass; ADR-016 |
+
+AUTH-01 verification: real DB lifecycle and 13-browser-test suite pass; local recovery capture/reset UI verified. No real owner auto-created; run auth:bootstrap with chosen identity. Production mail is still a release blocker. Next SEC-01.

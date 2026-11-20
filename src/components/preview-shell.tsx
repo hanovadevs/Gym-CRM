@@ -53,7 +53,6 @@ export function PreviewShell({
         <footer>
           <button disabled>Settings</button>
           <p>Crown Fitness</p>
-          <small>Development preview</small>
         </footer>
       </aside>
       <div className="content">
@@ -70,10 +69,9 @@ export function PreviewShell({
             Crown Fitness <span>Main branch</span>
           </div>
           <div className="header-right">
-            <span className="demo">Demo data</span>
             <button
               className="avatar"
-              aria-label="Open preview account"
+              aria-label="Open account"
               onClick={() => onAccount()}
             >
               AH

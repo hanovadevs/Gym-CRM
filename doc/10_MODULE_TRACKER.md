@@ -9,7 +9,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | AUTH-01 |
-| M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | NOT_STARTED | NOT_STARTED | DONE | IN_PROGRESS | IN_PROGRESS | AUTH-01 → SEC-01 |
+| M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | IN_PROGRESS | IN_PROGRESS | DONE | IN_PROGRESS | IN_PROGRESS | AUTH-01 → SEC-01 |
 | M02 | Settings & staff | A | M01 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | SET-01 |
 | M03 | Members & profiles | A | M01 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | MEM-01 → MEM-02 |
 | M04 | Plans & memberships | A | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAN-01 → SUB-01 |
@@ -58,3 +58,7 @@ Update backlog and session handoff in the same session. Preserve finished task e
 - Real DB checks: runtime DDL denied; no tenant context returns no business rows; cross-tenant writes rejected; composite org foreign keys reject cross-gym grants; reused connection clears transaction-local context. Installed Better Auth Drizzle adapter writes/reads app_auth user with runtime credentials. Test fixtures cleaned up/rolled back.
 - QA IN_PROGRESS: these DB checks pass, but sessions, revocation, action/branch RBAC, staff-directory bootstrap and complete two-gym application flows do not yet exist. No auth endpoint or owner login is exposed. Overall M01 IN_PROGRESS.
 - Next: AUTH-01, then SEC-01. Last updated: 20 November 2026, Asia/Karachi.
+
+## Authentication and UI update — 20 November 2026
+
+AUTH-01: local lifecycle complete; see session log and tests/integration/auth-lifecycle.ts plus tests/e2e/auth.spec.ts. M01 UI/Server/API/QA now IN_PROGRESS, DB remains DONE, overall IN_PROGRESS until SEC-01. Current entry routes /sign-in, /forgot-password, /reset-password, /workspace; latter verifies session but exposes no business data. No actual GYM owner has been provisioned. Info icon presentation supersedes the persistent Demo label at the user's request; fixture mode remains internal and production-guarded. Nine section help popovers tested; current screenshots in doc/evidence/.

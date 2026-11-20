@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { PreviewShell } from "./preview-shell";
+import { SectionTitle } from "./ui/section-title";
 import { Drawer, Field, Pill, Table } from "./ui/primitives";
 const members = [
   {
@@ -47,10 +48,7 @@ export function Dashboard() {
             Add member
           </button>
         </section>
-        <p className="preview-note">
-          Fictional dashboard preview. Operational actions are unavailable until
-          their modules are connected.
-        </p>
+
         <section className="metrics" aria-label="Gym overview">
           {[
             ["Active members", "248", "Effective memberships today"],
@@ -59,7 +57,13 @@ export function Dashboard() {
             ["Overdue invoices", "12", "Unpaid past the due date"],
           ].map(([label, value, note]) => (
             <article className="panel metric" key={label}>
-              <h2>{label}</h2>
+              <SectionTitle
+                title={label}
+                help={
+                  note +
+                  ". These illustrative figures are not live database totals."
+                }
+              />
               <strong>{value}</strong>
               <p>{note}</p>
             </article>
@@ -68,7 +72,10 @@ export function Dashboard() {
         <div className="middle-grid">
           <section className="panel activity">
             <div className="panel-heading">
-              <h2>Member activity</h2>
+              <SectionTitle
+                title="Member activity"
+                help="Successful visit openings for the selected week. Repeat visits count separately. This chart uses illustrative records."
+              />
               <label className="sr-only" htmlFor="period">
                 Activity period
               </label>
@@ -112,7 +119,10 @@ export function Dashboard() {
             </div>
           </section>
           <section className="panel quick">
-            <h2>Quick actions</h2>
+            <SectionTitle
+              title="Quick actions"
+              help="Register members, collect payments, check in visitors and schedule classes. These workflows are not connected yet; opening an action will explain availability."
+            />
             <p className="support">Explore the workflows coming next.</p>
             <div className="actions">
               {["Add member", "Record payment", "Check in", "Create class"].map(
@@ -123,25 +133,25 @@ export function Dashboard() {
                 ),
               )}
             </div>
-            <p className="support bottom-note">
-              Preview only · no records will be saved
-            </p>
           </section>
         </div>
         <div className="bottom-grid">
           <section className="panel">
             <div className="panel-heading">
-              <h2>Recent members</h2>
+              <SectionTitle
+                title="Recent members"
+                help="Search the illustrative member list. These people are not saved database records."
+              />
               <span className="subtle">3 new</span>
             </div>
             <label className="sr-only" htmlFor="search">
-              Search demo members
+              Search members
             </label>
             <input
               className="member-search"
               id="search"
               type="search"
-              placeholder="Search demo members…"
+              placeholder="Search members…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
@@ -162,13 +172,16 @@ export function Dashboard() {
               ))
             ) : (
               <p role="status" className="empty">
-                No demo members match “{query}”.
+                No members match “{query}”.
               </p>
             )}
           </section>
           <section className="panel schedule">
             <div className="panel-heading">
-              <h2>Today’s schedule</h2>
+              <SectionTitle
+                title="Today’s schedule"
+                help="Scheduled classes for the gym’s local day. Scheduling is not enabled yet."
+              />
             </div>
             <p className="support">20 November 2026</p>
             <div className="empty-state">
@@ -178,7 +191,10 @@ export function Dashboard() {
             </div>
           </section>
           <section className="panel">
-            <h2>Upcoming renewals</h2>
+            <SectionTitle
+              title="Upcoming renewals"
+              help="Membership periods ending soon in the gym’s local calendar. These are illustrative records, not payment reminders."
+            />
             <p className="support">Membership periods ending soon</p>
             {renewals.map(([initials, name, date, days]) => (
               <div className="person-row renewal" key={name}>
@@ -193,8 +209,7 @@ export function Dashboard() {
           </section>
         </div>
         <footer className="main-footer">
-          Crown Fitness workspace{" "}
-          <span>All figures are fictional · Asia/Karachi</span>
+          Crown Fitness workspace <span>Asia/Karachi</span>
         </footer>
       </main>
       {drawer ? (
@@ -221,10 +236,11 @@ export function Dashboard() {
             </>
           ) : drawer === "Preview account" ? (
             <>
-              <p className="drawer-intro">Ali Hassan · fictional owner</p>
+              <p className="drawer-intro">Account access</p>
+              <a href="/sign-in">Sign in to your staff account</a>
               <p>
-                No staff session is active in this development preview. Login
-                and permissions are pending AUTH-01 and SEC-01.
+                No staff session is active in this dashboard preview.
+                Organization and branch permissions are being connected.
               </p>
             </>
           ) : (

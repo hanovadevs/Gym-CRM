@@ -9,9 +9,10 @@ export default function Page() {
     <main className="setup">
       <h1>Jym CRM</h1>
       <p>
-        The dashboard preview is disabled. Staff authentication and live
-        operations are not available yet.
+        The dashboard preview is disabled. Live operations are not available
+        yet.
       </p>
+      <a href="/sign-in">Sign in to your staff account</a>
     </main>
   );
 }

@@ -1,6 +1,6 @@
 # Jym CRM
 
-Local PostgreSQL foundation and fictional dashboard preview. Staff authentication and live gym workflows are not available yet.
+Local PostgreSQL foundation and fictional dashboard preview. Staff authentication works locally; live gym workflows are not available yet.
 
 Run npm.cmd ci, then npm.cmd run dev. Open http://localhost:3000/dashboard.
 
@@ -15,3 +15,12 @@ Set DEMO_MODE=false to disable fictional UI. Production plus demo mode fails val
 Schemas: gym for business, app_auth for Better Auth, drizzle for migration history. Runtime has no ownership, DDL, superuser or RLS bypass. Tenant context must be transaction-local. Application session, active membership, role and branch authorization are required before protected operations are exposed.
 
 No Supabase account, keys, Docker or cloud database needed. Future hosting changes retain services and IDs. See doc/ for scope and verification evidence.
+
+Authentication is now implemented locally. Choose an owner identity before signing in; no shared account/password was seeded. In PowerShell, set OWNER_NAME, OWNER_EMAIL, GYM_NAME and GYM_SLUG to your chosen values. Read OWNER_PASSWORD securely, then run npm.cmd run auth:bootstrap:
+
+    $ownerSecret = Read-Host 'Choose owner password (12–128 characters)' -AsSecureString
+    $env:OWNER_PASSWORD = [System.Net.NetworkCredential]::new('', $ownerSecret).Password
+    try { npm.cmd run auth:bootstrap } finally { Remove-Item Env:OWNER_PASSWORD }
+
+The CLI uses separate migration credentials and refuses an initialized workspace. Visit http://localhost:3000/sign-in. Business authorization is the next task; /workspace currently shows your authenticated identity only. Password reset instructions are captured as private files in .local/mail for a local administrator, never served publicly. Actual production email delivery is not configured. Run npm.cmd run test:auth for the isolated auth lifecycle; browser tests use gym_test and clean their own fixtures. Run browser tests and production build serially.
+

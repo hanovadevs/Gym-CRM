@@ -19,7 +19,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
     "db:seed": "node scripts/seed.mjs",
-    "test:production": "node tests/integration/production.mjs"
+    "test:production": "node tests/integration/production.mjs",
+    "auth:bootstrap": "tsx scripts/bootstrap-owner.ts",
+    "test:auth": "tsx tests/integration/auth-lifecycle.ts"
   },
   "keywords": [],
   "author": "",
