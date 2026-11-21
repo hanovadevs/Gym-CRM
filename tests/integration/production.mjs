@@ -53,6 +53,38 @@ try {
   for (const [path, method, body] of [
     ["/api/settings", "GET"],
     ["/api/members", "GET"],
+    [`/api/members/${org}`, "GET"],
+    [
+      `/api/members/${org}/contact`,
+      "PATCH",
+      {
+        organizationId: org,
+        version: 1,
+        reason: "Anonymous denial check",
+        contact: null,
+      },
+    ],
+    [
+      `/api/members/${org}/archive`,
+      "POST",
+      {
+        organizationId: org,
+        version: 1,
+        reason: "Anonymous denial check",
+        archived: true,
+      },
+    ],
+    [
+      `/api/members/${org}/notes`,
+      "POST",
+      {
+        organizationId: org,
+        requestKey: org,
+        body: "Blocked note",
+        visibility: "operational",
+      },
+    ],
+    ["/api/staff/mail", "POST", { organizationId: org, mailId: org }],
     [
       "/api/members",
       "POST",
@@ -153,8 +185,25 @@ try {
       403,
       "Production rejects the unconfigured loopback alias",
     );
-    const rejectedAuth=await fetch("http://127.0.0.1:3200/api/auth/sign-in/email",{method:"POST",headers:{Origin:configured.origin,"Content-Type":"application/json"},body:JSON.stringify({email:"blocked@example.invalid",password:"Fictional test password"})});
-    assert.equal(rejectedAuth.status,403,"Production auth rejects the unconfigured alias");
+    const rejectedAuth = await fetch(
+      "http://127.0.0.1:3200/api/auth/sign-in/email",
+      {
+        method: "POST",
+        headers: {
+          Origin: configured.origin,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: "blocked@example.invalid",
+          password: "Fictional test password",
+        }),
+      },
+    );
+    assert.equal(
+      rejectedAuth.status,
+      403,
+      "Production auth rejects the unconfigured alias",
+    );
   }
   const files = await readdir(".next/static", {
     recursive: true,
@@ -165,6 +214,7 @@ try {
     process.env.DATABASE_URL,
     process.env.MIGRATION_DATABASE_URL,
     process.env.BETTER_AUTH_SECRET,
+    process.env.SMTP_PASSWORD,
   ].filter(Boolean);
   for (const file of files) {
     if (!file.isFile()) continue;
@@ -177,7 +227,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; workspace/settings/staff/branch/member APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
   );
 } finally {
   server.kill();

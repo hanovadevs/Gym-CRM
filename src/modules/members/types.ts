@@ -4,6 +4,7 @@ export type Member = MemberValues & {
   memberCode: string;
   branchName: string;
   version: number;
+  archivedAt: string | null;
 };
 export type DuplicateMatch = {
   id: string;

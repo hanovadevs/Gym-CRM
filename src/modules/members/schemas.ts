@@ -68,6 +68,7 @@ export const listMembers = z
       z.uuid().optional(),
     ),
     q: text(100).default(""),
+    status: z.enum(["registered", "archived", "all"]).default("registered"),
     sort: z.enum(["name", "newest", "oldest", "code"]).default("name"),
     page: z.coerce.number().int().min(1).max(100000).default(1),
   })

@@ -16,7 +16,7 @@ import {
 } from "./schemas";
 import type { MemberValues } from "./schemas";
 import type { Member, Directory, DuplicateMatch } from "./types";
-function parse<T>(schema: z.ZodType<T>, value: unknown): T {
+export function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);
   if (!result.success)
     throw new BusinessError(
@@ -28,18 +28,19 @@ function parse<T>(schema: z.ZodType<T>, value: unknown): T {
     );
   return result.data;
 }
-const fields = `m.id,m.member_code as "memberCode",m.name,m.phone,m.email,m.home_branch_id as "homeBranchId",b.name as "branchName",m.joined_on::text as "joinedOn",m.version`;
-const join =
+export const fields = `m.id,m.member_code as "memberCode",m.name,m.phone,m.email,m.home_branch_id as "homeBranchId",b.name as "branchName",m.joined_on::text as "joinedOn",m.version,to_jsonb(m.archived_at)#>>'{}' as "archivedAt"`;
+export const join =
   "gym.members m join gym.branches b on b.organization_id=m.organization_id and b.id=m.home_branch_id";
-async function readMember(
+export async function readMember(
   db: PoolClient,
   scope: Scope,
   id: string,
-  lock = false,
+  lock: boolean | "share" = false,
+  includeArchived = false,
 ): Promise<Member> {
   const row = (
     await db.query<Member>(
-      `select ${fields} from ${join} where m.organization_id=$1 and m.id=$2 and m.home_branch_id=any($3::uuid[]) and m.archived_at is null ${lock ? "for update of m" : ""}`,
+      `select ${fields} from ${join} where m.organization_id=$1 and m.id=$2 and m.home_branch_id=any($3::uuid[]) ${includeArchived ? "" : "and m.archived_at is null"} ${lock === true ? "for update of m" : lock === "share" ? "for share of m" : ""}`,
       [scope.organizationId, id, [...scope.branchIds]],
     )
   ).rows[0];
@@ -122,7 +123,7 @@ export function createMembersService(
         const phone = /^[+0-9() .-]+$/.test(query.q)
           ? normalizePhone(query.q)
           : "";
-        const where = `m.organization_id=$1 and m.home_branch_id=any($2::uuid[]) and m.archived_at is null and ($3='%%' or m.name ilike $3 or m.member_code ilike $3 or m.email ilike $3 or ($4<>'' and m.normalized_phone like '%'||$4||'%'))`;
+        const where = `m.organization_id=$1 and m.home_branch_id=any($2::uuid[]) and ($6='all' or ($6='registered' and m.archived_at is null) or ($6='archived' and m.archived_at is not null)) and ($3='%%' or m.name ilike $3 or m.member_code ilike $3 or m.email ilike $3 or ($4<>'' and m.normalized_phone like '%'||$4||'%'))`;
         const order = {
           name: "m.name,m.id",
           newest: "m.joined_on desc,m.member_code desc,m.id",
@@ -139,6 +140,7 @@ export function createMembersService(
               "%" + escaped + "%",
               phone,
               query.page,
+              query.status,
             ],
           )
         ).rows[0];

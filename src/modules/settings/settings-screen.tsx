@@ -32,6 +32,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
     >(null);
   const [draft, setDraft] = useState(initial.values);
   const [reloadRequired, setReloadRequired] = useState(false);
+  const [staffDelivery, setStaffDelivery] = useState("password");
   async function reload(staffPage = data.staffPage) {
     const response = await fetch(
       "/api/settings?organizationId=" +
@@ -64,7 +65,13 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
         throw new Error(result.error?.message ?? "Could not save. Try again.");
       committed = true;
       await reload();
-      setMessage("Changes saved.");
+      setMessage(
+        result.data.deliveryStatus
+          ? result.data.deliveryStatus === "sent"
+            ? "Staff saved. Invitation accepted by the mail server."
+            : `Staff saved. Invitation delivery: ${result.data.deliveryStatus}. Check the staff row before retrying.`
+          : "Changes saved.",
+      );
       setEditor(null);
       return true;
     } catch (e) {
@@ -502,7 +509,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                 <div className="panel-heading">
                   <SectionTitle
                     title="Team & roles"
-                    help="Only owners can add staff or change roles and branch grants. New accounts use an initial password you choose. No invitation email is sent. Existing accounts cannot be attached or have passwords changed here. At least one active owner must remain."
+                    help="Only owners can add staff or change roles and branch grants. Choose an initial password or email a one-use password setup link from contact@hanovadevs.com. Existing accounts cannot be claimed or reset here. At least one active owner must remain."
                   />
                   <button
                     className="primary"
@@ -535,6 +542,11 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                             <span className="cell-secondary">
                               {staff.email}
                             </span>
+                            {staff.invitationStatus ? (
+                              <span className="cell-secondary">
+                                Invitation: {staff.invitationStatus}
+                              </span>
+                            ) : null}
                           </td>
                           <td className="role-name">{staff.role}</td>
                           <td>{staff.active ? "Active" : "Inactive"}</td>
@@ -559,6 +571,23 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                             >
                               Edit access for {staff.name}
                             </button>
+                            {staff.active &&
+                            staff.invitationId &&
+                            ["pending", "failed"].includes(
+                              staff.invitationStatus ?? "",
+                            ) ? (
+                              <button
+                                disabled={pending || reloadRequired}
+                                onClick={() =>
+                                  send("/api/staff/mail", "POST", {
+                                    organizationId: data.organizationId,
+                                    mailId: staff.invitationId,
+                                  })
+                                }
+                              >
+                                Retry invitation for {staff.name}
+                              </button>
+                            ) : null}
                           </td>
                         </tr>
                       ))}
@@ -687,7 +716,10 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                     : {
                         name: String(form.get("name")),
                         email: String(form.get("email")),
-                        password: String(form.get("password")),
+                        delivery: staffDelivery,
+                        ...(staffDelivery === "password"
+                          ? { password: String(form.get("password")) }
+                          : {}),
                       }),
                   role: String(form.get("role")),
                   active: form.has("active"),
@@ -737,19 +769,35 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                         />
                       </label>
                       <label className="field">
-                        Initial password
-                        <input
-                          name="password"
-                          type="password"
-                          autoComplete="new-password"
-                          minLength={12}
-                          maxLength={128}
-                          required
-                        />
+                        Account setup
+                        <select
+                          aria-label="Account setup"
+                          value={staffDelivery}
+                          onChange={(e) => setStaffDelivery(e.target.value)}
+                        >
+                          <option value="password">
+                            Choose an initial password
+                          </option>
+                          <option value="email">Email staff invitation</option>
+                        </select>
                       </label>
+                      {staffDelivery === "password" ? (
+                        <label className="field">
+                          Initial password
+                          <input
+                            name="password"
+                            type="password"
+                            autoComplete="new-password"
+                            minLength={12}
+                            maxLength={128}
+                            required
+                          />
+                        </label>
+                      ) : null}
                       <p className="support">
-                        No email is sent. The staff member will use these
-                        initial credentials.
+                        {staffDelivery === "password"
+                          ? "No email is sent. The staff member will use these initial credentials."
+                          : "A one-use password setup link will be sent from contact@hanovadevs.com. It expires in 30 minutes."}
                       </p>
                     </>
                   ) : (

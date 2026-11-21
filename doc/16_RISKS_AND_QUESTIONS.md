@@ -7,7 +7,7 @@ Defaults allow local work. RELEASE_BLOCKER items must be resolved/verified befor
 | R01 | RELEASE_BLOCKER | Cross-gym data leakage | App scope + composite FKs + restricted-role RLS; two-gym tests |
 | R02 | RELEASE_BLOCKER | Concurrent/retried payments | Locks, exact balances, idempotency tests |
 | R03 | RELEASE_BLOCKER | Backup not restorable | Separate-DB restore including auth/files |
-| R04 | RELEASE_BLOCKER | Live account recovery/invitation | Test actual mail delivery, no public signup |
+| R04 | VERIFYING | Local SMTP recovery/new-staff invitation verified; deployment operations remain | Actual inbox/reset evidence in mail-delivery.json; REL-01 reachability/maintenance; multi-gym existing-account join deferred |
 | R05 | POLICY | Monthly vs fixed 30 days | Explicit plan unit; confirm pilot policy |
 | R06 | POLICY | Grace/unpaid access | Default zero grace/paid activation, reasoned authorized exception |
 | R07 | POLICY | Refund/freeze/cancellation | Prospective freeze, no automatic refund; confirm before pilot |
@@ -62,3 +62,9 @@ Resolved member defects during verification: adding an email to an existing shar
 Owner setup blocker resolved under the user's explicit instruction: the first actual GYM workspace/owner is now provisioned and verified, with no member fixtures. Preserve it as valued user data. Private access details are ignored and never committed. Local-only owner email cannot receive real external mail; R04 live delivery/consent-based invitations remain unresolved. No external messages or deployment/cloud changes occurred. Next local task MEM-02.
 
 Observed local login defect: user screenshots reported 429 and generic credential errors. Actual logs identified localhost vs 127.0.0.1 origin rejection (403), followed by the existing rate limit after retries. Resolved with exact same-port local aliases only outside production, shared across auth/business mutations; no security check or throttle disabled. Actual owner browser sign-in/directory/drawer/sign-out passed at both addresses. Form now honors server retry delay and preserves inputs. ADR-023 records the fix; the original failed browser attempt is retained as a failed check in session evidence.
+
+MEM-02 completed locally: profiles/emergency contacts, management vs operational notes, retained withdrawals, history and versioned reasoned archive/restore. Real row-lock/concurrency checks preserve history. M03 integration verification remains for membership/visit/payment history and actual ATT-01 archived visit rejection; those services do not exist yet. No remaining blocker to PLAN-01. R13 pilot privacy/retention/consent still applies; no structured medical/progress fields added.
+
+SMTP recovery/new-staff invitations work from the fixed sender. TLS authentication and actual Hostinger INBOX receipt/reset/single-use checks passed with one self-addressed email and isolated test identity. Owner login remains intentionally local-only by explicit choice and cannot receive email. Deployment HTTPS/reachable links, outbox maintenance scheduling and future host/proxy/SMTP behavior remain REL-01 checks. Existing identities cannot be claimed by another gym. No member campaign or arbitrary send endpoint added.
+
+Resolved verification defects: invitation active-access lookup originally used a tenant table without context, falsely expiring mail; it now uses the narrow staff directory. Profile alert assertion matched Next's route announcer; scoped to the app panel. Early Add member click could precede hydration; member actions now remain disabled until ready. A test orchestration run overlapped isolated fixtures with owner bootstrap; auth rerun serially passed. Final full browser suite 36 PASS; earlier failures are recorded, not counted as passes.

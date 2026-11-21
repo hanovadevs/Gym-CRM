@@ -1,0 +1,13 @@
+{
+  "date": "2026-11-20",
+  "transport": "Hostinger SMTP over TLS 465",
+  "sender": "contact@hanovadevs.com",
+  "recipient": "contact@hanovadevs.com",
+  "subject": "Reset your Jym CRM password",
+  "messageId": "<8953df47-edc5-4ba2-9d05-41c6e1ee3bed@hanovadevs.com>",
+  "receiptFolder": "INBOX",
+  "receiptUid": 59,
+  "resetLinkVerified": true,
+  "oneUseVerified": true,
+  "scope": "Isolated gym_test identity; actual owner unchanged; no reset URL or credentials retained in evidence"
+}

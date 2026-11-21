@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 20 November 2026 (Asia/Karachi): identity/security, settings/staff administration and member registration/directory verified locally. Full profiles, membership, attendance and finance remain upcoming.
+Updated 20 November 2026 (Asia/Karachi): profiles/notes/archival and fixed-sender SMTP recovery/invitations verified locally. Memberships, attendance and finance remain upcoming.
 
 ## State rules
 
@@ -8,10 +8,10 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | MEM-02 |
-| M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | VERIFYING | VERIFYING | R04 live mail before release |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | PLAN-01 |
+| M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SET-01 DONE; policy/receipt consumers in SUB-01/PAY-02/ATT-01 |
-| M03 | Members & profiles | A | M01 + M02 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | MEM-01 DONE; MEM-02 next |
+| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | MEM-01/02 DONE; cross-module history/access in SUB/PAY/ATT |
 | M04 | Plans & memberships | A | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAN-01 → SUB-01 |
 | M05 | Billing, payments & receipts | A | M04 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PAY-01 → PAY-03 |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
@@ -104,3 +104,15 @@ Visual review: doc/evidence/members-{390,768,1280,1440}.png, member-registration
 M03 remains IN_PROGRESS for MEM-02: full profiles, emergency contact, scoped notes, archival and their QA/schema. No enrollment/payment/access is created or claimed from registration. M02 policy-consumer verification and R04 live email remain open. During this session the user explicitly authorized selecting setup values; the controlled local bootstrap created the first GYM owner/workspace. Real owner login/workspace/empty directory verified; credentials stay in ignored .local/owner-access.json and the private user reply, never Git. GYM now has one real workspace/owner and zero fictional members; gym_test fixtures cleaned to zero. Next MEM-02.
 
 Local sign-in fix: server logs identified rejected 127.0.0.1 Origin against configured localhost, followed by rate limiting on retries. Exact same-port loopback aliases are now permitted only outside production, for auth and business writes. Sign-in respects Retry-After countdown without auto-retries. Actual GYM owner browser login/directory/registration drawer/sign-out passed on both localhost and 127.0.0.1. No throttle or CSRF protection disabled; production alias denial remains verified separately. ADR-022/023.
+
+## MEM-02 / MAIL-01 evidence — 20 November 2026, Asia/Karachi
+
+MEM-02 task DONE: persisted /members/[id] overview, versioned emergency contact add/update/explicit removal, operational/management notes, actor-scoped note replay, immutable reasoned withdrawal, role-filtered history and versioned archive/restore. Archive preserves contacts/notes/audit, removes members from registered lists and denies edits/new notes. Restore does not enroll or charge. Reception cannot see management notes/counts/events or withdraw another author's note; owners/managers have permitted branch scope. Directory adds registered/archived/all filters. Member-row locks serialize contact/archive/notes/branch moves.
+
+Files: members/profile-{schemas,service,types,screen}.ts/tsx, profile.ts, /members/[id], /api/members/[id] and contact/archive/notes; server/mail/config.ts/service.ts; staff invitation provisioning/UI, /api/staff/mail; scripts/deliver-mail.ts. Reviewed migrations 0008_member_profiles_and_mail / 0009_profile_mail_security applied to GYM and gym_test (10 entries each), prior 0000–0007 unchanged. Runtime notes/withdrawals SELECT/INSERT only with tenant RLS; contact composite org/member FK; outbox is private global identity infrastructure.
+
+Checks: test:profiles PASS on actual PostgreSQL/sessions/two gyms, including stale writes, private visibility, note replay/withdrawal/pagination, preservation/denial/restore, forced audit rollback and contact/archive concurrency. test:mail PASS for atomic invitation identity/grants/token/outbox/audit, maintained one-use setup/login, concurrent single delivery, failed retry/uncertain hold/expiry and recipient/template/origin guards. Existing members/settings/security/auth/DB suites PASS. Unit 17 PASS; final browser suite 36 PASS (1.8m). Lint/typecheck/build PASS; production smoke proves new profile/contact/archive/note/mail APIs 401/no-store, strict origin checks, disabled fixtures and no configured database/auth/SMTP secrets in 20 client assets. db:generate no changes; production dependency audit zero vulnerabilities.
+
+Visuals opened at 390/768/1280/1440: doc/evidence/profile-*.png, including archived mobile; source 03_member_profile.png reviewed. Empty/error/stale-input/permission/archived/refresh/keyboard states connected. Fixed an early-click hydration issue in member actions; final full suite supersedes the 35-pass/1-fail run. M03 QA/overall VERIFYING only for future membership/visit/payment history and actual ATT-01 archived visit denial; local MEM-02 task work is complete.
+
+MAIL-01 DONE locally: every gym's account mail uses contact@hanovadevs.com without tenant override. Nodemailer 10.6.1/types 8.0.2 pinned; private TLS SMTP auth passes. ONE real recovery email reached Hostinger INBOX, matched by Message-ID (UID 59); received link reset an isolated test account and rejected reuse. Token-free doc/evidence/mail-delivery.json. Owner login unchanged by explicit choice. Invitations let new staff choose a password; app/browser capture flow passes. Outbox commits before SMTP, clears successful links and holds uncertain sends for reconciliation. Automated suites capture; production cannot. Deployment scheduling/HTTPS/reachable URLs/proxy remain REL-01. No member campaign/send-anything endpoint. Next PLAN-01.

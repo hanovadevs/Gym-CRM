@@ -24,7 +24,10 @@
     "test:auth": "tsx tests/integration/auth-lifecycle.ts",
     "test:security": "node --conditions=react-server --import tsx tests/integration/security.ts",
     "test:settings": "node --conditions=react-server --import tsx tests/integration/settings.ts",
-    "test:members": "node --conditions=react-server --import tsx tests/integration/members.ts"
+    "test:members": "node --conditions=react-server --import tsx tests/integration/members.ts",
+    "test:profiles": "node --conditions=react-server --import tsx tests/integration/profiles.ts",
+    "test:mail": "node --conditions=react-server --import tsx tests/integration/mail.ts",
+    "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts"
   },
   "keywords": [],
   "author": "",
@@ -35,6 +38,7 @@
     "dotenv": "18.0.10",
     "drizzle-orm": "0.45.4",
     "next": "16.4.6",
+    "nodemailer": "10.6.1",
     "pg": "8.23.1",
     "react": "19.3.1",
     "react-dom": "19.3.1",
@@ -46,6 +50,7 @@
     "@playwright/test": "1.65.1",
     "@tailwindcss/postcss": "4.3.5",
     "@types/node": "26.6.6",
+    "@types/nodemailer": "8.0.2",
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",

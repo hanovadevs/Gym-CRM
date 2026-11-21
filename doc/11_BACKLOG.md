@@ -13,7 +13,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | SEC-01 | M01 | AUTH-01 | Org/branch context, RBAC, runtime RLS, two-gym negative checks | DONE | Real session/DB/browser isolation and revocation pass; 0002/0003; next SET-01 |
 | SET-01 | M02 | SEC-01 | Persisted settings/staff grants/owner safeguards/audit | DONE | Real persistence/RBAC/audit rollback/concurrency pass; 0004/0005; 22 browser tests; M02 operational consumers remain VERIFYING |
 | MEM-01 | M03 | SET-01 | Persisted list/create/edit/search/registration | DONE | 0006/0007; scoped real-session DB suite, 15 unit and 30 browser checks pass; member code/retry/audit concurrency verified |
-| MEM-02 | M03 | MEM-01 | Profile/contact/notes scope/archive/required states | NOT_STARTED | None yet |
+| MEM-02 | M03 | MEM-01 | Profile/contact/notes scope/archive/required states | DONE | Real profile/contact/notes/archive suite; 36 browser tests; 0008/0009; future histories/access integration in SUB/PAY/ATT |
 | PLAN-01 | M04 | MEM-01 | Immutable plan versions and snapshots | NOT_STARTED | None yet |
 | SUB-01 | M04 | PLAN-01 | Enrollment/renewal/freeze/cancel and overlap checks | NOT_STARTED | None yet |
 | PAY-01 | M05 | SUB-01 | Invoices/balances/atomic numbering | NOT_STARTED | None yet |
@@ -29,6 +29,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | CLS-01 | M09 | TRN-01 + ATT-01 | Timetable/bookings/capacity/trainer-room contention | NOT_STARTED | None yet |
 | LEAD-01 | M10 | MEM-02 | Pipeline/trials/follow-ups/idempotent conversion | NOT_STARTED | None yet |
 | DB-MIG-01 | M14 | REL-01 + authorized target | Future Supabase rehearsal/reconciliation/cutover plan | NOT_STARTED | None yet |
+| MAIL-01 | M01 | AUTH-01 + SET-01 | Fixed-sender SMTP recovery/invitation delivery and verification | DONE | TLS auth + actual INBOX recovery receipt/reset/reuse denial; transactional invitations and safe delivery status tested; owner unchanged |
 
 ## Task evidence card
 
@@ -84,3 +85,13 @@ Status: DONE for persisted member directory/registration/basic contact edit. Pre
 Acceptance: T07 plus relevant T01–T06/T24–T25/T34–T37 pass for existing member operations. Real persisted data after reload; UUID identity/org-unique atomic code; usable contact/local joining date/branch validation; reasoned scoped family-contact review; unauthorized direct writes and foreign resource IDs rejected; stale forms cannot overwrite; counter/member/audit roll back together; same actor/key replay returns one registration after lost response. Single SQL snapshot keeps pagination/count consistent; latest browser query wins. No enrollment/payment/access/paid receipt is claimed.
 
 Actual checks: test:members PASS with real restricted PostgreSQL/sessions and concurrent registrations/edits; 15 unit tests PASS; full 30-browser-test suite PASS (1.3m). Baseline DB/auth/security/settings suites PASS; lint/typecheck/build PASS; db:generate no changes. Responsive directory/drawer/failure screenshots reviewed at required widths in doc/evidence/members-*.png and member-registration-390.png. User-authorized real owner initialized separately from fictional gym_test fixtures; private credentials never committed. Local alias/origin fix and retry countdown have real-browser and production-boundary evidence (ADR-023). Next exact task MEM-02.
+
+## MEM-02 / MAIL-01 evidence card
+
+Status: DONE for local profiles, notes, archival and account email. Dependencies MEM-01, AUTH-01 and SET-01 verified. Files: src/modules/members/profile*, /members/[id], /api/members/[id] and contact/archive/notes routes; src/server/mail/*, /api/staff/mail, settings/auth integration, scripts/deliver-mail.ts. Reviewed additive migrations 0008_member_profiles_and_mail and 0009_profile_mail_security applied to GYM and gym_test; existing migrations unchanged. ADR-024/025 record scope and operational limits.
+
+Acceptance T38–T41: persisted emergency contacts with stale-version protection; operational vs management note scope including hidden counts/history; idempotent append and immutable reasoned withdrawal; archive/restore preserves history and denies archived edits; branch/tenant/role enforcement and atomic audit rollback. Reference-like overview/notes/history and directory archived filtering work at 390/768/1280/1440, with help icons and retained failure drafts. Future membership/visit/payment history and attendance enforcement await their modules; M03 overall remains VERIFYING for those integrations.
+
+Checks actually run: test:profiles and test:mail PASS against restricted PostgreSQL and maintained real sessions; existing test:members/settings/security/auth/integration PASS. Unit 17 PASS; final full browser suite 36 PASS (1.8m), targeted profile recapture 6 PASS. Lint/typecheck/build/production smoke PASS; 20 client assets checked for configured database/auth/SMTP secrets. db:generate no changes; production dependency audit zero vulnerabilities. Responsive profile and archived screenshots retained in doc/evidence/profile-*.png. Final GYM: 10 migrations, one real organization, zero members/queued mail; gym_test: 10 migrations, zero organizations/members/queued mail after cleanup.
+
+All gyms use fixed contact@hanovadevs.com sender. Recovery and new-staff password setup use maintained single-use tokens; transactional private outbox records survive delivery failure, and ambiguous sends are held without automatic resend. Automated suites capture mail. One actual recovery email reached the supplied mailbox INBOX; its received link reset an isolated test identity and rejected reuse (doc/evidence/mail-delivery.json). Owner login/email/password unchanged by explicit instruction. Deployment scheduling, reachable HTTPS links and production-host delivery remain REL-01; existing-account consent/join is deferred. Next eligible task PLAN-01.

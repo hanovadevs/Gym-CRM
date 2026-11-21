@@ -27,6 +27,7 @@ test.beforeAll(async () => {
 });
 test.afterAll(async () => {
   if (owner) {
+    await db.query("delete from app_auth.mail_outbox where auth_user_id=$1",[owner.userId]);
     await db.query(
       "delete from gym.staff_branch_grants where organization_id=$1",
       [owner.organizationId],

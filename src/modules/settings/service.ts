@@ -1,4 +1,5 @@
 import "server-only";
+import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 import type { z } from "zod";
 import type { createSecurity, Scope } from "@/server/security/service";
@@ -87,8 +88,14 @@ export function createSettingsService(
   security: ReturnType<typeof createSecurity>,
   provision: (
     db: PoolClient,
-    input: { name: string; email: string; password: string },
-  ) => Promise<{ id: string }>,
+    input: {
+      name: string;
+      email: string;
+      password: string;
+      invite?: boolean;
+      organizationId?: string;
+    },
+  ) => Promise<{ id: string; mailId?: string }>,
 ) {
   async function get(
     headers: Headers,
@@ -131,7 +138,7 @@ export function createSettingsService(
           );
           staff = (
             await db.query<Staff>(
-              'select s.id,u.name,u.email,s.role,s.active,s.version,coalesce((select array_agg(g.branch_id order by g.branch_id) from gym.staff_branch_grants g where g.staff_membership_id=s.id),array[]::uuid[]) as "branchIds" from gym.staff_memberships s join app_auth."user" u on u.id=s.auth_user_id order by u.name,s.id limit 25 offset $1',
+              `select s.id,u.name,u.email,s.role,s.active,s.version,coalesce((select array_agg(g.branch_id order by g.branch_id) from gym.staff_branch_grants g where g.staff_membership_id=s.id),array[]::uuid[]) as "branchIds",o.id as "invitationId",o.status as "invitationStatus" from gym.staff_memberships s join app_auth."user" u on u.id=s.auth_user_id left join lateral (select id,status from app_auth.mail_outbox where organization_id=s.organization_id and auth_user_id=s.auth_user_id and kind='invitation' order by created_at desc limit 1) o on true order by u.name,s.id limit 25 offset $1`,
               [(staffPage - 1) * 25],
             )
           ).rows;
@@ -297,7 +304,13 @@ export function createSettingsService(
         const identity = await provision(db, {
           name: input.name,
           email: input.email,
-          password: input.password,
+          password:
+            input.delivery === "email"
+              ? randomBytes(32).toString("base64url")
+              : input.password!,
+          ...(input.delivery === "email"
+            ? { invite: true, organizationId: scope.organizationId }
+            : {}),
         });
         const staff = (
           await db.query(
@@ -319,7 +332,11 @@ export function createSettingsService(
             branchIds: input.branchIds,
           },
         );
-        return { id: staff.id, requestId: scope.requestId };
+        return {
+          id: staff.id,
+          ...(identity.mailId ? { mailId: identity.mailId } : {}),
+          requestId: scope.requestId,
+        };
       },
     );
   }

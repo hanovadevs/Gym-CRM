@@ -70,11 +70,16 @@ export const createStaff = z
     ...org,
     name: z.string().trim().min(1).max(100),
     email: z.email().toLowerCase(),
-    password: z.string().min(12).max(128),
+    password: z.string().min(12).max(128).optional(),
+    delivery: z.enum(["password", "email"]).default("password"),
     ...access,
     reason,
   })
-  .strict();
+  .strict()
+  .refine(
+    (v) => v.delivery === "email" || Boolean(v.password),
+    "An initial password is required",
+  );
 export const branchWrite = z
   .object({
     ...org,

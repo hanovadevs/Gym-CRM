@@ -90,7 +90,7 @@ export function AuthForm({
                   );
                 else
                   setMessage(
-                    "If an account exists, password reset instructions have been prepared. On this local installation, contact your administrator to retrieve them.",
+                    "If an account exists, password reset instructions have been requested. Check your inbox and spam folder.",
                   );
               } else {
                 const token = new URLSearchParams(window.location.search).get(
@@ -129,7 +129,7 @@ export function AuthForm({
           </p>
           <SectionTitle
             title="Account access"
-            help="Staff accounts are created by your gym administrator. Public registration is disabled. Recovery messages are captured privately on the local server until mail delivery is configured."
+            help="Staff accounts are created by your gym administrator. Public registration is disabled. Recovery and invitation emails are sent by contact@hanovadevs.com. Use a deliverable staff email for recovery."
           />
           {mode !== "reset" ? (
             <label className="field">

@@ -28,6 +28,22 @@ export async function securityFixture(
   > = {};
   async function cleanup() {
     await admin.query(
+      "delete from app_auth.mail_outbox where organization_id=any($1::uuid[]) or auth_user_id=any($2::text[])",
+      [[orgA, orgB], Object.values(users).map((u) => u.id)],
+    );
+    await admin.query(
+      "delete from gym.member_note_withdrawals where organization_id=any($1::uuid[])",
+      [[orgA, orgB]],
+    );
+    await admin.query(
+      "delete from gym.member_notes where organization_id=any($1::uuid[])",
+      [[orgA, orgB]],
+    );
+    await admin.query(
+      "delete from gym.member_contacts where organization_id=any($1::uuid[])",
+      [[orgA, orgB]],
+    );
+    await admin.query(
       "delete from gym.members where organization_id=any($1::uuid[])",
       [[orgA, orgB]],
     );

@@ -12,12 +12,15 @@ export default defineConfig({
   webServer: {
     command:
       "node node_modules/next/dist/bin/next dev --hostname 127.0.0.1 --port 3100",
-    url: "http://127.0.0.1:3100",
+    url: "http://127.0.0.1:3100/sign-in",
+    timeout:120000,
     reuseExistingServer: false,
     env: {
       DATABASE_URL: process.env.TEST_DATABASE_URL,
       APP_URL: "http://127.0.0.1:3100",
       DEMO_MODE: "true",
+      APP_ENV:"test",
+      MAIL_TRANSPORT:"capture",
     },
   },
   workers: 1,

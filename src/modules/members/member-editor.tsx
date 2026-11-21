@@ -19,7 +19,9 @@ export function MemberEditor({
   onSave,
   busy,
 }: {
-  data: Directory;
+  data: Pick<Directory, "organization" | "branches" | "today"> & {
+    query?: { branchId?: string };
+  };
   record?: Member;
   onClose: () => void;
   onSave: (body: unknown, editing: boolean) => Promise<SaveResult>;
@@ -31,7 +33,7 @@ export function MemberEditor({
     phone: record?.phone ?? "",
     email: record?.email ?? "",
     homeBranchId:
-      record?.homeBranchId ?? data.query.branchId ?? data.branches[0].id,
+      record?.homeBranchId ?? data.query?.branchId ?? data.branches[0].id,
     joinedOn: record?.joinedOn ?? data.today,
   });
   const [step, setStep] = useState("details"),

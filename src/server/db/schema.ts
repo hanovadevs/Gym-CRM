@@ -14,7 +14,7 @@ import {
   foreignKey,
   check,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth-schema";
+import { user, appAuth } from "./auth-schema";
 export const gym = pgSchema("gym");
 export const organizations = gym.table("organizations", {
   id: uuid().defaultRandom().primaryKey(),
@@ -196,6 +196,114 @@ export const members = gym.table(
     check(
       "member_phone_normalized",
       sql`${t.normalizedPhone}=regexp_replace(${t.phone},'[^0-9]','','g') and (${t.normalizedPhone}='' or ${t.normalizedPhone} ~ '^[0-9]{7,15}$')`,
+    ),
+  ],
+);
+
+export const memberContacts = gym.table(
+  "member_contacts",
+  {
+    organizationId: uuid("organization_id").notNull(),
+    memberId: uuid("member_id").notNull(),
+    name: text().notNull(),
+    phone: text().notNull(),
+    relationship: text().notNull().default(""),
+  },
+  (t) => [
+    unique().on(t.organizationId, t.memberId),
+    foreignKey({
+      columns: [t.organizationId, t.memberId],
+      foreignColumns: [members.organizationId, members.id],
+    }),
+    check(
+      "emergency_contact_present",
+      sql`length(btrim(${t.name})) between 1 and 100 and length(regexp_replace(${t.phone},'[^0-9]','','g')) between 7 and 15`,
+    ),
+  ],
+);
+export const memberNotes = gym.table(
+  "member_notes",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id").notNull(),
+    memberId: uuid("member_id").notNull(),
+    authorUserId: text("author_user_id")
+      .notNull()
+      .references(() => user.id),
+    visibility: text().notNull(),
+    body: text().notNull(),
+    requestKey: uuid("request_key").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique().on(t.organizationId, t.id),
+    unique().on(t.organizationId, t.authorUserId, t.requestKey),
+    foreignKey({
+      columns: [t.organizationId, t.memberId],
+      foreignColumns: [members.organizationId, members.id],
+    }),
+    index("member_notes_member_time_idx").on(
+      t.organizationId,
+      t.memberId,
+      t.createdAt,
+      t.id,
+    ),
+    index("member_notes_author_idx").on(t.authorUserId),
+    check(
+      "member_note_bounds",
+      sql`length(btrim(${t.body})) between 1 and 2000 and ${t.visibility} in ('operational','management')`,
+    ),
+  ],
+);
+export const noteWithdrawals = gym.table(
+  "member_note_withdrawals",
+  {
+    organizationId: uuid("organization_id").notNull(),
+    noteId: uuid("note_id").notNull(),
+    actorUserId: text("actor_user_id")
+      .notNull()
+      .references(() => user.id),
+    reason: text().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    unique().on(t.organizationId, t.noteId),
+    foreignKey({
+      columns: [t.organizationId, t.noteId],
+      foreignColumns: [memberNotes.organizationId, memberNotes.id],
+    }),
+    index("note_withdrawals_actor_idx").on(t.actorUserId),
+  ],
+);
+export const mailOutbox = appAuth.table(
+  "mail_outbox",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    authUserId: text("auth_user_id")
+      .notNull()
+      .references(() => user.id),
+    organizationId: uuid("organization_id").references(() => organizations.id),
+    kind: text().notNull(),
+    payload: jsonb(),
+    status: text().notNull().default("pending"),
+    messageId: text("message_id"),
+    errorCode: text("error_code"),
+    attemptedAt: timestamp("attempted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [
+    index("mail_outbox_pending_idx").on(t.status, t.createdAt),
+    index("mail_outbox_user_idx").on(t.authUserId),
+    index("mail_outbox_org_idx").on(t.organizationId),
+    check(
+      "mail_kind_status",
+      sql`${t.kind} in ('recovery','invitation') and ${t.status} in ('pending','sending','sent','failed','uncertain','expired')`,
     ),
   ],
 );

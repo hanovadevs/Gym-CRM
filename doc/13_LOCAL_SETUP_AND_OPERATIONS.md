@@ -23,7 +23,9 @@ Use PowerShell-compatible instructions on Windows; no CMD caret continuation or 
 | TEST_DATABASE_URL | Separate disposable test target |
 | BETTER_AUTH_URL / BETTER_AUTH_SECRET | Auth origin/secret |
 | DEMO_MODE | Explicit fictional preview, forbidden in production |
-| EMAIL_FROM / SMTP_HOST / SMTP_PORT / SMTP_USER / SMTP_PASSWORD | Actual selected mail adapter; verify chosen library configuration |
+| MAIL_TRANSPORT | smtp for delivery; capture permitted only outside production |
+| SMTP_HOST / SMTP_PORT / SMTP_USE_SSL | SMTP server/port and true for direct TLS; false requires STARTTLS |
+| SMTP_USERNAME / SMTP_PASSWORD | Fixed contact@hanovadevs.com identity and private credential; no tenant sender override |
 
 No NEXT_PUBLIC_DATABASE_URL, database password in client code, or Supabase keys required locally. Startup fails clearly on missing required configuration. No owner-credential or cloud fallback after connection failure. Keep seed/reset tools environment/database guarded.
 
@@ -42,3 +44,5 @@ Monitor payment/check-in failures, DB connection pressure, failed auth, backup/e
 First gym onboarding: create org/branch/owner; confirm brand/time zone/currency/access/refund policies; plans; validate/import members and audited opening balances; train receptionist; test receipt printing, permissions/recovery and backup; document support and limits. No deployment is performed by this document pack.
 
 Foundation setup verified on 20 November 2026: PostgreSQL tools 18.4 in C:/Program Files/PostgreSQL/18/bin; app GYM and isolated gym_test. Generated runtime/migration credentials are in ignored .env.local. Migrations run with MIGRATION_DATABASE_URL, application runtime uses DATABASE_URL; tests use TEST_DATABASE_URL/TEST_MIGRATION_DATABASE_URL. No Supabase keys required. Do not rerun one-time provisioning on this machine. See README.md for scripts and 15_SESSION_LOG.md for results. Browser tests own port 3100; production smoke test owns port 3200. Normal dev server is localhost:3000.
+
+MEM-02/MAIL-01 operations: apply through committed 0009 on a new database; preserve initialized GYM. Account callbacks enqueue before immediate delivery. Schedule npm.cmd run mail:deliver on the deployed host to process pending messages, expire old link payloads and mark interrupted claims uncertain. It handles at most 20 pending jobs per invocation. Failed invitations can be explicitly retried by the authorized owner through Team & roles; uncertain outcomes require mailbox/provider reconciliation and are never automatically resent. Do not run delivery commands casually against valued data merely as a test. Test suites use capture and must run serially against gym_test. Private captures in .local/mail contain links and must not enter Git or screenshots. Production requires SMTP and a reachable trusted APP_URL. Local SMTP receipt/reset verification does not establish delivery or callback reachability from a future deployment. The real owner's local-only email remains unchanged by explicit user choice.

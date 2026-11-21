@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { SectionTitle } from "@/components/ui/section-title";
 import { MemberEditor } from "./member-editor";
+import { useHydrated } from "@/lib/use-hydrated";
 import type { Directory, Member } from "./types";
 import type { DirectoryQuery } from "./schemas";
 function url(query: DirectoryQuery, search = true) {
@@ -12,10 +13,12 @@ function url(query: DirectoryQuery, search = true) {
     page: String(query.page),
   });
   if (query.branchId) params.set("branchId", query.branchId);
+  params.set("status", query.status);
   if (search && query.q) params.set("q", query.q);
   return params.toString();
 }
 export function MembersScreen({ initial }: { initial: Directory }) {
+  const hydrated = useHydrated();
   const [data, setData] = useState(initial),
     [query, setQuery] = useState(initial.query),
     [search, setSearch] = useState(initial.query.q),
@@ -76,6 +79,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
     return () => controller.abort();
   }, [query, revision]);
   const locked =
+    !hydrated ||
     loading ||
     saving ||
     Boolean(editor) ||
@@ -211,6 +215,25 @@ export function MembersScreen({ initial }: { initial: Directory }) {
               <option value="code">Member code</option>
             </select>
           </label>
+          <label className="field">
+            Records
+            <select
+              aria-label="Member records"
+              value={query.status}
+              disabled={saving || Boolean(editor) || reloadRequired}
+              onChange={(e) =>
+                setQuery({
+                  ...query,
+                  status: e.target.value as DirectoryQuery["status"],
+                  page: 1,
+                })
+              }
+            >
+              <option value="registered">Registered</option>
+              <option value="archived">Archived</option>
+              <option value="all">All records</option>
+            </select>
+          </label>
           <button
             type="button"
             disabled={saving || Boolean(editor) || loading}
@@ -299,9 +322,15 @@ export function MembersScreen({ initial }: { initial: Directory }) {
                             }).format(new Date(member.joinedOn + "T12:00:00Z"))}
                           </td>
                           <td>
+                            <a
+                              className="text-action member-view"
+                              href={`/members/${member.id}?organizationId=${data.organization.id}`}
+                            >
+                              View {member.name}
+                            </a>
                             <button
                               className="text-action"
-                              disabled={locked}
+                              disabled={locked || Boolean(member.archivedAt)}
                               onClick={() => {
                                 setNotice("");
                                 setEditor({ record: member });
@@ -309,6 +338,9 @@ export function MembersScreen({ initial }: { initial: Directory }) {
                             >
                               Edit {member.name}
                             </button>
+                            {member.archivedAt ? (
+                              <span className="cell-secondary">Archived</span>
+                            ) : null}
                           </td>
                         </tr>
                       ))}
@@ -344,16 +376,16 @@ export function MembersScreen({ initial }: { initial: Directory }) {
             ) : (
               <div className="empty member-empty">
                 <h2>
-                  {query.q || query.branchId
+                  {query.q || query.branchId || query.status !== "registered"
                     ? "No members match this view"
                     : "No members registered yet"}
                 </h2>
                 <p>
-                  {query.q || query.branchId
+                  {query.q || query.branchId || query.status !== "registered"
                     ? "Try another search or branch."
                     : "Add your first member to start the directory."}
                 </p>
-                {query.q || query.branchId ? (
+                {query.q || query.branchId || query.status !== "registered" ? (
                   <button
                     onClick={() => {
                       setSearch("");
@@ -361,6 +393,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
                         ...query,
                         q: "",
                         branchId: undefined,
+                        status: "registered",
                         page: 1,
                       });
                     }}

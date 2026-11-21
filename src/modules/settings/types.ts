@@ -15,6 +15,8 @@ export type Staff = {
   active: boolean;
   version: number;
   branchIds: string[];
+  invitationId?: string | null;
+  invitationStatus?: string | null;
 };
 export type SettingsData = {
   organizationId: string;
