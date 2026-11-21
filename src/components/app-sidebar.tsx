@@ -2,7 +2,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { Drawer } from "./ui/primitives";
 import { useHydrated } from "@/lib/use-hydrated";
-type Page = "workspace" | "members" | "plans" | "settings" | "dashboard";
+type Page = "workspace" | "members" | "plans" | "payments" | "settings" | "dashboard";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
 function snapshot() {
@@ -72,6 +72,7 @@ export function AppSidebar({
   canManageSettings = false,
   canManageMembers = true,
   canReadPlans = true,
+  canReadBilling = false,
   preview = false,
 }: {
   organization: { id: string; name: string };
@@ -79,6 +80,7 @@ export function AppSidebar({
   canManageSettings?: boolean;
   canManageMembers?: boolean;
   canReadPlans?: boolean;
+  canReadBilling?: boolean;
   preview?: boolean;
 }) {
   const collapsed = useSyncExternalStore(subscribe, snapshot, () => false),
@@ -107,6 +109,7 @@ export function AppSidebar({
         ...(canReadPlans
           ? [{ name: "Plans", page: "plans", href: "/plans" }]
           : []),
+        ...(canReadBilling ? [{ name: "Payments", page: "payments", href: "/payments" }] : []),
       ];
   const href = (path: string) =>
     path + (preview ? "" : "?organizationId=" + organization.id);

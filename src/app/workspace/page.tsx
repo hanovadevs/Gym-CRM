@@ -48,6 +48,7 @@ export default async function Workspace({
       canManageSettings={workspace.actions.includes("settings.read")}
       canManageMembers={workspace.actions.includes("members.manage")}
       canReadPlans={workspace.actions.includes("plans.read")}
+      canReadBilling={workspace.actions.includes("billing.read")}
     >
       <div className="secure-main">
         <section className="page-heading">

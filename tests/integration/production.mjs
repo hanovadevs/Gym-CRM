@@ -62,6 +62,12 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/invoices?organizationId=${org}`,"GET"],
+    [`/api/invoices/${org}?organizationId=${org}`,"GET"],
+    [`/api/invoices/${org}/pdf?organizationId=${org}`,"GET"],
+    [`/api/invoices/recipients?organizationId=${org}`,"GET"],
+    ["/api/invoices","POST",{organizationId:org,memberId:org,requestKey:org,reason:"Anonymous invoice guard",values:{description:"Blocked charge",currency:"PKR",dueOn:"2026-11-21",lines:[{description:"Blocked fee",quantity:1,unitMinor:100,discountMinor:0}]}}],
+    [`/api/invoices/${org}`,"PATCH",{organizationId:org,operation:"issue",version:1,requestKey:org,reason:"Anonymous invoice guard"}],
     [`/api/members/${org}/memberships?organizationId=${org}`, "GET"],
     [
       `/api/members/${org}/memberships`,
@@ -244,7 +250,7 @@ try {
     assert.equal(result.headers.get("cache-control"), "no-store");
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
-  for (const path of ["/workspace", "/members", "/settings", "/plans"]) {
+  for (const path of ["/workspace", "/members", "/settings", "/plans", "/payments"]) {
     const protectedPage = await fetch("http://127.0.0.1:3200" + path);
     // Next inserts a meta redirect when the loading boundary has already streamed.
     assert.ok(
@@ -311,7 +317,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail/plan/membership APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail/plan/membership/invoice/PDF APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
   );
 } finally {
   server.kill();

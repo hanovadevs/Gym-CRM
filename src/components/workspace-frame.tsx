@@ -5,6 +5,7 @@ export function WorkspaceFrame({
   canManageSettings,
   canManageMembers = true,
   canReadPlans = true,
+  canReadBilling = true,
   active = "members",
   children,
 }: {
@@ -12,7 +13,8 @@ export function WorkspaceFrame({
   canManageSettings: boolean;
   canManageMembers?: boolean;
   canReadPlans?: boolean;
-  active?: "members" | "plans" | "workspace";
+  canReadBilling?: boolean;
+  active?: "members" | "plans" | "payments" | "workspace";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;
@@ -24,6 +26,7 @@ export function WorkspaceFrame({
         canManageSettings={canManageSettings}
         canManageMembers={canManageMembers}
         canReadPlans={canReadPlans}
+        canReadBilling={canReadBilling}
       />
       <div className="settings-content">
         <header className="settings-topbar">

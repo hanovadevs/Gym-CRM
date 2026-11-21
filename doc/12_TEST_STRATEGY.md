@@ -55,6 +55,10 @@ Unit tests cover period/date/time-zone rules, money parsing/balance math, eligib
 | T47 | Membership policy and access consumers | Paid/configured activation; due debt vs dates; grace/freeze/archive/exclusive ends |
 | T48 | Shared sidebar rail/mobile navigation | Accessible icons, saved real collapse width, permitted routes, focus trap/Escape/return focus |
 
+| T49 | Invoice drafts/lines/issue/snapshot/numbering and concurrent stale writes | Exact totals; one revision/issue winner; immutable issued charge/billing identity; safe replay |
+| T50 | Invoice filter/paging/currency/branch/archived-member/debt consumers | Consistent counts; separated currencies; historical attribution; drafts never count as debt |
+| T51 | Issued invoice PDF auth/render/download/retry and production assets | Issued-only private/no-store attachment; embedded fonts; all lines/page footers readable; no duplicate charge on retry |
+
 Foundation should define actual project scripts for lint/typecheck/unit/integration/browser/build/db:generate/db:migrate/db:seed. These are desired interfaces, not a claim that scripts already exist. Reuse existing package manager/lockfile. CI uses isolated known data and credentials; browser tests assert visible behavior and remain independent.
 
 DONE: acceptance passed, real persistence, permission/tenant protection, required UI states, relevant tests and visual review, migrations/setup docs and trackers updated. If verification is unavailable, use VERIFYING/BLOCKED and say why. Building TypeScript is not enough.

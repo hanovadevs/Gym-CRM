@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 21 November 2026 (Asia/Karachi): SUB-01 membership lifecycle and UI-03 shared icon/collapse sidebar verified locally. Enrollment includes the issued invoice foundation. Payment collection, paid receipts and attendance remain upcoming.
+Updated 21 November 2026 (Asia/Karachi): SUB-01 membership lifecycle and UI-03 shared icon/collapse sidebar verified locally. PAY-01 invoice drafts, issued line/billing snapshots, balances and downloadable PDFs verified locally. Payment collection, paid receipts and attendance remain upcoming.
 
 ## State rules
 
@@ -8,12 +8,12 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-03 DONE; continue PAY-01 |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-03 DONE; billing navigation connected |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB policy verified; paid receipt/access consumers in PAY-02/ATT-01 |
 | M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership history connected; payments/visits and ATT-01 archival denial remain |
 | M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01 DONE; automatic paid activation/attendance in PAY-02/ATT-01 |
-| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | Issued enrollment invoice foundation; next PAY-01 lists/lines/balances |
+| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PAY-01 invoices/balances/PDF DONE; next PAY-02 collection/receipts |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
 | M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
@@ -144,3 +144,19 @@ Visuals: current captured member/profile/settings/plans/workspace/preview eviden
 Module boundary: M04 UI/server/database DONE; QA/overall VERIFYING for automatic paid activation and actual attendance consumers in PAY-02/ATT-01. M02/M03 retain later payment/visit integration gates. M05 UI/server/database/QA IN_PROGRESS for the minimal issued enrollment invoice foundation; PAY-01 still needs invoice list/lines/balances/corrections. Next exact task PAY-01. No valued-data reset, actual external email, owner-identity change, cloud cutover or public deployment in this phase.
 
 Final SUB-01/UI-03 release checks: lint/typecheck, 30 units, full 52-browser regression, production build and production smoke PASS. All membership APIs reject anonymous valid requests with 401/no-store; 22 client assets contain no configured database/auth/SMTP secrets. Full evidence, corrected failed runs, final migration/data counts and publishing/runtime handoff are recorded in doc/15_SESSION_LOG.md.
+
+## PAY-01 evidence — 21 November 2026, Asia/Karachi
+
+PAY-01 task DONE locally: /payments invoice/outstanding/overdue/draft/issued lists, permitted branch/member/literal search/local issue-day filters, allowlisted sorting and 25/page. Rows/count/page/summary share one snapshot; per-currency exact string totals prevent false conversion/unsafe aggregate arithmetic. Due today is outstanding; overdue starts after the local due day. Minimal name/code/branch recipient search enables accountants without granting contact/note/full-profile access. Owners/managers/reception/accountants use fresh action/membership/branch scope; trainer denied.
+
+Draft create/edit supports 1–30 lines, whole quantities, exact unit prices and bounded fixed discounts. Review precedes save/issue. Draft has no number, issue day or debt; edit appends immutable line revisions. Issue atomically assigns the shared org invoice number, preserves charge/issuer/recipient/origin snapshots, audit and scoped request result. Same-key retries replay; changed body/stale/concurrent edit or issue reject. Archive, member-home-branch transfer and current-currency gates are server checked. Issued history/PDF retain original branch/name after later changes. Existing enrollment charges automatically get their equivalent item line; original enrollment amounts/dates/numbers preserved. Cancellation never erases debt. Saved debt policy now reads the shared balance view, with actual tests proving drafts do not block but issued due charges do.
+
+Schema: 0015_invoice_drafts_and_lines, 0016_invoice_security, 0017_invoice_currency applied to GYM/gym_test (18 journal entries); prior 0000–0014 unchanged. Scoped member/branch/child/request FKs, unique org number and immutable item revisions. Runtime SELECT/INSERT on new tables, constrained draft-header UPDATE, no issued header/item/delete edits; invoker-rights RLS balance view (PG15+ future host). Deferred aggregate trigger rejects empty/incomplete/mismatched totals independently of UI/service. Forced audit failure rolls back invoice/revision/counter/request/debt. No payment/receipt/credit/refund tables invented.
+
+Files/routes: src/modules/billing/* and licensed fonts; /payments; /api/invoices, /recipients, /[id], /[id]/pdf; sidebar and member invoice/history links. PDF download rechecks billing.read and original branch on every request; draft 409; issued attachment application/pdf, private/no-store/nosniff. Snapshot-based bill/lines/discounts/dates/original enrollment period, current outstanding and page footers; no public URL/cache or automatic email. PDF request audit is not proof of member delivery. Retry cannot issue/charge again. User's admin saves and shares the downloaded file.
+
+Actual checks: test:billing PASS on real sessions/two gyms/restricted runtime for exact calculations, policies, historical overdue/date filters, archive/branch-transfer history, mixed currency, paging/search, replay/concurrent edit/issue, direct RLS/grant/immutable/aggregate denial and audit/counter rollback. Existing membership/profile/member/plan/settings/security/mail/auth/database/adapter suites PASS serially. Unit 35 PASS (nine files); full browser 59 PASS (2.6m), including seven billing scenarios plus prior 52; scoped failed response/refresh/stale/input/permission/mobile and actual saved PDF tested. Lint/typecheck/build PASS; production smoke new invoice/PDF APIs 401/no-store, protected payments redirects, disabled fixtures and 23 client assets free of configured DB/auth/SMTP secrets. Authenticated production billing/PDF test PASS on gym_test: actual login/create/draft 409/issue/PDF attachment, no extra issue on download, all three font assets in production trace. No schema drift; production dependency audit zero vulnerabilities.
+
+Visual evidence: reviewed invoices at 390/768/1280/1440, narrow invoice details/download, one-page PDF and all six long-invoice pages via rendered contact sheet/full last page, plus actual production PDF render. Retained doc/evidence/invoices-*.png, invoice-{detail,download}-390.png, invoice-download.pdf, invoice-render.png, invoice-multipage.pdf and invoice-multipage-review.png. Internal table scroll on narrow layouts; no page overflow. White/sage/charcoal, option icons and section info buttons retained. Corrected legacy table spacing and PDF footer blank-page defect; earlier failures are recorded in session log.
+
+State: M05 remains IN_PROGRESS for PAY-02/03 payment allocation, paid receipts, automatic paid activation and owner corrections/refunds/credits/void. M02/M03/M04 retain later payment/visit consumer gates. No local blocker, external message, real-owner change, destructive reset or public deployment. Final read-only SQL: GYM 18 migrations/one org/zero members/plans/memberships/invoices/items/requests/queued mail; gym_test 18 and zero fixtures; PostgreSQL 18.4 both. Next exact task PAY-02; preserve issued invoice/line snapshots and extend invoice_balances with actual settlement, not an unrelated balance implementation.

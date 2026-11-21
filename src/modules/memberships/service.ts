@@ -79,7 +79,7 @@ export async function readMembershipContext(
   if (!candidates.length && result.rows.length) candidates.push(result.rows[0]);
   const due = (
     await db.query(
-      `select exists(select 1 from gym.invoices where organization_id=$1 and member_id=$2 and due_on<=$3::date and total_minor>0) due`,
+      `select exists(select 1 from gym.invoices i join gym.invoice_balances b on b.organization_id=i.organization_id and b.invoice_id=i.id where i.organization_id=$1 and i.member_id=$2 and i.due_on<=$3::date and b.balance_minor>0) due`,
       [s.organizationId, member.id, today],
     )
   ).rows[0].due;

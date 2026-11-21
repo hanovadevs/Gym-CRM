@@ -523,7 +523,7 @@ try {
           db.query(sql, [member.id]),
         ),
       (e: unknown) =>
-        !!e && typeof e === "object" && "code" in e && e.code === "42501",
+        !!e && typeof e === "object" && "code" in e && e.code === (sql.startsWith("update gym.invoices") ? "23514" : "42501"),
     );
   assert.equal(
     (await pool.query("select count(*)::int n from gym.invoices")).rows[0].n,

@@ -190,6 +190,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
         organization={{ id: data.organizationId, name: data.values.name }}
         active="settings"
         canManageSettings
+        canReadBilling
       />
       <div className="settings-content">
         <header className="settings-topbar">

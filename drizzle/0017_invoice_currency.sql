@@ -1,0 +1,1 @@
+ALTER TABLE "gym"."invoices" ADD CONSTRAINT "invoice_currency" CHECK ("gym"."invoices"."currency" ~ '^[A-Z]{3}$');

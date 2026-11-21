@@ -127,6 +127,7 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
           </div>
         </div>
         <div className="profile-actions">
+          <a className="button secondary" href={`/payments?organizationId=${data.organization.id}&memberId=${data.member.id}`}>Invoices &amp; balances</a>
           <button disabled={locked || archived} onClick={() => open("member")}>
             Edit member
           </button>

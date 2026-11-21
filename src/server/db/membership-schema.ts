@@ -72,7 +72,10 @@ export const memberships = gym.table(
     index("memberships_branch_idx").on(t.organizationId, t.homeBranchId),
     index("memberships_plan_idx").on(t.organizationId, t.planVersionId),
     index("memberships_actor_idx").on(t.createdBy),
-    check('membership_snapshot_shape',sql`coalesce(${t.snapshot} ?& array['planId','planVersionId','planCode','planVersion','branchId','name','amountMinor','currency','durationUnit','durationCount','accessMode','gymFloor','classes','personalTraining'] and jsonb_typeof(${t.snapshot}->'amountMinor')='number' and jsonb_typeof(${t.snapshot}->'currency')='string' and (${t.snapshot}->>'currency') ~ '^[A-Z]{3}$' and jsonb_typeof(${t.snapshot}->'planVersionId')='string' and (${t.snapshot}->>'planId') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (${t.snapshot}->>'branchId')=${t.homeBranchId}::text and (${t.snapshot}->>'planVersion') ~ '^[1-9][0-9]*$' and (${t.snapshot}->>'planCode') ~ '^[A-Z0-9][A-Z0-9-]{0,23}$' and jsonb_typeof(${t.snapshot}->'name')='string' and length(btrim(${t.snapshot}->>'name')) between 1 and 100 and (${t.snapshot}->>'accessMode') in ('home_branch','all_branches') and jsonb_typeof(${t.snapshot}->'gymFloor')='boolean' and jsonb_typeof(${t.snapshot}->'classes')='boolean' and jsonb_typeof(${t.snapshot}->'personalTraining')='boolean' and ((${t.snapshot}->>'gymFloor')::boolean or (${t.snapshot}->>'classes')::boolean or (${t.snapshot}->>'personalTraining')::boolean) and (((${t.snapshot}->>'durationUnit')='months' and (${t.snapshot}->>'durationCount')::int between 1 and 120) or ((${t.snapshot}->>'durationUnit')='days' and (${t.snapshot}->>'durationCount')::int between 1 and 3650)),false)`),
+    check(
+      "membership_snapshot_shape",
+      sql`coalesce(${t.snapshot} ?& array['planId','planVersionId','planCode','planVersion','branchId','name','amountMinor','currency','durationUnit','durationCount','accessMode','gymFloor','classes','personalTraining'] and jsonb_typeof(${t.snapshot}->'amountMinor')='number' and jsonb_typeof(${t.snapshot}->'currency')='string' and (${t.snapshot}->>'currency') ~ '^[A-Z]{3}$' and jsonb_typeof(${t.snapshot}->'planVersionId')='string' and (${t.snapshot}->>'planId') ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' and (${t.snapshot}->>'branchId')=${t.homeBranchId}::text and (${t.snapshot}->>'planVersion') ~ '^[1-9][0-9]*$' and (${t.snapshot}->>'planCode') ~ '^[A-Z0-9][A-Z0-9-]{0,23}$' and jsonb_typeof(${t.snapshot}->'name')='string' and length(btrim(${t.snapshot}->>'name')) between 1 and 100 and (${t.snapshot}->>'accessMode') in ('home_branch','all_branches') and jsonb_typeof(${t.snapshot}->'gymFloor')='boolean' and jsonb_typeof(${t.snapshot}->'classes')='boolean' and jsonb_typeof(${t.snapshot}->'personalTraining')='boolean' and ((${t.snapshot}->>'gymFloor')::boolean or (${t.snapshot}->>'classes')::boolean or (${t.snapshot}->>'personalTraining')::boolean) and (((${t.snapshot}->>'durationUnit')='months' and (${t.snapshot}->>'durationCount')::int between 1 and 120) or ((${t.snapshot}->>'durationUnit')='days' and (${t.snapshot}->>'durationCount')::int between 1 and 3650)),false)`,
+    ),
     check(
       "membership_values",
       sql`${t.endOn}>${t.startOn} and ${t.originalEndOn}>${t.startOn} and ${t.endOn}>=${t.originalEndOn} and ${t.amountMinor} between 0 and 999999999999 and ${t.version}>0 and ${t.lifecycle} in ('pending','active','cancelled') and (${t.lifecycle}<>'active' or ${t.activatedAt} is not null) and ((${t.lifecycle}='cancelled')=(${t.cancelledEffectiveOn} is not null)) and (${t.cancelledEffectiveOn} is null or ${t.cancelledEffectiveOn}<=${t.endOn}) and jsonb_typeof(${t.snapshot})='object' and (${t.snapshot}->>'planVersionId')=${t.planVersionId}::text and (${t.snapshot}->>'currency')=${t.currency} and (${t.snapshot}->>'amountMinor')::bigint=${t.amountMinor}`,
@@ -122,15 +125,22 @@ export const invoices = gym.table(
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organizations.id),
-    membershipId: uuid("membership_id").notNull(),
+    membershipId: uuid("membership_id"),
     memberId: uuid("member_id").notNull(),
     originatingBranchId: uuid("originating_branch_id").notNull(),
-    number: text().notNull(),
+    number: text(),
     description: text().notNull(),
     totalMinor: bigint("total_minor", { mode: "number" }).notNull(),
     currency: text().notNull(),
-    issuedOn: date("issued_on").notNull(),
+    issuedOn: date("issued_on"),
     dueOn: date("due_on").notNull(),
+    status: text().notNull().default("issued"),
+    version: integer().notNull().default(1),
+    lineRevision: integer("line_revision").notNull().default(1),
+    recipientName: text("recipient_name").notNull().default(""),
+    recipientCode: text("recipient_code").notNull().default(""),
+    branchName: text("branch_name").notNull().default(""),
+    issuerSnapshot: jsonb("issuer_snapshot").notNull().default({}),
     createdBy: text("created_by")
       .notNull()
       .references(() => user.id),
@@ -142,6 +152,14 @@ export const invoices = gym.table(
     unique().on(t.organizationId, t.id),
     unique().on(t.organizationId, t.number),
     unique().on(t.organizationId, t.membershipId),
+    foreignKey({
+      columns: [t.organizationId, t.memberId],
+      foreignColumns: [members.organizationId, members.id],
+    }),
+    foreignKey({
+      columns: [t.organizationId, t.originatingBranchId],
+      foreignColumns: [branches.organizationId, branches.id],
+    }),
     foreignKey({
       columns: [
         t.organizationId,
@@ -167,9 +185,76 @@ export const invoices = gym.table(
       t.issuedOn,
     ),
     index("invoices_actor_idx").on(t.createdBy),
+    index("invoices_due_idx").on(t.organizationId, t.status, t.dueOn, t.id),
     check(
       "invoice_values",
       sql`${t.totalMinor} between 0 and 999999999999 and ${t.dueOn}>=${t.issuedOn} and length(btrim(${t.description})) between 1 and 100`,
+    ),
+    check(
+      "invoice_lifecycle",
+      sql`${t.version}>0 and ${t.lineRevision}>0 and ((${t.status}='draft' and ${t.membershipId} is null and ${t.number} is null and ${t.issuedOn} is null) or (${t.status}='issued' and ${t.number} is not null and ${t.issuedOn} is not null))`,
+    ),
+    check("invoice_currency", sql`${t.currency} ~ '^[A-Z]{3}$'`),
+  ],
+);
+export const invoiceItems = gym.table(
+  "invoice_items",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    invoiceId: uuid("invoice_id").notNull(),
+    revision: integer().notNull(),
+    position: integer().notNull(),
+    description: text().notNull(),
+    quantity: integer().notNull(),
+    unitMinor: bigint("unit_minor", { mode: "number" }).notNull(),
+    discountMinor: bigint("discount_minor", { mode: "number" }).notNull(),
+    totalMinor: bigint("total_minor", { mode: "number" }).notNull(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.organizationId, t.invoiceId],
+      foreignColumns: [invoices.organizationId, invoices.id],
+    }),
+    unique().on(t.organizationId, t.invoiceId, t.revision, t.position),
+    check(
+      "invoice_item_values",
+      sql`${t.revision}>0 and ${t.position} between 1 and 30 and length(btrim(${t.description})) between 1 and 150 and ${t.quantity} between 1 and 10000 and ${t.unitMinor} between 0 and 999999999999 and ${t.discountMinor} between 0 and ${t.quantity}::bigint*${t.unitMinor} and ${t.totalMinor}=${t.quantity}::bigint*${t.unitMinor}-${t.discountMinor} and ${t.totalMinor} between 0 and 999999999999`,
+    ),
+  ],
+);
+export const billingRequests = gym.table(
+  "billing_requests",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id),
+    invoiceId: uuid("invoice_id").notNull(),
+    operation: text().notNull(),
+    requestKey: uuid("request_key").notNull(),
+    requestHash: text("request_hash").notNull(),
+    result: jsonb().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    foreignKey({
+      columns: [t.organizationId, t.invoiceId],
+      foreignColumns: [invoices.organizationId, invoices.id],
+    }),
+    unique().on(t.organizationId, t.actorId, t.requestKey),
+    index("billing_requests_invoice_idx").on(t.organizationId, t.invoiceId),
+    index("billing_requests_actor_idx").on(t.actorId),
+    check(
+      "billing_request_operation",
+      sql`${t.operation} in ('create','edit','issue')`,
     ),
   ],
 );

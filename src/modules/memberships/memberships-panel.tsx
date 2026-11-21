@@ -224,7 +224,7 @@ export function MembershipsPanel({
                     <div>
                       <dt>Issued invoice</dt>
                       <dd>
-                        {m.invoice.number}
+                        <a className="text-action" href={`/payments?organizationId=${data.organizationId}&invoiceId=${m.invoice.id}`}>{m.invoice.number}</a>
                         <small>
                           {money(
                             m.invoice.totalMinor,

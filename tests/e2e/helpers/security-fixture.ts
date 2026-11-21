@@ -28,6 +28,8 @@ export async function securityFixture(
   > = {};
   async function cleanup() {
     for (const table of [
+      "billing_requests",
+      "invoice_items",
       "membership_requests",
       "membership_freezes",
       "invoices",
