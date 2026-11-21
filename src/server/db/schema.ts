@@ -20,6 +20,7 @@ export const organizations = gym.table("organizations", {
   id: uuid().defaultRandom().primaryKey(),
   name: text().notNull(),
   slug: text().notNull().unique(),
+  active: boolean().notNull().default(true),
   phone: text().notNull().default(""),
   email: text().notNull().default(""),
   address: text().notNull().default(""),

@@ -162,6 +162,20 @@
       "when": 1795284807422,
       "tag": "0022_correction_cash_method",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1795287189522,
+      "tag": "0023_empty_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1795287209762,
+      "tag": "0024_platform_security",
+      "breakpoints": true
     }
   ]
 }

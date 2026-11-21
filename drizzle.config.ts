@@ -8,6 +8,7 @@ export default defineConfig({
     "./src/server/db/membership-schema.ts",
     "./src/server/db/payment-schema.ts",
     "./src/server/db/correction-schema.ts",
+    "./src/server/db/platform-schema.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",
