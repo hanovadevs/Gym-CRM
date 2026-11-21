@@ -12,6 +12,7 @@ import type { DraftValues, InvoiceQuery } from "./schemas";
 import type { InvoiceList, InvoiceDetail, Recipient } from "./types";
 import { PaymentDrawer } from "@/modules/payments/payment-drawer";
 import { PaymentLedger } from "@/modules/payments/payment-ledger";
+import { CorrectionDrawer } from "./correction-drawer";
 async function json(url: string, options?: RequestInit) {
   const r = await fetch(url, { cache: "no-store", ...options }),
     j = await r.json();
@@ -55,6 +56,7 @@ export function InvoicesScreen({
     ),
     [pdfBusy, setPdfBusy] = useState(false),
     [payment, setPayment] = useState<{ initial?: InvoiceDetail } | null>(null),
+    [correction, setCorrection] = useState<InvoiceDetail | null>(null),
     [view, setView] = useState<"invoices" | "receipts">("invoices");
   const seq = useRef(0),
     detailSeq = useRef(0),
@@ -619,7 +621,7 @@ export function InvoicesScreen({
         recorded payment has a paid receipt; other access rules still apply
         after settlement.
       </p>
-      {detail && !editor && !payment ? (
+      {detail && !editor && !payment && !correction ? (
         <Drawer
           title="Invoice details"
           busy={pdfBusy || busy}
@@ -646,6 +648,16 @@ export function InvoicesScreen({
                 </p>
               ) : null}
               <div className="invoice-actions">
+                {detail.data.canAdjust &&
+                detail.data.invoice.status === "issued" ? (
+                  <button
+                    className="button secondary"
+                    disabled={locked}
+                    onClick={() => setCorrection(detail.data!)}
+                  >
+                    Correct invoice
+                  </button>
+                ) : null}
                 {detail.data.invoice.status === "issued" &&
                 BigInt(detail.data.invoice.balanceMinor) > 0n ? (
                   <button
@@ -730,6 +742,29 @@ export function InvoicesScreen({
             />
           )}
         </Drawer>
+      ) : null}
+      {correction ? (
+        <CorrectionDrawer
+          detail={correction}
+          today={data.today}
+          onClose={() => setCorrection(null)}
+          onSaved={async () => {
+            try {
+              await load(lastQuery.current, true);
+              const fresh: InvoiceDetail = await json(
+                `/api/invoices/${correction.invoice.id}?organizationId=${data.organization.id}`,
+              );
+              setDetail({ id: fresh.invoice.id, data: fresh });
+            } catch (e) {
+              setBlocked(true);
+              setFailed(true);
+              setError(
+                "Correction saved. Reload invoices before another change.",
+              );
+              throw e;
+            }
+          }}
+        />
       ) : null}
       {payment ? (
         <PaymentDrawer
@@ -843,6 +878,56 @@ function InvoiceContents({
         <dt>Outstanding</dt>
         <dd>{i.status === "draft" ? "Not issued" : money(i.balanceMinor)}</dd>
       </dl>
+      <section className="panel" aria-label="Financial corrections">
+        <SectionTitle
+          title="Financial corrections"
+          help="Original charges and receipts stay unchanged. A refund reopens debt unless it includes an explicit credit. Void numbers remain reserved."
+        />
+        {detail.corrections.rows.length ? (
+          <>
+            <p className="support">
+              Latest {detail.corrections.rows.length} of{" "}
+              {detail.corrections.total} corrections
+            </p>
+            {detail.corrections.rows.map((c) => (
+              <article className="invoice-review" key={c.id}>
+                <h3>
+                  {c.number} · {c.kind.replaceAll("_", " ")}
+                </h3>
+                <p>
+                  {c.cashOn} ·{" "}
+                  {exactMoney(
+                    c.amountMinor,
+                    i.currency,
+                    detail.organization.locale,
+                  )}
+                  {c.method ? " · " + c.method.replaceAll("_", " ") : ""}
+                </p>
+                <p>{c.reason}</p>
+                {c.reference ? <p>Reference: {c.reference}</p> : null}
+                <p>
+                  Balance afterward:{" "}
+                  {exactMoney(
+                    c.balanceAfterMinor,
+                    i.currency,
+                    detail.organization.locale,
+                  )}
+                </p>
+                {c.paymentId ? (
+                  <Link
+                    className="text-action"
+                    href={`/receipts/${c.paymentId}?organizationId=${detail.organization.id}`}
+                  >
+                    Original paid receipt
+                  </Link>
+                ) : null}
+              </article>
+            ))}
+          </>
+        ) : (
+          <p className="support">No financial corrections recorded.</p>
+        )}
+      </section>
       <PaymentLedger
         key={detail.requestId}
         initial={detail.payments}

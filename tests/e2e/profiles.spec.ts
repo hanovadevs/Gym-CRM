@@ -124,6 +124,8 @@ test("profile, emergency contact and notes persist with responsive reference lay
   await page
     .getByRole("link", { name: "View Sara Ahmed", exact: true })
     .click();
+  // Next Link completes its click before the streamed client transition commits.
+  await page.waitForURL(url => url.pathname === `/members/${m.id}`);
   await expect(
     page.getByRole("heading", { name: "Sara Ahmed", exact: true }),
   ).toBeVisible();

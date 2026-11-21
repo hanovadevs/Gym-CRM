@@ -1,5 +1,5 @@
 import "server-only";
-import { Pool } from "pg";
+import { createDatabase } from "@/server/db";
 import { enqueueMail, deliverMail } from "@/server/mail/service";
 import { readEnvironment } from "@/lib/env";
 import { configureAuth } from "./configure";
@@ -7,7 +7,7 @@ let instance: ReturnType<typeof configureAuth> | undefined;
 export function getAuth() {
   if (instance) return instance;
   const env = readEnvironment(process.env);
-  const pool = new Pool({ connectionString: env.DATABASE_URL, max: 5 });
+  const { pool } = createDatabase();
   instance = configureAuth(pool, {
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.APP_URL,

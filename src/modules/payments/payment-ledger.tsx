@@ -49,12 +49,12 @@ export function PaymentLedger({
     >
       <SectionTitle
         title={compact ? "Member payments" : "Payments & receipts"}
-        help="Every row is a recorded payment with a paid receipt. Filter by the date you received the funds, branch or method. Currencies are shown separately."
+        help="Every row is a recorded payment with a paid receipt. Filter by the date you received the funds, branch or method. Currencies are shown separately. Refunds and credits are listed on the original invoice."
       />
       {!error && !busy ? (
         <div className="payment-ledger-summary">
           <div>
-            <span>Collected in this view</span>
+            <span>Payments received</span>
             {data.summary.length ? (
               data.summary.map((c) => (
                 <strong key={c.currency}>

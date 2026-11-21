@@ -81,7 +81,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           "#253C58",
         );
         text(
-          "INVOICE",
+          i.status === "void" ? "VOID INVOICE" : "INVOICE",
           390,
           46,
           161,

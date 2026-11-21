@@ -6,6 +6,7 @@ import { AccessError } from "@/server/security/errors";
 import { SignOut } from "@/components/sign-out";
 import { SectionTitle } from "@/components/ui/section-title";
 import { WorkspaceFrame } from "@/components/workspace-frame";
+import { getPlatform } from "@/modules/platform";
 export const dynamic = "force-dynamic";
 export default async function Workspace({
   searchParams,
@@ -21,6 +22,11 @@ export default async function Workspace({
   } catch (error) {
     if (error instanceof AccessError) {
       if (error.code === "UNAUTHENTICATED") redirect("/sign-in");
+      if (
+        error.code === "FORBIDDEN" &&
+        (await getPlatform().available(await headers()))
+      )
+        redirect("/admin");
       return (
         <main className="setup access-state">
           <h1>
@@ -145,7 +151,8 @@ export default async function Workspace({
               ? "Manage your gym preferences and permitted staff settings. "
               : "Your workspace access is active. "}
             Register and maintain members in your permitted branches. Membership
-            enrollment is available from member profiles. Record funds received and share paid receipts from Payments.
+            enrollment is available from member profiles. Record funds received
+            and share paid receipts from Payments.
           </p>
           {workspace.actions.includes("settings.read") ? (
             <Link

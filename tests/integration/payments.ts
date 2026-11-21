@@ -12,7 +12,7 @@ import { createMembershipsService } from "../../src/modules/memberships/service"
 import { createBillingService } from "../../src/modules/billing/service";
 import { createPaymentsService } from "../../src/modules/payments/service";
 import { createSettingsService } from "../../src/modules/settings/service";
-import {createCorrectionsService} from "../../src/modules/billing/corrections";
+import { createCorrectionsService } from "../../src/modules/billing/corrections";
 import { receiptPdf } from "../../src/modules/payments/receipt-pdf";
 import { todayInZone, endOn } from "../../src/modules/plans/format";
 import { securityFixture } from "../helpers/security-fixture";
@@ -717,37 +717,229 @@ try {
     oldReceipt.snapshot.issuer.footer,
   );
 
-  const corrections=createCorrectionsService(security);
-  const correction=(invoiceId:string,kind:string,amountMinor:string,expectedBalanceMinor:string,paymentId?:string)=>({...org,invoiceId,kind,amountMinor,expectedBalanceMinor,currency:'PKR',cashOn:today,reason:'Approved correction test',reference:'Adjustment reference',requestKey:randomUUID(),...(paymentId?{paymentId,method:'cash'}:{})});
-  const refund=correction(a.invoiceId,'refund','10000','0',partial.paymentId);
-  const r1=await corrections.record(owner,refund);assert.equal(r1.balanceAfterMinor,'10000');
-  assert.equal((await corrections.record(owner,refund)).correctionId,r1.correctionId);
-  await deny(()=>corrections.record(owner,{...refund,reason:'Changed correction'}),'CONFLICT');
-  await deny(()=>corrections.record(reception,refund),'FORBIDDEN');
-  await payments.record(owner,input(a.invoiceId,'10000','10000'));
-  assert.equal((await billing.get(owner,a.invoiceId,org)).invoice.balanceMinor,'0');
-  const paired=await corrections.record(owner,correction(a.invoiceId,'refund_credit','5000','0',partial.paymentId));assert.equal(paired.balanceAfterMinor,'0');
-  const correctionRaces=await Promise.allSettled([corrections.record(owner,correction(a.invoiceId,'refund','40000','0',complete.paymentId)),corrections.record(owner,correction(a.invoiceId,'refund','40000','0',complete.paymentId))]);assert.equal(correctionRaces.filter(r=>r.status==='fulfilled').length,1);
-  assert.equal((await corrections.record(owner,correction(a.invoiceId,'credit','40000','40000'))).balanceAfterMinor,'0');
-  await deny(()=>corrections.record(owner,correction(a.invoiceId,'credit','1','0')),'CONFLICT');
-  await deny(()=>corrections.record(owner,correction(a.invoiceId,'refund','30000','0',partial.paymentId)),'CONFLICT');
-  const voidable=await invoice('Void without history');
-  assert.equal((await corrections.record(owner,correction(voidable.invoiceId,'void','0','100000'))).balanceAfterMinor,'0');
-  await deny(()=>payments.record(owner,input(voidable.invoiceId)),'CONFLICT');
-  await deny(()=>corrections.record(owner,correction(a.invoiceId,'void','0','0')),'CONFLICT');
-  const credited=await invoice('Credit then settle');
-  assert.equal((await corrections.record(owner,correction(credited.invoiceId,'credit','25000','100000'))).balanceAfterMinor,'75000');
-  await payments.record(owner,input(credited.invoiceId,'75000','75000'));
-  await deny(()=>corrections.record(foreign,{...correction(credited.invoiceId,'credit','1','0'),organizationId:f.orgB}),'NOT_FOUND');
-  const rollbackCorrection=await invoice('Correction audit rollback');
-  const beforeCorrection=(await admin.query("select (select value from gym.number_counters where organization_id=$1 and kind='adjustment')::text counter,(select version from gym.members where id=$2) version",[f.orgA,rollbackCorrection.memberId])).rows[0];
-  const failedCorrection=correction(rollbackCorrection.invoiceId,'credit','10000','100000');
-  await admin.query('revoke insert on gym.audit_events from gym_runtime');
-  await assert.rejects(()=>corrections.record(owner,failedCorrection));
-  await admin.query('grant insert on gym.audit_events to gym_runtime');
-  assert.deepEqual((await admin.query("select (select value from gym.number_counters where organization_id=$1 and kind='adjustment')::text counter,(select version from gym.members where id=$2) version",[f.orgA,rollbackCorrection.memberId])).rows[0],beforeCorrection);
-  assert.equal((await corrections.record(owner,failedCorrection)).balanceAfterMinor,'90000');
-  console.log('PASS correction service: refund/recollection, paired refund-credit, exact caps, stale races, owner/tenant denial, void restrictions and audit rollback.');
+  const corrections = createCorrectionsService(security);
+  const correction = (
+    invoiceId: string,
+    kind: string,
+    amountMinor: string,
+    expectedBalanceMinor: string,
+    paymentId?: string,
+  ) => ({
+    ...org,
+    invoiceId,
+    kind,
+    amountMinor,
+    expectedBalanceMinor,
+    currency: "PKR",
+    cashOn: today,
+    reason: "Approved correction test",
+    reference: "Adjustment reference",
+    requestKey: randomUUID(),
+    ...(paymentId ? { paymentId, method: "cash" } : {}),
+  });
+  const refund = correction(
+    a.invoiceId,
+    "refund",
+    "10000",
+    "0",
+    partial.paymentId,
+  );
+  const r1 = await corrections.record(owner, refund);
+  assert.equal(r1.balanceAfterMinor, "10000");
+  assert.equal(
+    (await corrections.record(owner, refund)).correctionId,
+    r1.correctionId,
+  );
+  await deny(
+    () =>
+      corrections.record(owner, { ...refund, reason: "Changed correction" }),
+    "CONFLICT",
+  );
+  await deny(() => corrections.record(reception, refund), "FORBIDDEN");
+  await payments.record(owner, input(a.invoiceId, "10000", "10000"));
+  assert.equal(
+    (await billing.get(owner, a.invoiceId, org)).invoice.balanceMinor,
+    "0",
+  );
+  const paired = await corrections.record(
+    owner,
+    correction(a.invoiceId, "refund_credit", "5000", "0", partial.paymentId),
+  );
+  assert.equal(paired.balanceAfterMinor, "0");
+  const correctionRaces = await Promise.allSettled([
+    corrections.record(
+      owner,
+      correction(a.invoiceId, "refund", "40000", "0", complete.paymentId),
+    ),
+    corrections.record(
+      owner,
+      correction(a.invoiceId, "refund", "40000", "0", complete.paymentId),
+    ),
+  ]);
+  assert.equal(
+    correctionRaces.filter((r) => r.status === "fulfilled").length,
+    1,
+  );
+  assert.equal(
+    (
+      await corrections.record(
+        owner,
+        correction(a.invoiceId, "credit", "40000", "40000"),
+      )
+    ).balanceAfterMinor,
+    "0",
+  );
+  await deny(
+    () =>
+      corrections.record(owner, correction(a.invoiceId, "credit", "1", "0")),
+    "CONFLICT",
+  );
+  await deny(
+    () =>
+      corrections.record(
+        owner,
+        correction(a.invoiceId, "refund", "30000", "0", partial.paymentId),
+      ),
+    "CONFLICT",
+  );
+  const voidable = await invoice("Void without history");
+  assert.equal(
+    (
+      await corrections.record(
+        owner,
+        correction(voidable.invoiceId, "void", "0", "100000"),
+      )
+    ).balanceAfterMinor,
+    "0",
+  );
+  await deny(
+    () => payments.record(owner, input(voidable.invoiceId)),
+    "CONFLICT",
+  );
+  await deny(
+    () => corrections.record(owner, correction(a.invoiceId, "void", "0", "0")),
+    "CONFLICT",
+  );
+  const credited = await invoice("Credit then settle");
+  assert.equal(
+    (
+      await corrections.record(
+        owner,
+        correction(credited.invoiceId, "credit", "25000", "100000"),
+      )
+    ).balanceAfterMinor,
+    "75000",
+  );
+  await payments.record(owner, input(credited.invoiceId, "75000", "75000"));
+  await deny(
+    () =>
+      corrections.record(foreign, {
+        ...correction(credited.invoiceId, "credit", "1", "0"),
+        organizationId: f.orgB,
+      }),
+    "NOT_FOUND",
+  );
+  const rollbackCorrection = await invoice("Correction audit rollback");
+  const beforeCorrection = (
+    await admin.query(
+      "select (select value from gym.number_counters where organization_id=$1 and kind='adjustment')::text counter,(select version from gym.members where id=$2) version",
+      [f.orgA, rollbackCorrection.memberId],
+    )
+  ).rows[0];
+  const failedCorrection = correction(
+    rollbackCorrection.invoiceId,
+    "credit",
+    "10000",
+    "100000",
+  );
+  await admin.query("revoke insert on gym.audit_events from gym_runtime");
+  await assert.rejects(() => corrections.record(owner, failedCorrection));
+  await admin.query("grant insert on gym.audit_events to gym_runtime");
+  assert.deepEqual(
+    (
+      await admin.query(
+        "select (select value from gym.number_counters where organization_id=$1 and kind='adjustment')::text counter,(select version from gym.members where id=$2) version",
+        [f.orgA, rollbackCorrection.memberId],
+      )
+    ).rows[0],
+    beforeCorrection,
+  );
+  assert.equal(
+    (await corrections.record(owner, failedCorrection)).balanceAfterMinor,
+    "90000",
+  );
+  console.log(
+    "PASS correction service: refund/recollection, paired refund-credit, exact caps, stale races, owner/tenant denial, void restrictions and audit rollback.",
+  );
+  const rawCorrection = await pool.connect();
+  try {
+    const creditRow = (
+      await admin.query(
+        "select to_jsonb(c) data from gym.financial_corrections c where invoice_id=$1 and kind='credit' limit 1",
+        [credited.invoiceId],
+      )
+    ).rows[0].data;
+    for (const verb of [
+      "update gym.financial_corrections set reason='Attempted rewrite' where id=$1",
+      "delete from gym.financial_corrections where id=$1",
+    ]) {
+      await rawCorrection.query("begin");
+      await rawCorrection.query(
+        "select set_config('app.organization_id',$1,true)",
+        [f.orgA],
+      );
+      await assert.rejects(rawCorrection.query(verb, [creditRow.id]), {
+        code: "42501",
+      });
+      await rawCorrection.query("rollback");
+    }
+    const refundRow = (
+      await admin.query(
+        "select to_jsonb(c) data from gym.financial_corrections c where organization_id=$1 and kind='refund' limit 1",
+        [f.orgA],
+      )
+    ).rows[0].data;
+    for (const row of [
+      { ...creditRow, amount_minor: 1 },
+      { ...refundRow, amount_minor: 999999999999 },
+    ]) {
+      await rawCorrection.query("begin");
+      await rawCorrection.query(
+        "select set_config('app.organization_id',$1,true)",
+        [f.orgA],
+      );
+      await assert.rejects(
+        rawCorrection.query(
+          "insert into gym.financial_corrections select (jsonb_populate_record(null::gym.financial_corrections,$1::jsonb)).*",
+          [
+            JSON.stringify({
+              ...row,
+              id: randomUUID(),
+              number: "RAW-" + randomUUID(),
+              request_key: randomUUID(),
+              request_hash: "0".repeat(64),
+            }),
+          ],
+        ),
+        { code: "23514" },
+      );
+      await rawCorrection.query("rollback");
+    }
+    assert.equal(
+      (
+        await rawCorrection.query(
+          "select count(*)::int n from gym.financial_corrections",
+        )
+      ).rows[0].n,
+      0,
+    );
+    console.log(
+      "PASS direct database correction credit/refund caps, immutable runtime grants and cleared tenant context.",
+    );
+  } finally {
+    await rawCorrection.query("rollback");
+    rawCorrection.release();
+  }
   await admin.query(
     "update gym.staff_branch_grants set branch_id=$2 where staff_membership_id=$1",
     [f.memberships.reception, f.a2],

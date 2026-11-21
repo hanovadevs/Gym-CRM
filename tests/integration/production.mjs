@@ -69,6 +69,9 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    ["/api/platform", "GET"],
+    ["/api/platform", "POST", {}],
+    [`/api/invoices/${org}/corrections`,"POST",{organizationId:org,invoiceId:org,requestKey:org,kind:"credit",amountMinor:"1",expectedBalanceMinor:"1",currency:"PKR",cashOn:"2026-11-21",reason:"Anonymous correction guard"}],
     [`/api/payments?organizationId=${org}`,"GET"],
     [`/api/payments/targets?organizationId=${org}`,"GET"],
     [`/api/receipts/${org}?organizationId=${org}`,"GET"],

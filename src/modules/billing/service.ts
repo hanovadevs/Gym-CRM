@@ -32,7 +32,7 @@ export async function invoiceNumber(
   ).rows[0].value;
   return prefix + "-INV-" + n.padStart(6, "0");
 }
-const fields = `i.id,i.member_id as "memberId",i.membership_id as "membershipId",i.originating_branch_id as "branchId",i.branch_name as "branchName",i.number,i.description,i.total_minor::text as "totalMinor",b.balance_minor::text as "balanceMinor",i.currency,i.issued_on::text as "issuedOn",i.due_on::text as "dueOn",i.status,i.version,i.line_revision as "lineRevision",i.recipient_name as "recipientName",i.recipient_code as "recipientCode",to_jsonb(i.created_at)#>>'{}' as "createdAt"`;
+const fields = `i.id,i.member_id as "memberId",i.membership_id as "membershipId",i.originating_branch_id as "branchId",i.branch_name as "branchName",i.number,i.description,i.total_minor::text as "totalMinor",b.balance_minor::text as "balanceMinor",i.currency,i.issued_on::text as "issuedOn",i.due_on::text as "dueOn",case when exists(select 1 from gym.financial_corrections c where c.organization_id=i.organization_id and c.invoice_id=i.id and c.kind='void') then 'void' else i.status end as status,exists(select 1 from gym.financial_corrections c where c.organization_id=i.organization_id and c.invoice_id=i.id) as \"hasCorrections\",i.version,i.line_revision as "lineRevision",i.recipient_name as "recipientName",i.recipient_code as "recipientCode",to_jsonb(i.created_at)#>>'{}' as "createdAt"`;
 const joined =
   "gym.invoices i join gym.invoice_balances b on b.organization_id=i.organization_id and b.invoice_id=i.id";
 const scoped =
@@ -98,6 +98,13 @@ async function details(
     : null;
   return {
     invoice: i,
+    canAdjust: can(s.role, "billing.adjust"),
+    corrections: (
+      await db.query(
+        `select (select count(*)::int from gym.financial_corrections where organization_id=$1 and invoice_id=$2) total,coalesce((select jsonb_agg(r) from(select id,number,kind,amount_minor::text as "amountMinor",cash_on::text as "cashOn",method,reason,reference,payment_id as "paymentId",balance_after_minor::text as "balanceAfterMinor" from gym.financial_corrections where organization_id=$1 and invoice_id=$2 order by created_at desc,id desc limit 25)r),'[]'::jsonb) rows`,
+        [s.organizationId, id],
+      )
+    ).rows[0],
     payments: await readPaymentPage(db, s, {
       organizationId: s.organizationId,
       invoiceId: id,
@@ -428,7 +435,7 @@ export function createBillingService(
     const q = parse(detailQuery, raw);
     return security.run(headers, q, "billing.read", async (db, s) => {
       const result = await details(db, s, id);
-      if (result.invoice.status !== "issued")
+      if (result.invoice.status === "draft")
         throw new BusinessError(
           "CONFLICT",
           "Issue this invoice before downloading its PDF.",

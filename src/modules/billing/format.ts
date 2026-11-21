@@ -25,18 +25,23 @@ export function invoiceStatus(
     balanceMinor: string;
     dueOn: string;
     totalMinor?: string;
+    hasCorrections?: boolean;
   },
   today: string,
 ) {
-  return i.status === "draft"
-    ? "Draft"
-    : BigInt(i.balanceMinor) === 0n
-      ? BigInt(i.totalMinor ?? "0") > 0n
-        ? "Paid"
-        : "No balance"
-      : i.dueOn < today
-        ? "Overdue"
-        : i.totalMinor && BigInt(i.balanceMinor) < BigInt(i.totalMinor)
-          ? "Partially paid"
-          : "Outstanding";
+  return i.status === "void"
+    ? "Void"
+    : i.status === "draft"
+      ? "Draft"
+      : BigInt(i.balanceMinor) === 0n
+        ? i.hasCorrections
+          ? "Settled"
+          : BigInt(i.totalMinor ?? "0") > 0n
+            ? "Paid"
+            : "No balance"
+        : i.dueOn < today
+          ? "Overdue"
+          : i.totalMinor && BigInt(i.balanceMinor) < BigInt(i.totalMinor)
+            ? "Partially paid"
+            : "Outstanding";
 }

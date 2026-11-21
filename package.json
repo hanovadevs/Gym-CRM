@@ -32,7 +32,9 @@
     "test:billing": "node --conditions=react-server --import tsx tests/integration/billing.ts",
     "test:billing:production": "node --conditions=react-server --import tsx tests/integration/billing-production.ts",
     "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts",
-    "test:payments": "node --conditions=react-server --import tsx tests/integration/payments.ts"
+    "test:payments": "node --conditions=react-server --import tsx tests/integration/payments.ts",
+    "test:platform": "node --conditions=react-server --import tsx tests/integration/platform.ts",
+    "auth:platform-admin": "tsx scripts/bootstrap-platform-admin.ts"
   },
   "keywords": [],
   "author": "",
@@ -74,5 +76,8 @@
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
     }
+  },
+  "engines": {
+    "node": "24.x"
   }
 }

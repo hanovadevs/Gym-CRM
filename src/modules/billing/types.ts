@@ -13,7 +13,8 @@ export type Invoice = {
   currency: string;
   issuedOn: string | null;
   dueOn: string;
-  status: "draft" | "issued";
+  status: "draft" | "issued" | "void";
+  hasCorrections: boolean;
   version: number;
   lineRevision: number;
   recipientName: string;
@@ -21,6 +22,22 @@ export type Invoice = {
   createdAt: string;
 };
 export type InvoiceDetail = {
+  canAdjust: boolean;
+  corrections: {
+    total: number;
+    rows: {
+      id: string;
+      number: string;
+      kind: string;
+      amountMinor: string;
+      cashOn: string;
+      method: string | null;
+      reason: string;
+      reference: string;
+      paymentId: string | null;
+      balanceAfterMinor: string;
+    }[];
+  };
   payments: PaymentPage;
   invoice: Invoice;
   items: (LineInput & { position: number; totalMinor: number })[];

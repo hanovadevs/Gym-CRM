@@ -18,7 +18,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | SUB-01 | M04 | PLAN-01 | Enrollment/renewal/freeze/cancel and overlap checks | DONE | 0012–0014; atomic enrollment invoice/snapshot/audit, policy/lifecycle/overlap/replay verified; 52 browser/30 unit and real-DB regression PASS; final gates in session log |
 | PAY-01 | M05 | SUB-01 | Invoices/balances/atomic numbering | DONE | 0015–0017; scoped draft/issue/lines/balances/numbering and private invoice PDF; 59 browser/35 unit + real-DB regression/build/production PDF PASS |
 | PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | DONE | 0018/0019; atomic collection, immutable paid receipts/print/PDF, valid activation; 64 browser/36 units + serial real-DB/production checks PASS |
-| PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | IN_PROGRESS | Draft schema/service and0020/0021 generated; unapplied, API/UI/real-DB verification pending |
+| PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | VERIFYING | Reviewed 0020–0022 applied; owner API/UI/history/void PDF and real-DB correction checks pass; final production verification underway |
 | ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | NOT_STARTED | None yet |
 | DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | NOT_STARTED | None yet |
 | EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | NOT_STARTED | None yet |
@@ -28,7 +28,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | TRN-01 | M08 | MEM-02 + SET-01 | Trainer directory/assignments/PT schedules | NOT_STARTED | None yet |
 | CLS-01 | M09 | TRN-01 + ATT-01 | Timetable/bookings/capacity/trainer-room contention | NOT_STARTED | None yet |
 | LEAD-01 | M10 | MEM-02 | Pipeline/trials/follow-ups/idempotent conversion | NOT_STARTED | None yet |
-| DB-MIG-01 | M14 | REL-01 + authorized target | Future Supabase rehearsal/reconciliation/cutover plan | NOT_STARTED | None yet |
+| DB-MIG-01 | M14 | REL-01 + authorized target | Supabase reconciliation and host change | VERIFYING | Authorized hosted configuration; initialized workspace copied and hashes reconciled, restricted TLS/pooler verified; application/restore/release gates remain |
 | MAIL-01 | M01 | AUTH-01 + SET-01 | Fixed-sender SMTP recovery/invitation delivery and verification | DONE | TLS auth + actual INBOX recovery receipt/reset/reuse denial; transactional invitations and safe delivery status tested; owner unchanged |
 | UI-03 | M00 | PLAN-01 | Icon sidebar with desktop collapse and accessible mobile navigation | DONE | Shared live/preview sidebar; desktop clearance/persistence, mobile focus/Escape/routes and final regression PASS; reviewed retained evidence |
 | UI-04 | M00 | UI-03 | Silver & Midnight theme, liquid glass surfaces and sharp buttons across app | DONE | Shared palette/glass/square controls, four widths, reduced-transparency/print/focus/regression and production captures verified; ADR-030 |
@@ -140,7 +140,7 @@ User authorizes completing all remaining Release A/B CRM modules in one sustaine
 | --- | --- | --- | --- | --- | --- |
 | PERF-01 | M00 | UI-04 | Client navigation, scoped prefetch, shared bounded DB pool; production reload/timing evidence | DONE | Production client transitions/window continuity verified; full64 and post-removal12 browsers pass; shared-pool mail lifetime regression fixed |
 | BRAND-01 | M00 | UI-04 | Mojym name, editable twin-arch logo, favicon and consistent UI/mail brand | DONE | Native SVG/PNG mark/wordmark/favicon integrated; production screenshot reviewed, build and browser checks pass |
-| PLAT-01 | M15 | SEC-01 + SET-01 | Separately authorized platform admin, create/manage gyms and scoped activity | NOT_STARTED | Requires explicit platform identity/grant boundary, atomic maintained-auth provisioning and isolation tests |
-| REL-02 | M14 | All remaining modules + PLAT-01 | Remove every preview route/content; production Vercel/PostgreSQL release checks | IN_PROGRESS | Target confirmed, domain/hosted database credentials not yet configured; independent local work continues |
+| PLAT-01 | M15 | SEC-01 + SET-01 | Separately authorized platform admin, create/manage gyms and scoped activity | IN_PROGRESS | User supplied separate platform administrator identity; explicit grants, provisioning, suspension and activity being implemented |
+| REL-02 | M14 | All remaining modules + PLAT-01 | Remove every preview route/content; production Vercel/PostgreSQL release checks | IN_PROGRESS | mojym.hanovadevs.com verified on Vercel; Supabase TLS/runtime/pooler verified and private production import prepared; live env/deploy and remaining modules still open |
 
 Remaining core execution order: PAY-03 -> ATT-01 -> DASH-01; independent EXP-01/TRN-01/LEAD-01; CLS-01 after attendance/trainers; RPT-01/IMP-01 then recovery/release gates. PLAT-01 must use separate platform privileges; gym owner role must never imply cross-gym administrator access. Preserve initialized user data and all applied migrations.

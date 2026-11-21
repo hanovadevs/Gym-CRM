@@ -447,3 +447,165 @@ test("theme applies across existing screens with square controls and glass fallb
     fullPage: true,
   });
 });
+
+async function correct(
+  page: Page,
+  invoiceId: string,
+  kind: string,
+  amount: string,
+  reason: string,
+) {
+  await page.goto(`/payments?organizationId=${f.orgA}&invoiceId=${invoiceId}`);
+  await page
+    .getByRole("button", { name: "Correct invoice", exact: true })
+    .click();
+  const d = page.getByRole("dialog");
+  await d.getByLabel("Correction type", { exact: true }).selectOption(kind);
+  if (kind !== "void")
+    await d.getByLabel("Correction amount (PKR)", { exact: true }).fill(amount);
+  await d.getByLabel("Reason", { exact: true }).fill(reason);
+  await d
+    .getByRole("button", { name: "Review correction", exact: true })
+    .click();
+  await expect(
+    d.getByRole("region", { name: "Correction review" }),
+  ).toBeVisible();
+  return d;
+}
+test("owner refunds and credits preserve receipts, balances and correction history", async ({
+  page,
+}) => {
+  const x = await invoice(page, "Correction member");
+  let d = await payment(page, "Correction member", "1000.00");
+  await d.getByRole("button", { name: "Confirm payment", exact: true }).click();
+  await expect(
+    d.getByRole("region", { name: "Payment confirmation" }),
+  ).toBeVisible();
+  await d.getByRole("button", { name: "Done", exact: true }).click();
+  d = await correct(
+    page,
+    x.invoiceId,
+    "refund",
+    "250.00",
+    "Returned unused coaching funds",
+  );
+  await d
+    .getByRole("button", { name: "Confirm correction", exact: true })
+    .click();
+  await expect(
+    d.getByRole("heading", { name: "Correction recorded", exact: true }),
+  ).toBeVisible();
+  await d.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Financial corrections", exact: true }),
+  ).toContainText("Returned unused coaching funds");
+  expect(
+    (
+      await admin.query(
+        "select balance_minor::text balance from gym.invoice_balances where invoice_id=$1",
+        [x.invoiceId],
+      )
+    ).rows[0].balance,
+  ).toBe("25000");
+  d = await correct(
+    page,
+    x.invoiceId,
+    "refund_credit",
+    "100.00",
+    "Return and waive agreed charge",
+  );
+  await d
+    .getByRole("button", { name: "Confirm correction", exact: true })
+    .click();
+  await expect(
+    d.getByRole("heading", { name: "Correction recorded", exact: true }),
+  ).toBeVisible();
+  await d.getByRole("button", { name: "Done", exact: true }).click();
+  expect(
+    (
+      await admin.query(
+        "select balance_minor::text balance from gym.invoice_balances where invoice_id=$1",
+        [x.invoiceId],
+      )
+    ).rows[0].balance,
+  ).toBe("25000");
+  d = await correct(
+    page,
+    x.invoiceId,
+    "credit",
+    "250.00",
+    "Waive remaining approved charge",
+  );
+  let lost = false;
+  await page.route("**/api/invoices/*/corrections", async (route) => {
+    if (!lost) {
+      lost = true;
+      const r = await route.fetch();
+      expect(r.status()).toBe(200);
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  await d
+    .getByRole("button", { name: "Confirm correction", exact: true })
+    .click();
+  await expect(d.getByRole("alert")).toContainText("retry safely");
+  await d
+    .getByRole("button", { name: "Confirm correction", exact: true })
+    .click();
+  await expect(
+    d.getByRole("heading", { name: "Correction recorded", exact: true }),
+  ).toBeVisible();
+  await d.getByRole("button", { name: "Done", exact: true }).click();
+  expect(
+    (
+      await admin.query(
+        "select count(*)::int n from gym.financial_corrections where invoice_id=$1",
+        [x.invoiceId],
+      )
+    ).rows[0].n,
+  ).toBe(3);
+  await expect(
+    page.getByRole("region", { name: "Financial corrections", exact: true }),
+  ).toContainText("Latest 3 of 3");
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await page.screenshot({
+    path: ".local/payment-evidence/corrections-390.png",
+    fullPage: true,
+  });
+  expect(await count(x.invoiceId)).toBe(1);
+});
+test("void keeps the issued number and downloads a clearly void PDF", async ({
+  page,
+}) => {
+  const x = await invoice(page, "Void member");
+  const d = await correct(
+    page,
+    x.invoiceId,
+    "void",
+    "",
+    "Unused duplicate charge voided",
+  );
+  await d
+    .getByRole("button", { name: "Confirm correction", exact: true })
+    .click();
+  await expect(
+    d.getByRole("heading", { name: "Correction recorded", exact: true }),
+  ).toBeVisible();
+  await d.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("dialog").locator(".pill").first()).toHaveText(
+    "Void",
+  );
+  await expect(
+    page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Record payment", exact: true }),
+  ).toHaveCount(0);
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download PDF", exact: true }).click();
+  await (await download).saveAs(".local/payment-evidence/invoice-void.pdf");
+  const r = await page.request.get(
+    `/api/invoices/${x.invoiceId}?organizationId=${f.orgA}`,
+  );
+  expect((await r.json()).data.invoice.status).toBe("void");
+  expect(await count(x.invoiceId)).toBe(0);
+});

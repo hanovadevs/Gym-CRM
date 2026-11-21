@@ -97,6 +97,11 @@ export function createSecurity(
           "select pg_advisory_xact_lock(hashtextextended($1,0))",
           ["gym-admin:" + chosen.organization_id],
         );
+      const organization = await client.query(
+        "select active from gym.organizations where id=$1 for share",
+        [chosen.organization_id],
+      );
+      if (!organization.rows[0]?.active) throw new AccessError("FORBIDDEN");
       // Shared row lock serializes membership revocation/role edits with this operation.
       const membership = await client.query(
         "select role from gym.staff_memberships where id=$1 and auth_user_id=$2 and active=true for share",

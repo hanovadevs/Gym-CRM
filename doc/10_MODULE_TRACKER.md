@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 21 November 2026 (Asia/Karachi): PAY-02 payments, allocations, paid receipts/PDF and valid paid activation verified locally. UI-04 Silver & Midnight glass theme and square buttons verified across live/preview screens. Next PAY-03 owner corrections/refunds/credits; attendance remains upcoming.
+Updated 22 November 2026 (Asia/Karachi): Mojym brand/navigation and preview removal verified. PAY-03 corrections and PLAT-01 separate platform administration are in final verification. Authorized Supabase connection/data transfer and Vercel import preparation recorded below; attendance and the remaining CRM modules still await implementation.
 
 ## State rules
 
@@ -23,7 +23,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
 | M13 | Imports, exports & files | A | M03 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | IMP-01 |
 | M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | REL-01; DB-MIG-01 later |
-| M15 | Platform administration | A | M01 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAT-01 explicit separate platform grants, gym provisioning and activity |
+| M15 | Platform administration | A | M01 + M02 | VERIFYING | DONE | DONE | VERIFYING | VERIFYING | PLAT-01 isolated service and two browser scenarios pass; production/remaining regression underway |
 
 ## Evidence card template
 

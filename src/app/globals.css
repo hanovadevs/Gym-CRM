@@ -2418,4 +2418,25 @@ input[type="checkbox"] {
 .invoice-table-panel td:nth-child(3) { min-width:200px; max-width:260px; white-space:normal; }
 .invoice-table-panel td:first-child { min-width:150px; }
 .invoice-table-panel td:nth-child(2) { min-width:135px; }
+
+.platform-header { display:flex;align-items:center;gap:28px;padding:24px clamp(20px,4vw,64px);border-bottom:1px solid var(--border);background:var(--surface,#fff); }
+.platform-header .brand { color:var(--accent); }
+.platform-header>span { color:var(--muted);font-size:13px;flex:1; }
+.platform-main { max-width:1440px;margin:auto;padding:44px clamp(20px,4vw,64px);display:grid;gap:28px; }
+.platform-main .page-heading { margin:0; }
+.platform-main .panel { min-width:0;padding:28px; }
+.platform-search { display:flex;align-items:end;gap:16px;margin:24px 0; }
+.platform-search .field { max-width:400px;flex:1; }
+.platform-main .table-scroll { margin:24px 0; }
+.platform-main table { width:100%;border-collapse:collapse;font-size:14px; }
+.platform-main th { text-align:left;color:var(--muted);background:var(--canvas,#F1F4F7);font-weight:500; }
+.platform-main th,.platform-main td { padding:18px 16px;border-bottom:1px solid var(--border);vertical-align:top; }
+.platform-main td small { display:block;color:var(--muted);font-size:12px;margin-top:6px; }
+.platform-main td:last-child { max-width:400px;overflow-wrap:anywhere; }
+.platform-main time { white-space:nowrap;font-size:12px; }
+.platform-row-actions { display:flex;gap:18px;white-space:nowrap;align-items:center; }
+.platform-row-actions button { padding:0;border:0;background:transparent; }
+.platform-section-heading { display:flex;gap:20px;align-items:center;justify-content:space-between; }
+.platform-empty { padding:24px 0;color:var(--muted); }
+@media(max-width:700px) { .platform-header { gap:16px;flex-wrap:wrap;padding:18px 20px; }.platform-header>span { order:3;flex-basis:100%; }.platform-header .brand { flex:1; }.platform-main { padding-top:28px; }.platform-main .panel { padding:20px; }.platform-search { flex-wrap:wrap; }.platform-main .page-heading,.platform-section-heading { align-items:start;flex-direction:column; }.platform-main .table-scroll { margin-left:-4px;margin-right:-4px; }.platform-main th,.platform-main td { padding:14px 12px; }.platform-main table { min-width:680px; } }
 .members-main .invoice-table-panel .text-action { border:0; padding:0; background:transparent; color:var(--accent); }

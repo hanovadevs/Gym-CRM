@@ -64,6 +64,17 @@ describe("Invoice arithmetic and status", () => {
     ).toBe("No balance");
     expect(invoiceStatus(i, "2026-11-22")).toBe("Overdue");
   });
+  it("marks void invoices and adjusted settlement without claiming a new payment", () => {
+    const i = {
+      status: "issued",
+      balanceMinor: "0",
+      totalMinor: "1000",
+      dueOn: "2026-11-21",
+      hasCorrections: true,
+    };
+    expect(invoiceStatus(i, "2026-11-21")).toBe("Settled");
+    expect(invoiceStatus({ ...i, status: "void" }, "2026-11-21")).toBe("Void");
+  });
   it("rejects unsupported filters and reversed date ranges", () => {
     expect(invoiceQuery.safeParse({ sort: "raw SQL" }).success).toBe(false);
     expect(

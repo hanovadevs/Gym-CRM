@@ -176,6 +176,13 @@
       "when": 1795287209762,
       "tag": "0024_platform_security",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1795288893833,
+      "tag": "0025_platform_contact_fields",
+      "breakpoints": true
     }
   ]
 }

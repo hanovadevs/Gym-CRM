@@ -232,6 +232,116 @@ try {
     assert.ok(receiptTrace.files.some((p: string) => p.endsWith(file)));
   await mkdir(".local/payment-evidence", { recursive: true });
   await writeFile(".local/payment-evidence/receipt-production.pdf", paidBytes);
+  const refundInput = {
+    organizationId: f.orgA,
+    invoiceId: draft.invoiceId,
+    requestKey: randomUUID(),
+    kind: "refund",
+    paymentId: partial.paymentId,
+    amountMinor: "50000",
+    expectedBalanceMinor: "0",
+    currency: "PKR",
+    cashOn: todayInZone("Asia/Karachi"),
+    method: "cash",
+    reason: "Production manual refund verification",
+  };
+  const refund = await post(
+    `/api/invoices/${draft.invoiceId}/corrections`,
+    refundInput,
+  );
+  assert.equal(refund.balanceAfterMinor, "50000");
+  assert.equal(
+    (await post(`/api/invoices/${draft.invoiceId}/corrections`, refundInput))
+      .correctionId,
+    refund.correctionId,
+  );
+  assert.equal(
+    (
+      await post(`/api/invoices/${draft.invoiceId}/corrections`, {
+        organizationId: f.orgA,
+        invoiceId: draft.invoiceId,
+        requestKey: randomUUID(),
+        kind: "credit",
+        amountMinor: "50000",
+        expectedBalanceMinor: "50000",
+        currency: "PKR",
+        cashOn: todayInZone("Asia/Karachi"),
+        reason: "Production charge correction verification",
+      })
+    ).balanceAfterMinor,
+    "0",
+  );
+  const adjusted = await (
+    await fetch(
+      `${base}/api/invoices/${draft.invoiceId}?organizationId=${f.orgA}`,
+      { headers: { cookie } },
+    )
+  ).json();
+  assert.equal(adjusted.data.invoice.hasCorrections, true);
+  assert.equal(adjusted.data.corrections.total, 2);
+  assert.equal(adjusted.data.invoice.totalMinor, "450000");
+  assert.equal(adjusted.data.invoice.balanceMinor, "0");
+  const voidDraft = await post("/api/invoices", {
+    organizationId: f.orgA,
+    memberId: member.member.id,
+    requestKey: randomUUID(),
+    reason: "Production void verification",
+    values: {
+      description: "Void verification",
+      currency: "PKR",
+      dueOn: todayInZone("Asia/Karachi"),
+      lines: [
+        {
+          description: "Replaced charge",
+          quantity: 1,
+          unitMinor: 1000,
+          discountMinor: 0,
+        },
+      ],
+    },
+  });
+  await post(
+    `/api/invoices/${voidDraft.invoiceId}`,
+    {
+      organizationId: f.orgA,
+      operation: "issue",
+      version: 1,
+      requestKey: randomUUID(),
+      reason: "Production reviewed void target",
+    },
+    "PATCH",
+  );
+  await post(`/api/invoices/${voidDraft.invoiceId}/corrections`, {
+    organizationId: f.orgA,
+    invoiceId: voidDraft.invoiceId,
+    requestKey: randomUUID(),
+    kind: "void",
+    amountMinor: "0",
+    expectedBalanceMinor: "1000",
+    currency: "PKR",
+    cashOn: todayInZone("Asia/Karachi"),
+    reason: "Incorrect charge withdrawn before payment",
+  });
+  const voidDetail = await (
+    await fetch(
+      `${base}/api/invoices/${voidDraft.invoiceId}?organizationId=${f.orgA}`,
+      { headers: { cookie } },
+    )
+  ).json();
+  assert.equal(voidDetail.data.invoice.status, "void");
+  assert.equal(voidDetail.data.invoice.balanceMinor, "0");
+  const voidPdf = await fetch(
+    `${base}/api/invoices/${voidDraft.invoiceId}/pdf?organizationId=${f.orgA}`,
+    { headers: { cookie } },
+  );
+  assert.equal(voidPdf.status, 200);
+  await writeFile(
+    ".local/payment-evidence/invoice-void-production.pdf",
+    Buffer.from(await voidPdf.arrayBuffer()),
+  );
+  console.log(
+    "PASS production owner refund, same-request replay, credit/history with original totals retained, void status/balance and private void PDF.",
+  );
   const browser = await chromium.launch();
   try {
     const context = await browser.newContext();
