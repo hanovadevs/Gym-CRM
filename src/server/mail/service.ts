@@ -73,7 +73,7 @@ export function accountMessage(
       ? "Your Jym CRM staff invitation"
       : "Reset your Jym CRM password",
     text: `${intro}\n\n${title}:\n${payload.url}\n\nThis link expires in 30 minutes and can be used once. If you did not expect this message, ignore it.`,
-    html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;color:#202725"><h1 style="font-size:24px">${title}</h1><p>${escape(intro)}</p><p><a style="display:inline-block;background:#416658;color:#fff;padding:14px 20px;border-radius:10px;text-decoration:none" href="${escape(payload.url)}">${title}</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not expect this message, ignore it.</p><p>Jym CRM</p></div>`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px;color:#1E2937"><h1 style="font-size:24px">${title}</h1><p>${escape(intro)}</p><p><a style="display:inline-block;background:#253C58;color:#fff;padding:14px 20px;border-radius:0;text-decoration:none" href="${escape(payload.url)}">${title}</a></p><p>This link expires in 30 minutes and can be used once.</p><p>If you did not expect this message, ignore it.</p><p>Jym CRM</p></div>`,
   };
 }
 type Sender = (

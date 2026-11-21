@@ -15,6 +15,7 @@ import {
 } from "./profile-schemas";
 import type { Profile } from "./profile-types";
 import { readMembershipContext } from "@/modules/memberships/service";
+import { readPaymentPage } from "@/modules/payments/service";
 export function createProfileService(
   security: ReturnType<typeof createSecurity>,
 ) {
@@ -75,6 +76,13 @@ export function createProfileService(
         const memberships = await readMembershipContext(db, scope, member);
         return {
           organization,
+          payments: await readPaymentPage(db, scope, {
+            organizationId: scope.organizationId,
+            memberId: id,
+            q: "",
+            method: "all",
+            page: 1,
+          }),
           branches,
           today: localToday(organization.timeZone),
           canManageSettings: can(scope.role, "settings.read"),

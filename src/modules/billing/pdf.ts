@@ -56,7 +56,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         width: number,
         size = 10,
         bold = false,
-        color = "#202725",
+        color = "#1E2937",
         align: "left" | "right" = "left",
       ) {
         font(value, size, bold);
@@ -78,7 +78,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           330,
           continued ? 15 : 23,
           true,
-          "#416658",
+          "#253C58",
         );
         text(
           "INVOICE",
@@ -87,10 +87,10 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           161,
           continued ? 16 : 24,
           true,
-          "#202725",
+          "#1E2937",
           "right",
         );
-        text(i.number!, 350, 82, 201, 10, true, "#416658", "right");
+        text(i.number!, 350, 82, 201, 10, true, "#253C58", "right");
         if (continued)
           return Math.max(
             111,
@@ -101,13 +101,13 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           data.issuer.address,
           [data.issuer.email, data.issuer.phone].filter(Boolean).join(" | "),
         ].filter(Boolean)) {
-          text(v, 44, y, 300, 9, false, "#68716d");
+          text(v, 44, y, 300, 9, false, "#526276");
           y += height(v, 300, 9) + 5;
         }
         y = Math.max(y + 22, 135);
-        text("BILL TO", 44, y, 290, 8, true, "#68716d");
-        text("ISSUED", 365, y, 90, 8, true, "#68716d");
-        text("DUE", 460, y, 91, 8, true, "#68716d");
+        text("BILL TO", 44, y, 290, 8, true, "#526276");
+        text("ISSUED", 365, y, 90, 8, true, "#526276");
+        text("DUE", 460, y, 91, 8, true, "#526276");
         y += 19;
         text(i.recipientName, 44, y, 290, 14, true);
         text(date(i.issuedOn), 365, y, 90, 9);
@@ -121,7 +121,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           340,
           9,
           false,
-          "#68716d",
+          "#526276",
         );
         y += height(i.recipientCode + " | " + i.branchName, 340, 9) + 22;
         text(i.description, 44, y, W, 13, true);
@@ -132,7 +132,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
             date(data.membershipTerm.startOn) +
             " - " +
             date(previousDay(data.membershipTerm.endOn));
-          text(v, 44, y, W, 9, false, "#68716d");
+          text(v, 44, y, W, 9, false, "#526276");
           y += height(v, W, 9) + 10;
         }
         return y + 15;
@@ -140,7 +140,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
       const xs = [44, 269, 304, 384, 464],
         widths = [215, 25, 70, 70, 87];
       function tableHead(y: number) {
-        doc.roundedRect(44, y, W, 30, 7).fill("#edf2ef");
+        doc.roundedRect(44, y, W, 30, 7).fill("#DCE4EE");
         ["Description", "Qty", "Unit price", "Discount", "Amount"].forEach(
           (v, n) =>
             text(
@@ -150,7 +150,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
               widths[n] - (n === 0 ? 10 : 0),
               8,
               true,
-              "#416658",
+              "#253C58",
               n > 1 ? "right" : "left",
             ),
         );
@@ -182,7 +182,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
             widths[n],
             n ? 9 : 10,
             n === 4,
-            "#202725",
+            "#1E2937",
             n > 1 ? "right" : "left",
           ),
         );
@@ -193,7 +193,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         doc.addPage();
         y = heading(true);
       }
-      text("Subtotal", 305, y, 110, 9, false, "#68716d");
+      text("Subtotal", 305, y, 110, 9, false, "#526276");
       text(
         money(data.subtotalMinor),
         415,
@@ -201,11 +201,11 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         136,
         10,
         false,
-        "#202725",
+        "#1E2937",
         "right",
       );
       y += 26;
-      text("Discounts", 305, y, 110, 9, false, "#68716d");
+      text("Discounts", 305, y, 110, 9, false, "#526276");
       text(
         money(data.discountMinor),
         415,
@@ -213,15 +213,15 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         136,
         10,
         false,
-        "#202725",
+        "#1E2937",
         "right",
       );
       y += 26;
       text("Invoice total", 305, y, 110, 11, true);
-      text(money(i.totalMinor), 415, y, 136, 11, true, "#202725", "right");
+      text(money(i.totalMinor), 415, y, 136, 11, true, "#1E2937", "right");
       y += 30;
-      doc.roundedRect(295, y, 256, 43, 9).fill("#edf2ef");
-      text("Outstanding", 305, y + 13, 110, 10, true, "#416658");
+      doc.roundedRect(295, y, 256, 43, 9).fill("#DCE4EE");
+      text("Outstanding", 305, y + 13, 110, 10, true, "#253C58");
       text(
         money(i.balanceMinor),
         415,
@@ -229,7 +229,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         126,
         10,
         true,
-        "#416658",
+        "#253C58",
         "right",
       );
       y += 69;
@@ -240,16 +240,16 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
         doc.addPage();
         y = heading(true);
       }
-      text(note, 44, y, W, 9, false, "#68716d");
+      text(note, 44, y, W, 9, false, "#526276");
       y += height(note, W, 9) + 16;
       if (data.issuer.footer)
-        text(data.issuer.footer, 44, y, W, 9, false, "#68716d");
+        text(data.issuer.footer, 44, y, W, 9, false, "#526276");
       const range = doc.bufferedPageRange();
       for (let page = 0; page < range.count; page++) {
         doc.switchToPage(page);
         font("Page", 8);
         doc
-          .fillColor("#68716d")
+          .fillColor("#526276")
           .text(`${i.number} | Page ${page + 1} of ${range.count}`, 44, 770, {
             width: W,
             align: "right",

@@ -9,6 +9,8 @@ import { invoiceTotals } from "./calculations";
 import { exactMoney, invoiceStatus } from "./format";
 import type { DraftValues, InvoiceQuery } from "./schemas";
 import type { InvoiceList, InvoiceDetail, Recipient } from "./types";
+import { PaymentDrawer } from "@/modules/payments/payment-drawer";
+import { PaymentLedger } from "@/modules/payments/payment-ledger";
 async function json(url: string, options?: RequestInit) {
   const r = await fetch(url, { cache: "no-store", ...options }),
     j = await r.json();
@@ -50,7 +52,9 @@ export function InvoicesScreen({
         ? { id: initialDetail.invoice.id, data: initialDetail }
         : null,
     ),
-    [pdfBusy, setPdfBusy] = useState(false);
+    [pdfBusy, setPdfBusy] = useState(false),
+    [payment, setPayment] = useState<{ initial?: InvoiceDetail } | null>(null),
+    [view, setView] = useState<"invoices" | "receipts">("invoices");
   const seq = useRef(0),
     detailSeq = useRef(0),
     lastQuery = useRef(initial.query),
@@ -210,16 +214,25 @@ export function InvoicesScreen({
           <h1>Invoices &amp; balances</h1>
           <p>Review issued charges, outstanding balances and draft invoices.</p>
         </div>
-        <button
-          className="button primary"
-          disabled={locked}
-          onClick={() => {
-            setError("");
-            setEditor({ kind: "create", key: crypto.randomUUID() });
-          }}
-        >
-          Create invoice
-        </button>
+        <div className="page-actions">
+          <button
+            className="button primary"
+            disabled={locked}
+            onClick={() => setPayment({})}
+          >
+            Record payment
+          </button>
+          <button
+            className="button secondary"
+            disabled={locked}
+            onClick={() => {
+              setError("");
+              setEditor({ kind: "create", key: crypto.randomUUID() });
+            }}
+          >
+            Create invoice
+          </button>
+        </div>
       </div>
       {message ? (
         <p role="status" className="settings-success">
@@ -240,319 +253,372 @@ export function InvoicesScreen({
           Reload invoices
         </button>
       ) : null}
-      {!failed && !busy ? (
-        <div className="invoice-summary">
-          <section className="panel">
-            <SectionTitle
-              title="Outstanding"
-              help="Issued invoice balances within your selected branch, search, member and issue-date filters. Currencies are kept separate. Drafts are not debts."
-            />
-            {data.summary.currencies.length ? (
-              data.summary.currencies.map((c) => (
-                <p className="invoice-metric" key={c.currency}>
-                  {money(c.outstandingMinor, c.currency)}{" "}
-                  <small>{c.currency}</small>
-                </p>
-              ))
-            ) : (
-              <p className="invoice-metric">No issued balances</p>
-            )}
-            <p>{data.summary.outstandingCount} invoices with a balance</p>
-          </section>
-          <section className="panel">
-            <SectionTitle
-              title="Overdue invoices"
-              help="An issued invoice is overdue when its positive balance remains after the due date in the gym's time zone. Due today is outstanding, not overdue."
-            />
-            <p className="invoice-metric">{data.summary.overdueCount}</p>
-            {data.summary.currencies
-              .filter((c) => BigInt(c.overdueMinor) > 0n)
-              .map((c) => (
-                <p key={c.currency}>{money(c.overdueMinor, c.currency)}</p>
-              ))}
-          </section>
-          <section className="panel">
-            <SectionTitle
-              title="Draft invoices"
-              help="Drafts have no invoice number and do not create debt. Editing retains earlier line revisions. Review and issue a draft to commit the charge."
-            />
-            <p className="invoice-metric">{data.summary.draftCount}</p>
-            <p>Review before issuing</p>
-          </section>
-        </div>
-      ) : null}
       <div
+        className="billing-view-tabs"
         role="tablist"
-        aria-label="Invoice records"
-        className="invoice-tabs"
+        aria-label="Billing views"
         onKeyDown={(e) => {
           if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key))
             return;
-          const tabs = Array.from(
-            e.currentTarget.querySelectorAll<HTMLButtonElement>(
-              '[role="tab"]:not(:disabled)',
-            ),
-          );
-          if (!tabs.length) return;
           e.preventDefault();
-          const current = tabs.indexOf(
-            document.activeElement as HTMLButtonElement,
-          );
           const next =
             e.key === "Home"
-              ? 0
+              ? "invoices"
               : e.key === "End"
-                ? tabs.length - 1
-                : (current + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) %
-                  tabs.length;
-          tabs[next].focus();
-          tabs[next].click();
+                ? "receipts"
+                : view === "invoices"
+                  ? "receipts"
+                  : "invoices";
+          setView(next);
+          e.currentTarget
+            .querySelectorAll<HTMLButtonElement>('[role="tab"]')
+            [next === "invoices" ? 0 : 1]?.focus();
         }}
       >
-        {(
-          [
-            ["all", "All invoices"],
-            ["outstanding", "Outstanding"],
-            ["overdue", "Overdue"],
-            ["draft", "Drafts"],
-            ["issued", "Issued"],
-          ] as const
-        ).map(([status, label]) => (
-          <button
-            key={status}
-            role="tab"
-            aria-selected={data.query.status === status}
-            disabled={busy}
-            onClick={() => load({ ...lastQuery.current, status, page: 1 })}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <form
-        className="invoice-filters"
-        onSubmit={(e) => {
-          e.preventDefault();
-          load({ ...lastQuery.current, q, page: 1 });
-        }}
-      >
-        <label>
-          Search invoices
-          <input
-            value={q}
-            maxLength={100}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Invoice, member, code or description"
-          />
-        </label>
-        <label>
-          Branch
-          <select
-            aria-label="Invoice branch"
-            value={data.query.branchId ?? ""}
-            disabled={busy}
-            onChange={(e) =>
-              load({
-                ...lastQuery.current,
-                branchId: e.target.value || undefined,
-                page: 1,
-              })
-            }
-          >
-            <option value="">All permitted branches</option>
-            {data.branches.map((b) => (
-              <option key={b.id} value={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Issued from
-          <input
-            type="date"
-            value={data.query.from ?? ""}
-            disabled={busy}
-            onChange={(e) =>
-              load({
-                ...lastQuery.current,
-                from: e.target.value || undefined,
-                page: 1,
-              })
-            }
-          />
-        </label>
-        <label>
-          Through
-          <input
-            type="date"
-            value={data.query.to ?? ""}
-            disabled={busy}
-            onChange={(e) =>
-              load({
-                ...lastQuery.current,
-                to: e.target.value || undefined,
-                page: 1,
-              })
-            }
-          />
-        </label>
-        <label>
-          Sort
-          <select
-            aria-label="Invoice sort"
-            value={data.query.sort}
-            disabled={busy}
-            onChange={(e) =>
-              load({
-                ...lastQuery.current,
-                sort: e.target.value as InvoiceQuery["sort"],
-                page: 1,
-              })
-            }
-          >
-            <option value="newest">Newest first</option>
-            <option value="due">Due date</option>
-            <option value="amount">Highest amount</option>
-          </select>
-        </label>
-        <button className="button secondary" disabled={busy}>
-          Search
-        </button>
-      </form>
-      {data.query.memberId ? (
-        <p className="support">
-          Showing invoices for this member.{" "}
-          <a
-            className="text-action"
-            href={`/payments?organizationId=${data.organization.id}`}
-          >
-            Show all members
-          </a>
-        </p>
-      ) : null}
-      {busy ? (
-        <p role="status" className="empty">
-          Loading invoices…
-        </p>
-      ) : failed ? null : (
-        <section
-          className="panel invoice-table-panel"
-          aria-label="Invoice list"
+        <button
+          role="tab"
+          aria-selected={view === "invoices"}
+          tabIndex={view === "invoices" ? 0 : -1}
+          onClick={() => setView("invoices")}
         >
-          <div className="table-scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Invoice</th>
-                  <th>Member</th>
-                  <th>Description</th>
-                  <th>Due date</th>
-                  <th>Total</th>
-                  <th>Outstanding</th>
-                  <th>Status</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.invoices.map((i) => (
-                  <tr key={i.id}>
-                    <td>
-                      {i.number ?? "Draft"}
-                      <small>{i.branchName}</small>
-                    </td>
-                    <td>
-                      {i.recipientName}
-                      <small>{i.recipientCode}</small>
-                    </td>
-                    <td>{i.description}</td>
-                    <td>{i.dueOn}</td>
-                    <td>{money(i.totalMinor, i.currency)}</td>
-                    <td>
-                      {i.status === "draft"
-                        ? "Not issued"
-                        : money(i.balanceMinor, i.currency)}
-                    </td>
-                    <td>
-                      <span
-                        className={
-                          "pill " +
-                          (i.status === "draft"
-                            ? "neutral"
-                            : BigInt(i.balanceMinor) > 0n
-                              ? "warning"
-                              : "green")
-                        }
-                      >
-                        {invoiceStatus(i, data.today)}
-                      </span>
-                    </td>
-                    <td>
-                      <button
-                        className="text-action"
-                        aria-label={`View ${i.number ?? i.description}`}
-                        onClick={() => {
-                          setError("");
-                          openDetail(i.id);
-                        }}
-                      >
-                        View
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!data.invoices.length ? (
-            <div className="empty">
-              <h2>
-                {data.query.q ||
-                data.query.status !== "all" ||
-                data.query.branchId ||
-                data.query.from ||
-                data.query.to
-                  ? "No matching invoices"
-                  : "No invoices yet"}
-              </h2>
-              <p>
-                Enroll a member to issue their plan charge, or create a draft
-                for other services.
-              </p>
+          Invoices &amp; balances
+        </button>
+        <button
+          role="tab"
+          aria-selected={view === "receipts"}
+          tabIndex={view === "receipts" ? 0 : -1}
+          onClick={() => setView("receipts")}
+        >
+          Payments &amp; receipts
+        </button>
+      </div>
+      {view === "invoices" ? (
+        <>
+          {!failed && !busy ? (
+            <div className="invoice-summary">
+              <section className="panel">
+                <SectionTitle
+                  title="Outstanding"
+                  help="Issued invoice balances within your selected branch, search, member and issue-date filters. Currencies are kept separate. Drafts are not debts."
+                />
+                {data.summary.currencies.length ? (
+                  data.summary.currencies.map((c) => (
+                    <p className="invoice-metric" key={c.currency}>
+                      {money(c.outstandingMinor, c.currency)}{" "}
+                      <small>{c.currency}</small>
+                    </p>
+                  ))
+                ) : (
+                  <p className="invoice-metric">No issued balances</p>
+                )}
+                <p>{data.summary.outstandingCount} invoices with a balance</p>
+              </section>
+              <section className="panel">
+                <SectionTitle
+                  title="Overdue invoices"
+                  help="An issued invoice is overdue when its positive balance remains after the due date in the gym's time zone. Due today is outstanding, not overdue."
+                />
+                <p className="invoice-metric">{data.summary.overdueCount}</p>
+                {data.summary.currencies
+                  .filter((c) => BigInt(c.overdueMinor) > 0n)
+                  .map((c) => (
+                    <p key={c.currency}>{money(c.overdueMinor, c.currency)}</p>
+                  ))}
+              </section>
+              <section className="panel">
+                <SectionTitle
+                  title="Draft invoices"
+                  help="Drafts have no invoice number and do not create debt. Editing retains earlier line revisions. Review and issue a draft to commit the charge."
+                />
+                <p className="invoice-metric">{data.summary.draftCount}</p>
+                <p>Review before issuing</p>
+              </section>
             </div>
           ) : null}
-          <div className="member-pagination">
-            <span>
-              {data.total} invoices · Page {data.page} of{" "}
-              {Math.max(1, Math.ceil(data.total / 25))}
-            </span>
-            <div>
+          <div
+            role="tablist"
+            aria-label="Invoice records"
+            className="invoice-tabs"
+            onKeyDown={(e) => {
+              if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(e.key))
+                return;
+              const tabs = Array.from(
+                e.currentTarget.querySelectorAll<HTMLButtonElement>(
+                  '[role="tab"]:not(:disabled)',
+                ),
+              );
+              if (!tabs.length) return;
+              e.preventDefault();
+              const current = tabs.indexOf(
+                document.activeElement as HTMLButtonElement,
+              );
+              const next =
+                e.key === "Home"
+                  ? 0
+                  : e.key === "End"
+                    ? tabs.length - 1
+                    : (current +
+                        (e.key === "ArrowRight" ? 1 : -1) +
+                        tabs.length) %
+                      tabs.length;
+              tabs[next].focus();
+              tabs[next].click();
+            }}
+          >
+            {(
+              [
+                ["all", "All invoices"],
+                ["outstanding", "Outstanding"],
+                ["overdue", "Overdue"],
+                ["draft", "Drafts"],
+                ["issued", "Issued"],
+              ] as const
+            ).map(([status, label]) => (
               <button
-                disabled={locked || data.page === 1}
-                onClick={() =>
-                  load({ ...lastQuery.current, page: data.page - 1 })
-                }
+                key={status}
+                role="tab"
+                aria-selected={data.query.status === status}
+                disabled={busy}
+                onClick={() => load({ ...lastQuery.current, status, page: 1 })}
               >
-                Previous invoices
+                {label}
               </button>
-              <button
-                disabled={locked || data.page * 25 >= data.total}
-                onClick={() =>
-                  load({ ...lastQuery.current, page: data.page + 1 })
-                }
-              >
-                Next invoices
-              </button>
-            </div>
+            ))}
           </div>
-        </section>
-      )}
+          <form
+            className="invoice-filters"
+            onSubmit={(e) => {
+              e.preventDefault();
+              load({ ...lastQuery.current, q, page: 1 });
+            }}
+          >
+            <label>
+              Search invoices
+              <input
+                value={q}
+                maxLength={100}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Invoice, member, code or description"
+              />
+            </label>
+            <label>
+              Branch
+              <select
+                aria-label="Invoice branch"
+                value={data.query.branchId ?? ""}
+                disabled={busy}
+                onChange={(e) =>
+                  load({
+                    ...lastQuery.current,
+                    branchId: e.target.value || undefined,
+                    page: 1,
+                  })
+                }
+              >
+                <option value="">All permitted branches</option>
+                {data.branches.map((b) => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Issued from
+              <input
+                type="date"
+                value={data.query.from ?? ""}
+                disabled={busy}
+                onChange={(e) =>
+                  load({
+                    ...lastQuery.current,
+                    from: e.target.value || undefined,
+                    page: 1,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Through
+              <input
+                type="date"
+                value={data.query.to ?? ""}
+                disabled={busy}
+                onChange={(e) =>
+                  load({
+                    ...lastQuery.current,
+                    to: e.target.value || undefined,
+                    page: 1,
+                  })
+                }
+              />
+            </label>
+            <label>
+              Sort
+              <select
+                aria-label="Invoice sort"
+                value={data.query.sort}
+                disabled={busy}
+                onChange={(e) =>
+                  load({
+                    ...lastQuery.current,
+                    sort: e.target.value as InvoiceQuery["sort"],
+                    page: 1,
+                  })
+                }
+              >
+                <option value="newest">Newest first</option>
+                <option value="due">Due date</option>
+                <option value="amount">Highest amount</option>
+              </select>
+            </label>
+            <button className="button secondary" disabled={busy}>
+              Search
+            </button>
+          </form>
+          {data.query.memberId ? (
+            <p className="support">
+              Showing invoices for this member.{" "}
+              <a
+                className="text-action"
+                href={`/payments?organizationId=${data.organization.id}`}
+              >
+                Show all members
+              </a>
+            </p>
+          ) : null}
+          {busy ? (
+            <p role="status" className="empty">
+              Loading invoices…
+            </p>
+          ) : failed ? null : (
+            <section
+              className="panel invoice-table-panel"
+              aria-label="Invoice list"
+            >
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Invoice</th>
+                      <th>Member</th>
+                      <th>Description</th>
+                      <th>Due date</th>
+                      <th>Total</th>
+                      <th>Outstanding</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.invoices.map((i) => (
+                      <tr key={i.id}>
+                        <td>
+                          {i.number ?? "Draft"}
+                          <small>{i.branchName}</small>
+                        </td>
+                        <td>
+                          {i.recipientName}
+                          <small>{i.recipientCode}</small>
+                        </td>
+                        <td>{i.description}</td>
+                        <td>{i.dueOn}</td>
+                        <td>{money(i.totalMinor, i.currency)}</td>
+                        <td>
+                          {i.status === "draft"
+                            ? "Not issued"
+                            : money(i.balanceMinor, i.currency)}
+                        </td>
+                        <td>
+                          <span
+                            className={
+                              "pill " +
+                              (i.status === "draft"
+                                ? "neutral"
+                                : BigInt(i.balanceMinor) > 0n
+                                  ? "warning"
+                                  : "green")
+                            }
+                          >
+                            {invoiceStatus(i, data.today)}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            className="text-action"
+                            aria-label={`View ${i.number ?? i.description}`}
+                            onClick={() => {
+                              setError("");
+                              openDetail(i.id);
+                            }}
+                          >
+                            View
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {!data.invoices.length ? (
+                <div className="empty">
+                  <h2>
+                    {data.query.q ||
+                    data.query.status !== "all" ||
+                    data.query.branchId ||
+                    data.query.from ||
+                    data.query.to
+                      ? "No matching invoices"
+                      : "No invoices yet"}
+                  </h2>
+                  <p>
+                    Enroll a member to issue their plan charge, or create a
+                    draft for other services.
+                  </p>
+                </div>
+              ) : null}
+              <div className="member-pagination">
+                <span>
+                  {data.total} invoices · Page {data.page} of{" "}
+                  {Math.max(1, Math.ceil(data.total / 25))}
+                </span>
+                <div>
+                  <button
+                    disabled={locked || data.page === 1}
+                    onClick={() =>
+                      load({ ...lastQuery.current, page: data.page - 1 })
+                    }
+                  >
+                    Previous invoices
+                  </button>
+                  <button
+                    disabled={locked || data.page * 25 >= data.total}
+                    onClick={() =>
+                      load({ ...lastQuery.current, page: data.page + 1 })
+                    }
+                  >
+                    Next invoices
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+        </>
+      ) : !failed && !busy ? (
+        <PaymentLedger
+          key={data.requestId}
+          initial={data.payments}
+          branches={data.branches}
+          organizationId={data.organization.id}
+          locale={data.organization.locale}
+        />
+      ) : null}
       <p className="support">
-        Invoice dates and balances are separate from membership access. Payment
-        collection and paid receipts will be connected in the next billing
-        phase.
+        Invoice dates, payments and membership access are separate. Every
+        recorded payment has a paid receipt; other access rules still apply
+        after settlement.
       </p>
-      {detail && !editor ? (
+      {detail && !editor && !payment ? (
         <Drawer
           title="Invoice details"
           busy={pdfBusy || busy}
@@ -579,6 +645,16 @@ export function InvoicesScreen({
                 </p>
               ) : null}
               <div className="invoice-actions">
+                {detail.data.invoice.status === "issued" &&
+                BigInt(detail.data.invoice.balanceMinor) > 0n ? (
+                  <button
+                    className="button primary"
+                    disabled={locked}
+                    onClick={() => setPayment({ initial: detail.data })}
+                  >
+                    Record payment
+                  </button>
+                ) : null}
                 {detail.data.invoice.status === "draft" ? (
                   <>
                     <button
@@ -653,6 +729,35 @@ export function InvoicesScreen({
             />
           )}
         </Drawer>
+      ) : null}
+      {payment ? (
+        <PaymentDrawer
+          organizationId={data.organization.id}
+          locale={data.organization.locale}
+          today={data.today}
+          branchId={data.query.branchId}
+          initial={payment.initial}
+          onClose={() => setPayment(null)}
+          onSaved={async (result) => {
+            setMessage(`Payment recorded. Receipt ${result.receiptNumber}.`);
+            try {
+              await load(lastQuery.current, true);
+              if (detail) {
+                const fresh: InvoiceDetail = await json(
+                  `/api/invoices/${detail.id}?organizationId=${data.organization.id}`,
+                );
+                setDetail({ id: detail.id, data: fresh });
+              }
+            } catch (e) {
+              setBlocked(true);
+              setFailed(true);
+              setError(
+                "Payment was saved. Reload invoices before recording another payment.",
+              );
+              throw e;
+            }
+          }}
+        />
       ) : null}
     </WorkspaceFrame>
   );
@@ -737,6 +842,13 @@ function InvoiceContents({
         <dt>Outstanding</dt>
         <dd>{i.status === "draft" ? "Not issued" : money(i.balanceMinor)}</dd>
       </dl>
+      <PaymentLedger
+        key={detail.requestId}
+        initial={detail.payments}
+        organizationId={detail.organization.id}
+        locale={detail.organization.locale}
+        compact
+      />
       <p className="support">
         {i.status === "draft"
           ? `Draft revision ${i.lineRevision}. No invoice number or debt exists yet.`

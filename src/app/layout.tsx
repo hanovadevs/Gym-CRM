@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./theme.css";
 export const metadata: Metadata = {
-  title: "Jym CRM · Crown Fitness",
+  title: "Jym CRM | Gym management",
   description: "Gym operations, thoughtfully organized.",
 };
 export default function Layout({ children }: { children: React.ReactNode }) {

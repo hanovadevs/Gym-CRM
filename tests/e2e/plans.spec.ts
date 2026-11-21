@@ -160,6 +160,9 @@ test("create, immutable version history and responsive catalog match the referen
   await seed(page, "All access");
   await seed(page, "Personal training");
   await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Create plan", exact: true }),
+  ).toBeEnabled();
   for (const width of [1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await page.evaluate(() => window.scrollTo(0, 0));

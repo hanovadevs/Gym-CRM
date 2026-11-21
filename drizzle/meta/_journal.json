@@ -127,6 +127,20 @@
       "when": 1795276066892,
       "tag": "0017_invoice_currency",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1795277742608,
+      "tag": "0018_payments_and_allocations",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795277743804,
+      "tag": "0019_payment_security",
+      "breakpoints": true
     }
   ]
 }

@@ -100,7 +100,7 @@ test("general settings persist, affect workspace and reject stale forms without 
   await expect(page.getByLabel("Time zone", { exact: true })).toHaveValue(
     "Asia/Dubai",
   );
-  await expect(page.locator(".receipt-example")).toContainText("CROWN-000001");
+  await expect(page.locator(".receipt-example")).toContainText("CROWN-RC-000001");
   const response = await page.request.get(
     "/api/settings?organizationId=" + f.orgA,
   );

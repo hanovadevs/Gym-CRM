@@ -48,6 +48,22 @@ describe("Invoice arithmetic and status", () => {
       "No balance",
     );
   });
+  it("labels actual partial and fully settled invoices without claiming payment on free charges", () => {
+    const i = {
+      status: "issued",
+      balanceMinor: "500",
+      totalMinor: "1000",
+      dueOn: "2026-11-21",
+    };
+    expect(invoiceStatus(i, "2026-11-21")).toBe("Partially paid");
+    expect(invoiceStatus({ ...i, balanceMinor: "0" }, "2026-11-21")).toBe(
+      "Paid",
+    );
+    expect(
+      invoiceStatus({ ...i, balanceMinor: "0", totalMinor: "0" }, "2026-11-21"),
+    ).toBe("No balance");
+    expect(invoiceStatus(i, "2026-11-22")).toBe("Overdue");
+  });
   it("rejects unsupported filters and reversed date ranges", () => {
     expect(invoiceQuery.safeParse({ sort: "raw SQL" }).success).toBe(false);
     expect(

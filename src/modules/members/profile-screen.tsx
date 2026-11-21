@@ -8,6 +8,7 @@ import { useHydrated } from "@/lib/use-hydrated";
 import type { Profile } from "./profile-types";
 import { MembershipsPanel } from "@/modules/memberships/memberships-panel";
 import { eligibilityLabel } from "@/modules/memberships/state";
+import { PaymentLedger } from "@/modules/payments/payment-ledger";
 export function ProfileScreen({ initial }: { initial: Profile }) {
   const hydrated = useHydrated();
   const [data, setData] = useState(initial),
@@ -127,7 +128,12 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
           </div>
         </div>
         <div className="profile-actions">
-          <a className="button secondary" href={`/payments?organizationId=${data.organization.id}&memberId=${data.member.id}`}>Invoices &amp; balances</a>
+          <a
+            className="button secondary"
+            href={`/payments?organizationId=${data.organization.id}&memberId=${data.member.id}`}
+          >
+            Invoices &amp; balances
+          </a>
           <button disabled={locked || archived} onClick={() => open("member")}>
             Edit member
           </button>
@@ -194,24 +200,26 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
               buttons[next].focus();
             }}
           >
-            {["Overview", "Memberships", "Notes", "History"].map((t) => (
-              <button
-                id={"profile-tab-" + t}
-                aria-controls="profile-panel"
-                type="button"
-                role="tab"
-                key={t}
-                tabIndex={tab === t ? 0 : -1}
-                aria-selected={tab === t}
-                disabled={pending}
-                onClick={() => {
-                  setTab(t);
-                  setError("");
-                }}
-              >
-                {t}
-              </button>
-            ))}
+            {["Overview", "Memberships", "Payments", "Notes", "History"].map(
+              (t) => (
+                <button
+                  id={"profile-tab-" + t}
+                  aria-controls="profile-panel"
+                  type="button"
+                  role="tab"
+                  key={t}
+                  tabIndex={tab === t ? 0 : -1}
+                  aria-selected={tab === t}
+                  disabled={pending}
+                  onClick={() => {
+                    setTab(t);
+                    setError("");
+                  }}
+                >
+                  {t}
+                </button>
+              ),
+            )}
           </div>
           <div
             id="profile-panel"
@@ -234,8 +242,8 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
                     <dd>{eligibilityLabel(data.eligibility)}</dd>
                   </dl>
                   <p className="support">
-                    Membership history is connected below. Attendance and
-                    payments will appear when those services are connected.
+                    Membership and payment history are connected below.
+                    Attendance history will appear when visits are connected.
                   </p>
                 </section>
                 <section className="panel">
@@ -292,6 +300,15 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
                     "Membership changes were saved, but the profile could not refresh. Reload before editing again.",
                   );
                 }}
+              />
+            ) : null}
+            {tab === "Overview" || tab === "Payments" ? (
+              <PaymentLedger
+                key={data.requestId}
+                initial={data.payments}
+                organizationId={data.organization.id}
+                locale={data.organization.locale}
+                compact
               />
             ) : null}
             {tab === "Overview" || tab === "Notes" ? (

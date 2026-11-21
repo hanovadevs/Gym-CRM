@@ -1,4 +1,5 @@
 import type { InvoiceQuery, LineInput } from "./schemas";
+import type { PaymentPage } from "@/modules/payments/types";
 export type Invoice = {
   id: string;
   memberId: string;
@@ -20,6 +21,7 @@ export type Invoice = {
   createdAt: string;
 };
 export type InvoiceDetail = {
+  payments: PaymentPage;
   invoice: Invoice;
   items: (LineInput & { position: number; totalMinor: number })[];
   issuer: {
@@ -39,6 +41,7 @@ export type InvoiceDetail = {
   requestId: string;
 };
 export type InvoiceList = {
+  payments: PaymentPage;
   organization: {
     id: string;
     name: string;

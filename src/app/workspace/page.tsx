@@ -144,8 +144,7 @@ export default async function Workspace({
               ? "Manage your gym preferences and permitted staff settings. "
               : "Your workspace access is active. "}
             Register and maintain members in your permitted branches. Membership
-            enrollment is available from member profiles. Payment collection is
-            upcoming.
+            enrollment is available from member profiles. Record funds received and share paid receipts from Payments.
           </p>
           {workspace.actions.includes("settings.read") ? (
             <a

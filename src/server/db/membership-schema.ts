@@ -152,6 +152,7 @@ export const invoices = gym.table(
     unique().on(t.organizationId, t.id),
     unique().on(t.organizationId, t.number),
     unique().on(t.organizationId, t.membershipId),
+    unique("invoice_payment_identity").on(t.organizationId,t.id,t.memberId,t.originatingBranchId,t.currency),
     foreignKey({
       columns: [t.organizationId, t.memberId],
       foreignColumns: [members.organizationId, members.id],

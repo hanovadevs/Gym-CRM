@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 21 November 2026 (Asia/Karachi): SUB-01 membership lifecycle and UI-03 shared icon/collapse sidebar verified locally. PAY-01 invoice drafts, issued line/billing snapshots, balances and downloadable PDFs verified locally. Payment collection, paid receipts and attendance remain upcoming.
+Updated 21 November 2026 (Asia/Karachi): PAY-02 payments, allocations, paid receipts/PDF and valid paid activation verified locally. UI-04 Silver & Midnight glass theme and square buttons verified across live/preview screens. Next PAY-03 owner corrections/refunds/credits; attendance remains upcoming.
 
 ## State rules
 
@@ -8,12 +8,12 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-03 DONE; billing navigation connected |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-04 theme/glass/square buttons DONE; sidebar preserved |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
-| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB policy verified; paid receipt/access consumers in PAY-02/ATT-01 |
-| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership history connected; payments/visits and ATT-01 archival denial remain |
-| M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01 DONE; automatic paid activation/attendance in PAY-02/ATT-01 |
-| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PAY-01 invoices/balances/PDF DONE; next PAY-02 collection/receipts |
+| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB/PAY policy and paid receipt consumers verified; actual ATT-01 enforcement remains |
+| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership/payments history connected; visits and ATT-01 archival denial remain |
+| M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01/PAY-02 activation verified; actual ATT-01 enforcement remains |
+| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PAY-01/02 invoices, payments and paid receipts DONE; next PAY-03 corrections |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
 | M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
@@ -160,3 +160,20 @@ Actual checks: test:billing PASS on real sessions/two gyms/restricted runtime fo
 Visual evidence: reviewed invoices at 390/768/1280/1440, narrow invoice details/download, one-page PDF and all six long-invoice pages via rendered contact sheet/full last page, plus actual production PDF render. Retained doc/evidence/invoices-*.png, invoice-{detail,download}-390.png, invoice-download.pdf, invoice-render.png, invoice-multipage.pdf and invoice-multipage-review.png. Internal table scroll on narrow layouts; no page overflow. White/sage/charcoal, option icons and section info buttons retained. Corrected legacy table spacing and PDF footer blank-page defect; earlier failures are recorded in session log.
 
 State: M05 remains IN_PROGRESS for PAY-02/03 payment allocation, paid receipts, automatic paid activation and owner corrections/refunds/credits/void. M02/M03/M04 retain later payment/visit consumer gates. No local blocker, external message, real-owner change, destructive reset or public deployment. Final read-only SQL: GYM 18 migrations/one org/zero members/plans/memberships/invoices/items/requests/queued mail; gym_test 18 and zero fixtures; PostgreSQL 18.4 both. Next exact task PAY-02; preserve issued invoice/line snapshots and extend invoice_balances with actual settlement, not an unrelated balance implementation.
+
+
+## PAY-02 / UI-04 evidence — 21 November 2026, Asia/Karachi
+
+PAY-02 DONE locally. Exact partial/full manual payments (Cash/Bank transfer/Other), one full allocation per payment, real outstanding balances and immutable numbered paid receipts. Review preserves fields on error; lost-response same-key replay cannot duplicate a payment. Distinct-key concurrent payments and stale expected balances reject before overpayment. Payment/allocation/receipt counter/snapshot/member revision/audit and valid pending activation commit together; forced downstream failure rolls all back. Receipt read/print/private PDF can retry independently after payment success. Original payment balance remains historical after later installments.
+
+All protected operations recheck active org membership/action/original debt branch, including accountant minimum billing DTOs and current grant revocation. Archived debt/historical currency may be settled without restoring membership. Future starts, freeze, cancellation, expiry and other due debt remain separate eligibility rules. Full settlement only activates eligible pending linked membership. Saved receipt prefix/footer reaches new receipts; earlier issuer/recipient/branch and balance snapshots are preserved. Invoice detail and member profile show scoped 25/page payment history, searchable collections/method/received date/branch filters and separated currency totals. No unpaid receipt, gateway charge, refund or public file URL.
+
+Files: src/modules/payments/*, src/server/db/payment-schema.ts, /api/payments and /targets, /api/receipts/[id] and /pdf, /receipts/[id], invoice/profile/shared theme integration. Reviewed 0018_payments_and_allocations and 0019_payment_security applied to GYM/gym_test: 20 entries. Prior 0000–0017 unchanged. Composite tenant/financial identity constraints, RLS, immutable SELECT/INSERT runtime grants, direct invoice-lock/fresh-balance cap and deferred full-allocation triggers. Shared security_invoker balance view now subtracts actual allocations.
+
+Acceptance T11–T13, payment portion of T14, T33 payment consumers and T52–T54 PASS for implemented flows; refund/credit portions of T14 remain PAY-03, attendance T33 remains ATT-01. Actual commands: test:payments, test:billing and previous membership/profile/member/plan/settings/security/mail/auth/database/adapter suites all PASS serially. Full browser64 PASS (5.8m); final four-case focused recapture PASS (41.3s) and latest test:payments PASS. Final lint/typecheck,36 units, build/anonymous production and actual authenticated invoice/payment/receipt/PDF/font/profile production checks PASS. No schema drift or production dependency vulnerabilities.
+
+UI-04 DONE: exact supplied #F1F4F7/#DCE4EE/#FFFFFF/#253C58/#1E2937 shared palette; midnight glass sidebar, translucent white/silver panels, fields/tables/tabs/drawers/auth/PDF styling, sharp square buttons. Opaque/reduced-transparency/print and focus states preserved. Existing icon/collapse/mobile navigation and small section help icons remain; no gradients/decorative dots/Demo labels. Browser checks four widths, square controls, no page overflow, reduced-transparency white/no-blur fallback and existing keyboard/regression behavior. Main palette text contrast measured 11.25:1/6.24:1/11.47:1.
+
+Visual evidence opened/reviewed: doc/evidence/silver-midnight-*.png (six screens at390/768/1280/1440, auth and review sheets); receipt-{390,768,1280,1440}.png; payment-review/confirm, ledger, profile-payments-*.png. Actual receipt-browser/print/production/partial/paid PDFs one page each; long-brand/mixed-script stress two pages. Rendered/reviewed no blank pages, overlap or missing Latin/Arabic glyphs. Fixed footer/header/font and screenshot-hydration/color-transition issues recorded honestly in session log.
+
+M05 remains IN_PROGRESS for PAY-03 refunds/credits/owner corrections/void; M02/M03/M04 await actual attendance/visit consumers. GYM preserved: one organization, zero fictional operational rows/queued mail; gym_test clean, both restricted roles verified. No local blocker, real-owner change, external send, cloud cutover or public deployment. Next exact task PAY-03. Final runtime/GitHub confirmation in session log.

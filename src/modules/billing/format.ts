@@ -20,14 +20,23 @@ export function exactMoney(
     .join("");
 }
 export function invoiceStatus(
-  i: { status: string; balanceMinor: string; dueOn: string },
+  i: {
+    status: string;
+    balanceMinor: string;
+    dueOn: string;
+    totalMinor?: string;
+  },
   today: string,
 ) {
   return i.status === "draft"
     ? "Draft"
     : BigInt(i.balanceMinor) === 0n
-      ? "No balance"
+      ? BigInt(i.totalMinor ?? "0") > 0n
+        ? "Paid"
+        : "No balance"
       : i.dueOn < today
         ? "Overdue"
-        : "Outstanding";
+        : i.totalMinor && BigInt(i.balanceMinor) < BigInt(i.totalMinor)
+          ? "Partially paid"
+          : "Outstanding";
 }

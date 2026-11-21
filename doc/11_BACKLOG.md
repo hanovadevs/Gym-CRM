@@ -17,7 +17,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | PLAN-01 | M04 | MEM-01 | Immutable plan versions and snapshots | DONE | 0010/0011; scoped immutable catalog/snapshot contract; 43 browser/24 unit + DB suite; build/production PASS; next SUB-01 |
 | SUB-01 | M04 | PLAN-01 | Enrollment/renewal/freeze/cancel and overlap checks | DONE | 0012–0014; atomic enrollment invoice/snapshot/audit, policy/lifecycle/overlap/replay verified; 52 browser/30 unit and real-DB regression PASS; final gates in session log |
 | PAY-01 | M05 | SUB-01 | Invoices/balances/atomic numbering | DONE | 0015–0017; scoped draft/issue/lines/balances/numbering and private invoice PDF; 59 browser/35 unit + real-DB regression/build/production PDF PASS |
-| PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | NOT_STARTED | None yet |
+| PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | DONE | 0018/0019; atomic collection, immutable paid receipts/print/PDF, valid activation; 64 browser/36 units + serial real-DB/production checks PASS |
 | PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | NOT_STARTED | None yet |
 | ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | NOT_STARTED | None yet |
 | DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | NOT_STARTED | None yet |
@@ -31,6 +31,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | DB-MIG-01 | M14 | REL-01 + authorized target | Future Supabase rehearsal/reconciliation/cutover plan | NOT_STARTED | None yet |
 | MAIL-01 | M01 | AUTH-01 + SET-01 | Fixed-sender SMTP recovery/invitation delivery and verification | DONE | TLS auth + actual INBOX recovery receipt/reset/reuse denial; transactional invitations and safe delivery status tested; owner unchanged |
 | UI-03 | M00 | PLAN-01 | Icon sidebar with desktop collapse and accessible mobile navigation | DONE | Shared live/preview sidebar; desktop clearance/persistence, mobile focus/Escape/routes and final regression PASS; reviewed retained evidence |
+| UI-04 | M00 | UI-03 | Silver & Midnight theme, liquid glass surfaces and sharp buttons across app | DONE | Shared palette/glass/square controls, four widths, reduced-transparency/print/focus/regression and production captures verified; ADR-030 |
 
 ## Task evidence card
 
@@ -120,3 +121,12 @@ DONE: persisted invoice/outstanding lists, exact line quantities/fixed discounts
 User-added PDF requirement DONE: issued invoice Download PDF saves a shareable private attachment with branded bill/recipient details, item charges/discounts/total/outstanding/due date/original membership term when applicable. Permission rechecked; draft 409/anonymous 401; no public link/email or extra charge on retries. PDFKit/fonts pinned and licensed; original financial snapshots survive later name/brand edits. New font assets verified in production trace.
 
 Evidence T49–T51: real-DB billing plus previous module/security/mail/auth suites PASS serially; unit 35 PASS; full browser 59 PASS (2.6m); lint/typecheck/build/anonymous production smoke and actual authenticated production PDF flow PASS. db:generate no drift; audit --omit=dev zero vulnerabilities. Actual page/PDF review and retained files in the module tracker; earlier failures/corrections/current data counts/runtime/publishing in session log. Automated tests capture mail and seed only gym_test. No local blocker. Next PAY-02: exact partial/full manual payments, allocations, committed paid receipts, safe retries and automatic valid membership activation; PAY-03 owner corrections/refunds/credits/void remains separate.
+
+
+## PAY-02 / UI-04 task evidence
+
+DONE: partial/full manual payments, atomic allocations/audit/receipt numbering/snapshot/member version/eligible paid activation; exact outstanding debt view, currency-separated collections and profile/invoice receipt history. Same-key replay after lost response, changed payload/stale review/overpayment/concurrent caps and direct DB invariants verified. Historical receipt balance and original billing branch/issuer/recipient survive later changes. Current role/branch revocation applies to replay and download. Share via printable/private downloadable paid-receipt PDF; failed rendering cannot charge twice. Saved settings branding consumes real receipt flow.
+
+0018/0019 bring local databases to20 migrations, old0000–0017 unchanged. test:payments plus all previous real-DB suites PASS serially; full64 browsers/36 units PASS; final four focused visual/workflow recaptures PASS; lint/typecheck/build/anonymous production and actual authenticated production payment/receipt/PDF/profile checks PASS. Font traces/private headers, extracted/rendered standard/stress/print PDFs and four-width screenshots retained. UI-04 includes exact supplied palette, readable glass panels/drawers/sidebar, sharp buttons, info icons and no decorative indicators. See module card/session for actual commands, failures/corrections and scope.
+
+Next PAY-03 owner corrections/refunds/credits/void; full M05 remains IN_PROGRESS. Attendance, operational dashboard and release/recovery are separate gates. No external sends, owner-email change, valued-data reset or public deployment.

@@ -30,7 +30,7 @@ The user explicitly selected **local PostgreSQL now, easy migration to Supabase 
 
 ## UI
 
-Follow `doc/02_DESIGN_SYSTEM.md`: white/sage/charcoal, soft rounded panels, excellent spacing, text-first sidebar, few icons. No gradients, decorative dots/lines, emojis, or crowded screens. Implement loading, empty, error, validation, permission, and responsive states. Visible actions must function or be explicitly unavailable in a development preview.
+Follow `doc/02_DESIGN_SYSTEM.md` and ADR-030: user-selected Silver & Midnight (#F1F4F7/#DCE4EE/#FFFFFF/#253C58/#1E2937), readable liquid-glass surfaces, sharp button corners, excellent spacing and restrained sidebar icons. This supersedes the original sage/no-glass styling. No gradients, decorative dots/lines, emojis, or crowded screens. Implement loading, empty, error, validation, permission, and responsive states. Visible actions must function or be explicitly unavailable in a development preview.
 
 ## Project memory
 

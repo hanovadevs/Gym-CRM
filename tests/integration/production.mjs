@@ -62,6 +62,11 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/payments?organizationId=${org}`,"GET"],
+    [`/api/payments/targets?organizationId=${org}`,"GET"],
+    [`/api/receipts/${org}?organizationId=${org}`,"GET"],
+    [`/api/receipts/${org}/pdf?organizationId=${org}`,"GET"],
+    ["/api/payments","POST",{organizationId:org,invoiceId:org,requestKey:org,amountMinor:"100",expectedBalanceMinor:"100",currency:"PKR",method:"cash",paidOn:"2026-11-21"}],
     [`/api/invoices?organizationId=${org}`,"GET"],
     [`/api/invoices/${org}?organizationId=${org}`,"GET"],
     [`/api/invoices/${org}/pdf?organizationId=${org}`,"GET"],

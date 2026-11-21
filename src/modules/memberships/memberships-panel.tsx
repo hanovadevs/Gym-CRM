@@ -378,8 +378,8 @@ export function MembershipsPanel({
         </>
       ) : null}
       <p className="support">
-        Invoices record charges. Payment collection and paid receipts will be
-        connected in the billing phase.
+        Invoices record charges. Open an issued invoice to record funds received
+        and view its paid receipts. Full settlement activates eligible pending memberships.
       </p>
       {editor ? (
         <Drawer

@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 import pg from "pg";
 import assert from "node:assert/strict";
+import { chromium } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
@@ -163,6 +164,131 @@ try {
     );
   await mkdir(".local/billing-evidence", { recursive: true });
   await writeFile(".local/billing-evidence/invoice-production.pdf", bytes);
+
+  const paymentInput = {
+    organizationId: f.orgA,
+    invoiceId: draft.invoiceId,
+    requestKey: randomUUID(),
+    amountMinor: "200000",
+    expectedBalanceMinor: "450000",
+    currency: "PKR",
+    method: "bank_transfer",
+    paidOn: todayInZone("Asia/Karachi"),
+    reference: "PRODUCTION-CAPTURED-TRANSFER",
+    note: "Received coaching installment",
+  };
+  const partial = await post("/api/payments", paymentInput);
+  assert.equal(partial.balanceAfterMinor, "250000");
+  assert.equal(
+    (await post("/api/payments", paymentInput)).paymentId,
+    partial.paymentId,
+  );
+  const full = await post("/api/payments", {
+    ...paymentInput,
+    requestKey: randomUUID(),
+    amountMinor: "250000",
+    expectedBalanceMinor: "250000",
+  });
+  assert.equal(full.balanceAfterMinor, "0");
+  const receiptPath = `/api/receipts/${partial.paymentId}/pdf?organizationId=${f.orgA}`;
+  const paidPdf = await fetch(base + receiptPath, { headers: { cookie } });
+  assert.equal(paidPdf.status, 200);
+  assert.equal(paidPdf.headers.get("content-type"), "application/pdf");
+  assert.match(paidPdf.headers.get("cache-control")!, /no-store/);
+  assert.match(
+    paidPdf.headers.get("content-disposition")!,
+    /^attachment; filename="GYM-RC-\d+\.pdf"$/,
+  );
+  const paidBytes = Buffer.from(await paidPdf.arrayBuffer());
+  assert.equal(paidBytes.subarray(0, 5).toString(), "%PDF-");
+  assert.equal((await fetch(base + receiptPath)).status, 401);
+  const historical = await fetch(
+    `${base}/api/receipts/${partial.paymentId}?organizationId=${f.orgA}`,
+    { headers: { cookie } },
+  );
+  const receiptData = (await historical.json()).data;
+  assert.equal(receiptData.payment.balanceAfterMinor, "250000");
+  assert.equal(receiptData.invoiceBalanceMinor, "0");
+  assert.equal(
+    (
+      await admin.query(
+        "select count(*)::int n from gym.payments where invoice_id=$1",
+        [draft.invoiceId],
+      )
+    ).rows[0].n,
+    2,
+  );
+  const receiptTrace = JSON.parse(
+    await readFile(
+      ".next/server/app/api/receipts/[id]/pdf/route.js.nft.json",
+      "utf8",
+    ),
+  );
+  for (const file of [
+    "NotoSans-Regular.ttf",
+    "NotoSans-Bold.ttf",
+    "NotoNaskhArabic-Regular.ttf",
+  ])
+    assert.ok(receiptTrace.files.some((p: string) => p.endsWith(file)));
+  await mkdir(".local/payment-evidence", { recursive: true });
+  await writeFile(".local/payment-evidence/receipt-production.pdf", paidBytes);
+  const browser = await chromium.launch();
+  try {
+    const context = await browser.newContext();
+    await context.addCookies(
+      cookie.split(";").map((part) => {
+        const i = part.trim().indexOf("=");
+        const v = part.trim();
+        return {
+          name: v.slice(0, i),
+          value: v.slice(i + 1),
+          url: base,
+          httpOnly: true,
+        };
+      }),
+    );
+    const page = await context.newPage();
+    await page.goto(
+      `${base}/members/${member.member.id}?organizationId=${f.orgA}`,
+    );
+    await page.waitForLoadState("networkidle");
+    await page
+      .getByRole("heading", { name: "PDF production member", exact: true })
+      .waitFor();
+    for (const width of [1440, 1280, 768, 390]) {
+      await page.setViewportSize({ width, height: 1000 });
+      assert.ok(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      );
+      await page.screenshot({
+        path: `.local/payment-evidence/profile-payments-${width}.png`,
+        fullPage: true,
+      });
+    }
+    await page.getByRole("tab", { name: "Payments", exact: true }).click();
+    await page
+      .getByRole("region", { name: "Member payments", exact: true })
+      .getByRole("link")
+      .first()
+      .waitFor();
+    assert.equal(
+      await page
+        .getByRole("region", { name: "Member payments", exact: true })
+        .getByRole("link")
+        .count(),
+      2,
+    );
+    console.log(
+      "PASS: actual production member profile shows both saved payments; four responsive captures without page overflow.",
+    );
+  } finally {
+    await browser.close();
+  }
+  console.log(
+    "PASS: production partial/full payments, idempotent replay, persisted historical receipt/current balance, PDF attachment/no-store/anonymous denial and all embedded font traces. No external sends.",
+  );
   console.log(
     "PASS: actual production login/member/draft/issue/PDF flow on guarded gym_test; draft PDF 409, issued PDF attachment/no-store with embedded fonts, anonymous PDF 401, no extra issue/charge on download; all three font assets retained in build trace. No external mail.",
   );

@@ -18,6 +18,7 @@ import {
 } from "./schemas";
 import { invoiceTotals } from "./calculations";
 import type { Invoice, InvoiceDetail, InvoiceList } from "./types";
+import { readPaymentPage } from "@/modules/payments/service";
 export async function invoiceNumber(
   db: PoolClient,
   organizationId: string,
@@ -50,9 +51,17 @@ async function header(
   id: string,
   lock = false,
 ): Promise<Invoice> {
+  if (lock) {
+    const locked = await db.query(
+      `select i.id from gym.invoices i where ${scoped} and i.id=$3 for update`,
+      [s.organizationId, [...s.branchIds], id],
+    );
+    if (!locked.rowCount)
+      throw new BusinessError("NOT_FOUND", "Invoice not found.");
+  }
   const r = (
     await db.query(
-      `select ${fields} from ${joined} where ${scoped} and i.id=$3${lock ? " for update of i" : ""}`,
+      `select ${fields} from ${joined} where ${scoped} and i.id=$3`,
       [s.organizationId, [...s.branchIds], id],
     )
   ).rows[0];
@@ -89,6 +98,13 @@ async function details(
     : null;
   return {
     invoice: i,
+    payments: await readPaymentPage(db, s, {
+      organizationId: s.organizationId,
+      invoiceId: id,
+      q: "",
+      method: "all",
+      page: 1,
+    }),
     items,
     issuer,
     membershipTerm,
@@ -201,6 +217,16 @@ export function createBillingService(
         ).rows[0];
         return {
           organization,
+          payments: await readPaymentPage(db, s, {
+            organizationId: s.organizationId,
+            branchId: q.branchId,
+            memberId: q.memberId,
+            q: "",
+            method: "all",
+            from: today.slice(0, 7) + "-01",
+            to: today,
+            page: 1,
+          }),
           branches,
           ...r,
           pageSize: 25,

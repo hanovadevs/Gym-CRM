@@ -31,7 +31,8 @@
     "test:memberships": "node --conditions=react-server --import tsx tests/integration/memberships.ts",
     "test:billing": "node --conditions=react-server --import tsx tests/integration/billing.ts",
     "test:billing:production": "node --conditions=react-server --import tsx tests/integration/billing-production.ts",
-    "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts"
+    "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts",
+    "test:payments": "node --conditions=react-server --import tsx tests/integration/payments.ts"
   },
   "keywords": [],
   "author": "",

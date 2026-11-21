@@ -2,30 +2,30 @@
 
 Use `references/01_dashboard.png` as the visual anchor. Implement the flat application, not the original laptop/desk scene. Generated images can disagree on names, dates, labels and numbers; written rules and consistent fixtures override those details.
 
-## Initial tokens
+## Current tokens (user override, 21 November 2026; ADR-030)
 
 | Token | Value | Use |
 | --- | --- | --- |
-| Canvas | #F7F8F7 | Main background |
+| Canvas | #F1F4F7 | Main background |
 | Surface | #FFFFFF | Panels/forms/tables |
-| Primary text | #202725 | Main content |
-| Secondary text | #68716D | Supporting content |
-| Accent | #416658 | Main actions/chart emphasis |
-| Selected | #DCE5E0 | Navigation/tabs |
-| Border | #E7EBE8 | Necessary boundaries |
+| Primary text | #1E2937 | Main content |
+| Secondary text | #526276 | Supporting content |
+| Accent | #253C58 | Main actions/chart emphasis |
+| Selected | #DCE4EE | Navigation/tabs |
+| Border | #DCE4EE | Necessary boundaries |
 | Success | #E7F1E9 / #2F6844 | Labeled positive status |
 | Warning | #FFF1DE / #8A571F | Labeled due/expiring |
 | Danger | #FBE8E7 / #983F3A | Error/denial |
 
-Check contrast in the real UI and adjust text colors if needed. Light theme, no gradients, glass blur, blinking dots, emojis, thick borders, ornamental lines, saturated green flooding, or clutter. User update (21 November 2026): sidebar options use consistent outline icons and labels, with a collapse control and accessible icon-only compact mode (ADR-028).
+Check contrast in the real UI and adjust text colors if needed. Silver & Midnight light theme with restrained liquid glass: translucent white panels, backdrop blur, reflective inset highlights and soft shadows; midnight navigation and silver selected states. Use opaque fallback without backdrop-filter, reduced transparency support and clear print output. No gradients, blinking/decorative dots, emojis, ornamental lines or clutter. User update (21 November 2026): sidebar options use consistent outline icons and labels, with a collapse control and accessible icon-only compact mode (ADR-028).
 
-Use Inter or similar clean sans-serif, preferably bundled locally. Heading approximately 28px/600; body 14–16px; labels 13–14px; tabular numerals for money. Spacing 4/8/12/16/24/32/40px. Panels radius 16px, controls 10px, very soft shadow. Tables around 56–64px row height; readable first.
+Use Inter or similar clean sans-serif, preferably bundled locally. Heading approximately 28px/600; body 14–16px; labels 13–14px; tabular numerals for money. Spacing 4/8/12/16/24/32/40px. Panels radius 18px, fields 8px, all button edges square (0px), very soft shadow. Tables around 56–64px row height; readable first.
 
 ## Shell
 
 Sidebar 210–240px, main padding 28–32px, header about 72px. Navigation: Dashboard, Members, Plans, Attendance, Payments, Classes, Trainers, Enquiries, Expenses, Reports; Settings bottom. Hide unauthorized/disabled modules. An extremely faint bottom weights illustration is optional and must not compete with text.
 
-Current shared sidebar: rounded floating white panel, 232px wide (84px collapsed), restrained sage selected state, readable labels and compact gym context. Persist only the non-sensitive desktop collapse preference in browser storage. Mobile uses a focus-trapped left navigation drawer, Escape/Close and focus return to Menu. Sidebar width and content offset switch together without a layout animation, avoiding temporary overlap on resize or expansion. Icons have accessible link/button names; unauthorized routes stay hidden and development preview controls stay explicitly disabled.
+Current shared sidebar: rounded floating midnight glass panel, 232px wide (84px collapsed), silver selected state, readable labels and compact gym context. Persist only the non-sensitive desktop collapse preference in browser storage. Mobile uses a focus-trapped left navigation drawer, Escape/Close and focus return to Menu. Sidebar width and content offset switch together without a layout animation, avoiding temporary overlap on resize or expansion. Icons have accessible link/button names; unauthorized routes stay hidden and development preview controls stay explicitly disabled.
 
 Header contains organization/branch context, working search and avatar menu. Hide branch picker for one branch. Start global search with authorized member lookup rather than a fake universal search box. Page header has title, short subtitle, one main action. Avoid unnecessary KPI rows on every list.
 
@@ -39,7 +39,7 @@ Header contains organization/branch context, working search and avatar menu. Hid
 - Corrections: archive/cancel/reverse with real effect explained. Do not delete finance to make the table look clean.
 - Feedback: restrained inline errors/status/toasts, meaningful retry, no celebration effects.
 
-All pages need loading, no records, no search matches, validation failure, request failure/retry, forbidden, expired session, and successful save states. Never replace database failure with demo rows. Fixture mode displays a persistent small `Demo data` label and is disabled in production.
+All pages need loading, no records, no search matches, validation failure, request failure/retry, forbidden, expired session, and successful save states. Never replace database failure with demo rows. Fixture mode is disabled in production. User explicitly removed all Demo labels and decorative status indicators; use small accessible section info icons.
 
 ## Responsive/accessibility gate
 

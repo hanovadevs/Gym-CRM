@@ -390,7 +390,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                       )}
                       <div className="receipt-example">
                         <strong>{draft.name}</strong>
-                        <p>{draft.receiptPrefix}-000001</p>
+                        <p>{draft.receiptPrefix}-RC-000001</p>
                         <p>{exampleAmount()}</p>
                         <p>{draft.receiptFooter}</p>
                         <small>Formatting example</small>

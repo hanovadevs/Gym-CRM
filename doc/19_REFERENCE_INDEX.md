@@ -40,3 +40,6 @@ Checked during pack preparation on 20 November 2026. Recheck installed-version A
 - [Playwright best practices](https://playwright.dev/docs/best-practices) — isolated user-visible checks.
 
 PG18 links relate to the user's previously mentioned local version; they do not identify the major version a future Supabase project provides. Inspect actual source/target.
+
+
+UI-04 user override: references/14_silver_midnight.svg records supplied #F1F4F7/#DCE4EE/#FFFFFF/#253C58/#1E2937 palette. Use current ADR-030 for restrained liquid glass/square buttons; original layout references remain spacing/content guidance.
