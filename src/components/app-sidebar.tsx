@@ -1,8 +1,11 @@
 "use client";
+import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
+import { BrandMark } from "./brand";
 import { Drawer } from "./ui/primitives";
 import { useHydrated } from "@/lib/use-hydrated";
-type Page = "workspace" | "members" | "plans" | "payments" | "settings" | "dashboard";
+type Page =
+  "workspace" | "members" | "plans" | "payments" | "settings" | "dashboard";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
 function snapshot() {
@@ -73,7 +76,6 @@ export function AppSidebar({
   canManageMembers = true,
   canReadPlans = true,
   canReadBilling = false,
-  preview = false,
 }: {
   organization: { id: string; name: string };
   active: Page;
@@ -81,46 +83,31 @@ export function AppSidebar({
   canManageMembers?: boolean;
   canReadPlans?: boolean;
   canReadBilling?: boolean;
-  preview?: boolean;
 }) {
   const collapsed = useSyncExternalStore(subscribe, snapshot, () => false),
     hydrated = useHydrated(),
     [mobile, setMobile] = useState(false);
-  const items = preview
-    ? [
-        { name: "Dashboard", page: "dashboard", href: "/dashboard" },
-        ...[
-          "Members",
-          "Plans",
-          "Attendance",
-          "Payments",
-          "Classes",
-          "Trainers",
-          "Enquiries",
-          "Expenses",
-          "Reports",
-        ].map((name) => ({ name, page: name.toLowerCase(), href: "" })),
-      ]
-    : [
-        { name: "Workspace", page: "workspace", href: "/workspace" },
-        ...(canManageMembers
-          ? [{ name: "Members", page: "members", href: "/members" }]
-          : []),
-        ...(canReadPlans
-          ? [{ name: "Plans", page: "plans", href: "/plans" }]
-          : []),
-        ...(canReadBilling ? [{ name: "Payments", page: "payments", href: "/payments" }] : []),
-      ];
-  const href = (path: string) =>
-    path + (preview ? "" : "?organizationId=" + organization.id);
+  const items = [
+    { name: "Workspace", page: "workspace", href: "/workspace" },
+    ...(canManageMembers
+      ? [{ name: "Members", page: "members", href: "/members" }]
+      : []),
+    ...(canReadPlans ? [{ name: "Plans", page: "plans", href: "/plans" }] : []),
+    ...(canReadBilling
+      ? [{ name: "Payments", page: "payments", href: "/payments" }]
+      : []),
+  ];
+  const href = (path: string) => path + "?organizationId=" + organization.id;
   function links(label: string) {
     return (
       <nav aria-label={label}>
         {items.map((i) =>
           i.href ? (
-            <a
+            <Link
               key={i.name}
               href={href(i.href)}
+              prefetch={true}
+              onNavigate={() => setMobile(false)}
               aria-label={i.name}
               aria-current={active === i.page ? "page" : undefined}
               title={collapsed ? i.name : undefined}
@@ -129,7 +116,7 @@ export function AppSidebar({
                 <Icon name={i.name} />
               </span>
               <span className="app-nav-label">{i.name}</span>
-            </a>
+            </Link>
           ) : (
             <button
               key={i.name}
@@ -146,45 +133,41 @@ export function AppSidebar({
       </nav>
     );
   }
-  const settings =
-    canManageSettings || preview ? (
-      <div className="app-nav-settings">
-        {preview ? (
-          <button disabled>
-            <Icon name="Settings" />
-            <span className="app-nav-label">Settings</span>
-          </button>
-        ) : (
-          <a
-            href={href("/settings")}
-            aria-label="Settings"
-            title={collapsed ? "Settings" : undefined}
-            aria-current={active === "settings" ? "page" : undefined}
-          >
-            <Icon name="Settings" />
-            <span className="app-nav-label">Settings</span>
-          </a>
-        )}
-      </div>
-    ) : null;
+  const settings = canManageSettings ? (
+    <div className="app-nav-settings">
+      <Link
+        href={href("/settings")}
+        prefetch={true}
+        onNavigate={() => setMobile(false)}
+        aria-label="Settings"
+        title={collapsed ? "Settings" : undefined}
+        aria-current={active === "settings" ? "page" : undefined}
+      >
+        <Icon name="Settings" />
+        <span className="app-nav-label">Settings</span>
+      </Link>
+    </div>
+  ) : null;
   return (
     <>
       <aside className="app-sidebar" data-collapsed={collapsed}>
-        <a
+        <Link
           className="app-brand"
-          aria-label="Jym CRM"
-          href={href(preview ? "/dashboard" : "/workspace")}
+          aria-label="Mojym"
+          href={href("/workspace")}
         >
-          <span className="app-brand-symbol">J</span>
-          <span className="app-nav-label">Jym CRM</span>
-        </a>
+          <span className="app-brand-symbol">
+            <BrandMark />
+          </span>
+          <span className="app-nav-label">Mojym</span>
+        </Link>
         <p className="app-nav-caption">Your workspace</p>
-        {links(preview ? "Main navigation" : "Workspace navigation")}
+        {links("Workspace navigation")}
         <div className="app-sidebar-bottom">
           {settings}
-          <a
+          <Link
             className="app-gym-card"
-            href={href(preview ? "/dashboard" : "/workspace")}
+            href={href("/workspace")}
             title={organization.name}
           >
             <span className="app-gym-initial">
@@ -194,7 +177,7 @@ export function AppSidebar({
               <strong>{organization.name}</strong>
               <small>Gym workspace</small>
             </span>
-          </a>
+          </Link>
           <button
             className="app-collapse"
             disabled={!hydrated}
@@ -243,7 +226,7 @@ export function AppSidebar({
           onClose={() => setMobile(false)}
         >
           <div id="mobile-app-navigation" className="app-mobile-links">
-            {links(preview ? "Main navigation" : "Workspace navigation")}
+            {links("Workspace navigation")}
             {settings}
             <p className="app-mobile-gym">{organization.name}</p>
           </div>

@@ -1,7 +1,7 @@
 {
-  "name": "gymcrm",
+  "name": "mojym",
   "version": "0.1.0",
-  "description": "Jym CRM local PostgreSQL foundation",
+  "description": "Mojym gym management",
   "main": "index.js",
   "directories": {
     "doc": "doc"

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
 import { Drawer } from "@/components/ui/primitives";
@@ -153,12 +154,12 @@ export function MembershipsPanel({
       ) : !data.planCount ? (
         <p className="support">
           No active plan in this home branch uses the gym’s current currency.{" "}
-          <a
+          <Link
             className="text-action"
             href={"/plans?organizationId=" + data.organizationId}
           >
             Open plans
-          </a>{" "}
+          </Link>{" "}
           before enrolling.
         </p>
       ) : null}
@@ -224,7 +225,7 @@ export function MembershipsPanel({
                     <div>
                       <dt>Issued invoice</dt>
                       <dd>
-                        <a className="text-action" href={`/payments?organizationId=${data.organizationId}&invoiceId=${m.invoice.id}`}>{m.invoice.number}</a>
+                        <Link className="text-action" href={`/payments?organizationId=${data.organizationId}&invoiceId=${m.invoice.id}`}>{m.invoice.number}</Link>
                         <small>
                           {money(
                             m.invoice.totalMinor,

@@ -15,7 +15,7 @@ export function configureAuth(
   },
 ) {
   return betterAuth({
-    appName: "Jym CRM",
+    appName: "Mojym",
     secret: options.secret,
     baseURL: options.baseURL,
     trustedOrigins: trustedOrigins(

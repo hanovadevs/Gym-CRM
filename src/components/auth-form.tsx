@@ -1,7 +1,9 @@
 "use client";
+import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { BrandMark } from "./brand";
 import { SectionTitle } from "./ui/section-title";
 export function AuthForm({
   mode = "sign-in",
@@ -31,9 +33,9 @@ export function AuthForm({
   return (
     <div className="auth-layout">
       <aside className="auth-story">
-        <a className="brand" href="/dashboard">
-          <span className="brand-mark">J</span>Jym CRM
-        </a>
+        <Link className="brand" href="/sign-in">
+          <span className="brand-mark"><BrandMark /></span>Mojym
+        </Link>
         <h1>A better day at the gym starts here.</h1>
         <p>Members, payments and daily operations, in one calm workspace.</p>
       </aside>
@@ -174,7 +176,7 @@ export function AuthForm({
                 <input type="checkbox" name="remember" defaultChecked />{" "}
                 Remember me
               </label>
-              <a href="/forgot-password">Forgot password?</a>
+              <Link href="/forgot-password">Forgot password?</Link>
             </div>
           ) : null}
           {error ? (
@@ -206,7 +208,7 @@ export function AuthForm({
             {mode === "sign-in" ? (
               "Need access? Contact your gym administrator."
             ) : (
-              <a href="/sign-in">Back to sign in</a>
+              <Link href="/sign-in">Back to sign in</Link>
             )}
           </p>
         </form>

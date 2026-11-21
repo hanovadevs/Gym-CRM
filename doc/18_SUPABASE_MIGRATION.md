@@ -64,3 +64,11 @@ pg_restore --dbname=$env:JYM_TARGET_MIGRATION_DB_URL --no-owner --no-acl --exit-
 No --clean, global-role restore or system-schema overwrite. With --no-acl, grants must be reapplied separately. Reassign/configure ownership so runtime remains restricted. This transfers neither private file bytes nor external mail configuration.
 
 Completion evidence updates DB-MIG-01, M14 cloud substate, decision log, operations configuration and handoff with versions/strategy/reconciliation/tests/retained limitations. Successful connection alone is not migration completion.
+
+
+## Target selected —21 November2026
+
+Vercel + Supabase-hosted PostgreSQL selected by user. Credentials retained only in ignored local target configuration, not app/browser/git. App runtime still uses local GYM. Connected Supabase MCP lacks project access; direct read-only PG probe reached certificate validation and failed SELF_SIGNED_CERT_IN_CHAIN. No successful authentication/schema inventory or remote changes yet. Need actual dashboard root CA and transaction-pooler connection details. Do not weaken TLS verification. Obtain restricted hosted runtime role and verify current grants/RLS, schema compatibility, backups/data reconciliation and all acceptance before live cutover. Local20 applied migrations remain authoritative; draft0020/0021 not applied/review-complete.
+
+
+Target inspection resolved: user supplied actual Supabase Root2021 CA file. Parsed as CA with expiry26April2031; direct PG connection verified with rejectUnauthorized=true. Read-only transaction confirms target PostgreSQL17.12 and no gym/app_auth/drizzle schemas/tables. No hosted DDL/data/auth changes. SourcePG18.4 means reviewed migrations-first + explicit data reconciliation, not blind downgrade restore. Need scoped runtime credentials and actual transaction-pooler URL before Vercel runtime configuration; local GYM remains active authority. Supabase public client key is unused by this server-only architecture.

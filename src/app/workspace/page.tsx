@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSecurity } from "@/server/security";
@@ -31,9 +32,9 @@ export default async function Workspace({
           </h1>
           <p>{error.message}</p>
           <p>Contact your gym administrator if your access has changed.</p>
-          <a className="text-action" href="/workspace">
+          <Link className="text-action" href="/workspace">
             Return to your workspaces
-          </a>
+          </Link>
           <SignOut />
         </main>
       );
@@ -147,15 +148,15 @@ export default async function Workspace({
             enrollment is available from member profiles. Record funds received and share paid receipts from Payments.
           </p>
           {workspace.actions.includes("settings.read") ? (
-            <a
+            <Link
               className="text-action"
               href={"/settings?organizationId=" + workspace.organization.id}
             >
               Open settings
-            </a>
+            </Link>
           ) : null}
           {workspace.actions.includes("members.manage") ? (
-            <a
+            <Link
               className="text-action workspace-members-link"
               href={
                 "/members?organizationId=" +
@@ -166,15 +167,15 @@ export default async function Workspace({
               }
             >
               Open members
-            </a>
+            </Link>
           ) : null}
           {workspace.actions.includes("plans.read") ? (
-            <a
+            <Link
               className="text-action workspace-members-link"
               href={"/plans?organizationId=" + workspace.organization.id}
             >
               Open plans
-            </a>
+            </Link>
           ) : null}
         </section>
       </div>

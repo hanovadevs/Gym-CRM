@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { Drawer } from "@/components/ui/primitives";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -87,12 +88,12 @@ export function PaymentDrawer({
               {exactMoney(result.balanceAfterMinor, invoice!.currency, locale)}
             </strong>
           </p>
-          <a
+          <Link
             className="button primary"
             href={`/receipts/${result.paymentId}?organizationId=${organizationId}`}
           >
             View paid receipt
-          </a>
+          </Link>
           <button className="button secondary" onClick={onClose}>
             Done
           </button>

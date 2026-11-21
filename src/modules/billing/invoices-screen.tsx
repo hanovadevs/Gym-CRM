@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useRef, useState } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -479,12 +480,12 @@ export function InvoicesScreen({
           {data.query.memberId ? (
             <p className="support">
               Showing invoices for this member.{" "}
-              <a
+              <Link
                 className="text-action"
                 href={`/payments?organizationId=${data.organization.id}`}
               >
                 Show all members
-              </a>
+              </Link>
             </p>
           ) : null}
           {busy ? (
@@ -800,12 +801,12 @@ function InvoiceContents({
         <dd>{i.currency}</dd>
       </dl>
       {detail.canManageMembers ? (
-        <a
+        <Link
           className="text-action"
           href={`/members/${i.memberId}?organizationId=${detail.organization.id}`}
         >
           Open member profile
-        </a>
+        </Link>
       ) : null}
       <SectionTitle
         title="Invoice lines"

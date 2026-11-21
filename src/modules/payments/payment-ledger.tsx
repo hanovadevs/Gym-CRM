@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
 import { exactMoney } from "@/modules/billing/format";
@@ -227,13 +228,13 @@ export function PaymentLedger({
                       {p.reference ? <small>{p.reference}</small> : null}
                     </td>
                     <td>
-                      <a
+                      <Link
                         className="text-action"
                         aria-label={`View receipt ${p.receiptNumber}`}
                         href={`/receipts/${p.id}?organizationId=${organizationId}`}
                       >
                         View receipt
-                      </a>
+                      </Link>
                     </td>
                   </tr>
                 ))}

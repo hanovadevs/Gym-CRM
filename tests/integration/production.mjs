@@ -42,7 +42,14 @@ try {
   assert.ok(response, "Production server must start");
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.ok(html.includes("dashboard preview is disabled"));
+  // fetch follows HTTP redirects, but Next may stream the legacy alias as a
+  // meta redirect. Verify its real destination too, as a browser does.
+  let protectedResponse=response, protectedHtml=html;
+  if(html.includes('url=/workspace')){
+    protectedResponse=await fetch('http://127.0.0.1:3200/workspace');
+    protectedHtml=await protectedResponse.text();
+  }
+  assert.ok(protectedResponse.url.endsWith('/sign-in') || protectedHtml.includes('url=/sign-in'));
   assert.ok(!html.includes("Good afternoon, Ali"));
   assert.ok(!html.includes("Demo data"));
   const denied = await fetch("http://127.0.0.1:3200/api/workspace");

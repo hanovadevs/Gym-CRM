@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
 import { Drawer } from "@/components/ui/primitives";
@@ -194,9 +195,9 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
       />
       <div className="settings-content">
         <header className="settings-topbar">
-          <a href={"/workspace?organizationId=" + data.organizationId}>
+          <Link href={"/workspace?organizationId=" + data.organizationId}>
             Back to workspace
-          </a>
+          </Link>
           <SignOut />
         </header>
         <main className="settings-main">

@@ -283,6 +283,49 @@ try {
     console.log(
       "PASS: actual production member profile shows both saved payments; four responsive captures without page overflow.",
     );
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.evaluate(() => {
+      (
+        window as Window & { mojymNavigationProbe?: string }
+      ).mojymNavigationProbe = "preserved";
+    });
+    const documentRequests: string[] = [];
+    page.on("request", (r) => {
+      if (r.resourceType() === "document") documentRequests.push(r.url());
+    });
+    const timings: Record<string, number> = {};
+    for (const [name, heading] of [
+      ["Plans", "Membership plans"],
+      ["Members", "Members"],
+      ["Payments", "Invoices & balances"],
+    ]) {
+      const start = Date.now();
+      await page
+        .locator(".app-sidebar")
+        .getByRole("link", { name, exact: true })
+        .click();
+      await page.getByRole("heading", { name: heading, exact: true }).waitFor();
+      timings[name] = Date.now() - start;
+      assert.equal(
+        await page.evaluate(
+          () =>
+            (window as Window & { mojymNavigationProbe?: string })
+              .mojymNavigationProbe,
+        ),
+        "preserved",
+      );
+    }
+    assert.deepEqual(documentRequests, []);
+    await page.getByRole("link", { name: "Mojym", exact: true }).waitFor();
+    assert.equal((await page.request.get(base + "/icon.svg")).status(), 200);
+    await page.screenshot({
+      path: ".local/payment-evidence/mojym-production.png",
+      fullPage: true,
+    });
+    console.log(
+      "PASS Mojym navigation: no document reloads; window state retained; production transition timings ms:",
+      timings,
+    );
   } finally {
     await browser.close();
   }

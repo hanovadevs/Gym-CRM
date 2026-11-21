@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -99,12 +100,12 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
       organization={data.organization}
       canManageSettings={data.canManageSettings}
     >
-      <a
+      <Link
         className="text-action profile-back"
         href={`/members?organizationId=${data.organization.id}`}
       >
         Members / Profile
-      </a>
+      </Link>
       <div className="profile-heading">
         <div className="profile-identity">
           <span className="profile-initials" aria-hidden="true">
@@ -128,12 +129,12 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
           </div>
         </div>
         <div className="profile-actions">
-          <a
+          <Link
             className="button secondary"
             href={`/payments?organizationId=${data.organization.id}&memberId=${data.member.id}`}
           >
             Invoices &amp; balances
-          </a>
+          </Link>
           <button disabled={locked || archived} onClick={() => open("member")}>
             Edit member
           </button>

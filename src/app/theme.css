@@ -869,3 +869,6 @@ tbody tr:hover {
 .drawer .invoice-form-total {
   margin-top: 0;
 }
+
+.app-brand-symbol svg,.brand-mark svg {display:block;flex:none;}
+.app-brand-symbol,.brand-mark {display:inline-flex;align-items:center;justify-content:center;}

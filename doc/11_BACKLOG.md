@@ -18,7 +18,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | SUB-01 | M04 | PLAN-01 | Enrollment/renewal/freeze/cancel and overlap checks | DONE | 0012–0014; atomic enrollment invoice/snapshot/audit, policy/lifecycle/overlap/replay verified; 52 browser/30 unit and real-DB regression PASS; final gates in session log |
 | PAY-01 | M05 | SUB-01 | Invoices/balances/atomic numbering | DONE | 0015–0017; scoped draft/issue/lines/balances/numbering and private invoice PDF; 59 browser/35 unit + real-DB regression/build/production PDF PASS |
 | PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | DONE | 0018/0019; atomic collection, immutable paid receipts/print/PDF, valid activation; 64 browser/36 units + serial real-DB/production checks PASS |
-| PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | NOT_STARTED | None yet |
+| PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | IN_PROGRESS | Draft schema/service and0020/0021 generated; unapplied, API/UI/real-DB verification pending |
 | ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | NOT_STARTED | None yet |
 | DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | NOT_STARTED | None yet |
 | EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | NOT_STARTED | None yet |
@@ -130,3 +130,17 @@ DONE: partial/full manual payments, atomic allocations/audit/receipt numbering/s
 0018/0019 bring local databases to20 migrations, old0000–0017 unchanged. test:payments plus all previous real-DB suites PASS serially; full64 browsers/36 units PASS; final four focused visual/workflow recaptures PASS; lint/typecheck/build/anonymous production and actual authenticated production payment/receipt/PDF/profile checks PASS. Font traces/private headers, extracted/rendered standard/stress/print PDFs and four-width screenshots retained. UI-04 includes exact supplied palette, readable glass panels/drawers/sidebar, sharp buttons, info icons and no decorative indicators. See module card/session for actual commands, failures/corrections and scope.
 
 Next PAY-03 owner corrections/refunds/credits/void; full M05 remains IN_PROGRESS. Attendance, operational dashboard and release/recovery are separate gates. No external sends, owner-email change, valued-data reset or public deployment.
+
+
+## Mojym completion programme — 21 November 2026
+
+User authorizes completing all remaining Release A/B CRM modules in one sustained programme, navigation performance, Mojym branding and a separate platform administrator console. Delivery target confirmed: Vercel + hosted PostgreSQL; local GYM remains authoritative until reviewed cutover. No bug-free or production-complete claim without verification.
+
+| Task | Module | Depends on | Outcome | Status | Evidence/blocker |
+| --- | --- | --- | --- | --- | --- |
+| PERF-01 | M00 | UI-04 | Client navigation, scoped prefetch, shared bounded DB pool; production reload/timing evidence | DONE | Production client transitions/window continuity verified; full64 and post-removal12 browsers pass; shared-pool mail lifetime regression fixed |
+| BRAND-01 | M00 | UI-04 | Mojym name, editable twin-arch logo, favicon and consistent UI/mail brand | DONE | Native SVG/PNG mark/wordmark/favicon integrated; production screenshot reviewed, build and browser checks pass |
+| PLAT-01 | M15 | SEC-01 + SET-01 | Separately authorized platform admin, create/manage gyms and scoped activity | NOT_STARTED | Requires explicit platform identity/grant boundary, atomic maintained-auth provisioning and isolation tests |
+| REL-02 | M14 | All remaining modules + PLAT-01 | Remove every preview route/content; production Vercel/PostgreSQL release checks | IN_PROGRESS | Target confirmed, domain/hosted database credentials not yet configured; independent local work continues |
+
+Remaining core execution order: PAY-03 -> ATT-01 -> DASH-01; independent EXP-01/TRN-01/LEAD-01; CLS-01 after attendance/trainers; RPT-01/IMP-01 then recovery/release gates. PLAT-01 must use separate platform privileges; gym owner role must never imply cross-gym administrator access. Preserve initialized user data and all applied migrations.

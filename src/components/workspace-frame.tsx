@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SignOut } from "./sign-out";
 import { AppSidebar } from "./app-sidebar";
 export function WorkspaceFrame({
@@ -30,7 +31,7 @@ export function WorkspaceFrame({
       />
       <div className="settings-content">
         <header className="settings-topbar">
-          <a href={"/workspace" + org}>{organization.name}</a>
+          <Link href={"/workspace" + org}>{organization.name}</Link>
           <SignOut />
         </header>
         <main className="settings-main members-main">{children}</main>

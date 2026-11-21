@@ -209,3 +209,12 @@ Full settlement activates only a linked, non-archived, non-cancelled, unexpired 
 Reviewed generated 0018_payments_and_allocations plus custom 0019_payment_security: initial generated foreign key preceded its new referenced unique constraint. Apply failed transactionally; verified BOTH databases still at 18 entries with no payment table before reordering this unapplied migration. Then both applied successfully (20 entries). No applied 0000–0017 edits. Sources reviewed: PostgreSQL 18 transaction isolation/explicit locks; installed Next page/route contracts; MDN backdrop-filter; existing PDFKit/font assets reused. Relevant PostgreSQL/React/PDF skill checks applied; no subagents/dependencies added.
 
 UI-04 verification detail: retain functional warning/error colors for understandable financial/form states; primary surfaces/actions use the supplied five-color palette. Sticky table action cells are opaque so scrolled text cannot show through them. Panel/dialog translucency is restrained for readability. Receipt font renderer explicitly selects embedded Arabic/Latin runs and measures continuation headers; no remote typography service.
+
+
+## ADR-032 — Mojym completion programme and navigation
+
+User-confirmed 21 November 2026: whole remaining CRM, Mojym brand, separate multi-gym platform admin and Vercel + hosted PostgreSQL delivery. Existing module acceptance/security/financial invariants remain mandatory. Platform admins require explicit separate grants, no implicit tenant-owner elevation. No cloud cutover until target/database/domain are concrete and verified.
+
+Replace same-origin anchor navigation with installed Next Link; permitted sidebar destinations explicitly prefetch dynamic content. No server-wide tenant data cache, no relaxed authorization. Mobile navigation closes on client transition. Shared per-process restricted PostgreSQL pool bounds connections and survives dev hot reload; configuration changes require restart. Production browser checks must prove document/window continuity and record actual transition timings. Development first-page compilation must not be presented as production performance.
+
+Mojym uses a native editable vector twin-arch M with a connecting baseline, midnight/silver palette, matching app/favicon/wordmark. SVG preferred over raster to match existing inline vector icons and stay crisp at small sizes. Sources: installed Next Link and linking/navigation guides; locked package versions retained. Existing internal storage keys/business IDs remain stable.

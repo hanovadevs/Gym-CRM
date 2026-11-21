@@ -32,16 +32,12 @@ export async function POST(request: Request) {
       },
     );
     const { pool } = createDatabase();
-    try {
-      return success({
-        ...result,
-        deliveryStatus: await deliverMail(pool, result.id, {
-          retryFailed: true,
-        }),
-      });
-    } finally {
-      await pool.end();
-    }
+    return success({
+      ...result,
+      deliveryStatus: await deliverMail(pool, result.id, {
+        retryFailed: true,
+      }),
+    });
   } catch (e) {
     return failure(e);
   }

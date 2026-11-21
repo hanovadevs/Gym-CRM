@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -248,13 +249,13 @@ export function MembersScreen({ initial }: { initial: Directory }) {
           <p className="form-message" role="status">
             {notice}
             {nextMemberId ? (
-              <a
+              <Link
                 className="text-action"
                 style={{ marginLeft: 12 }}
                 href={`/members/${nextMemberId}?organizationId=${data.organization.id}`}
               >
                 Open profile to enroll
-              </a>
+              </Link>
             ) : null}
             {reloadRequired
               ? " Refreshing saved records is required before editing again."
@@ -273,9 +274,9 @@ export function MembersScreen({ initial }: { initial: Directory }) {
             <button onClick={() => setRevision((r) => r + 1)}>
               Retry directory
             </button>
-            <a className="text-action" href="/sign-in">
+            <Link className="text-action" href="/sign-in">
               Sign in again
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="panel member-table-panel">
@@ -333,12 +334,12 @@ export function MembersScreen({ initial }: { initial: Directory }) {
                             }).format(new Date(member.joinedOn + "T12:00:00Z"))}
                           </td>
                           <td>
-                            <a
+                            <Link
                               className="text-action member-view"
                               href={`/members/${member.id}?organizationId=${data.organization.id}`}
                             >
                               View {member.name}
-                            </a>
+                            </Link>
                             <button
                               className="text-action"
                               disabled={locked || Boolean(member.archivedAt)}

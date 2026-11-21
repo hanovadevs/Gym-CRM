@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getBilling } from "@/modules/billing";
@@ -33,9 +34,9 @@ export default async function InvoicesPage({
               : "Invoices unavailable"}
           </h1>
           <p>{e.message}</p>
-          <a className="text-action" href="/workspace">
+          <Link className="text-action" href="/workspace">
             Return to workspace
-          </a>
+          </Link>
           <SignOut />
         </main>
       );

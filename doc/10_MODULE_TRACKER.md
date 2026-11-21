@@ -8,7 +8,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-04 theme/glass/square buttons DONE; sidebar preserved |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | PERF-01/BRAND-01 Mojym/navigation DONE; preview removed |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB/PAY policy and paid receipt consumers verified; actual ATT-01 enforcement remains |
 | M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership/payments history connected; visits and ATT-01 archival denial remain |
@@ -23,6 +23,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
 | M13 | Imports, exports & files | A | M03 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | IMP-01 |
 | M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | REL-01; DB-MIG-01 later |
+| M15 | Platform administration | A | M01 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAT-01 explicit separate platform grants, gym provisioning and activity |
 
 ## Evidence card template
 

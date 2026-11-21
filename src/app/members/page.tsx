@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getMembers } from "@/modules/members";
@@ -25,9 +26,9 @@ export default async function MembersPage({
               : "Members unavailable"}
           </h1>
           <p>{error.message}</p>
-          <a className="text-action" href="/workspace">
+          <Link className="text-action" href="/workspace">
             Return to workspace
-          </a>
+          </Link>
           <SignOut />
         </main>
       );

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getPayments } from "@/modules/payments";
@@ -27,9 +28,9 @@ export default async function ReceiptPage({
         <main className="setup access-state">
           <h1>Receipt unavailable</h1>
           <p>{e.message}</p>
-          <a href="/workspace" className="text-action">
+          <Link href="/workspace" className="text-action">
             Return to workspace
-          </a>
+          </Link>
           <SignOut />
         </main>
       );

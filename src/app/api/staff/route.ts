@@ -17,8 +17,6 @@ export async function POST(request: Request) {
         });
       } catch {
         return success({ ...result, deliveryStatus: "unavailable" });
-      } finally {
-        await pool.end();
       }
     }
     return success(result);

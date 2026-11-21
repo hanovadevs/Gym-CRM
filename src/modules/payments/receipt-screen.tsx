@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { exactMoney } from "@/modules/billing/format";
@@ -51,12 +52,12 @@ export function ReceiptScreen({ initial }: { initial: Receipt }) {
       canManageMembers={initial.canManageMembers}
     >
       <div className="receipt-screen-actions">
-        <a
+        <Link
           className="text-action"
           href={`/payments?organizationId=${initial.organization.id}&invoiceId=${p.invoiceId}`}
         >
           Back to invoice
-        </a>
+        </Link>
         <div>
           <button
             className="button secondary"

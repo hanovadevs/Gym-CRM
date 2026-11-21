@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSettings } from "@/modules/settings";
@@ -25,9 +26,9 @@ export default async function SettingsPage({
               : "Settings unavailable"}
           </h1>
           <p>{error.message}</p>
-          <a href="/workspace" className="text-action">
+          <Link href="/workspace" className="text-action">
             Return to workspace
-          </a>
+          </Link>
           <SignOut />
         </main>
       );
