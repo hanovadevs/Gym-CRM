@@ -141,6 +141,27 @@
       "when": 1795277743804,
       "tag": "0019_payment_security",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1795284364970,
+      "tag": "0020_financial_corrections",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795284372099,
+      "tag": "0021_correction_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1795284807422,
+      "tag": "0022_correction_cash_method",
+      "breakpoints": true
     }
   ]
 }

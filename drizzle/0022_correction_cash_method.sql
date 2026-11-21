@@ -1,0 +1,2 @@
+ALTER TABLE "gym"."financial_corrections" ADD COLUMN "method" text;--> statement-breakpoint
+ALTER TABLE "gym"."financial_corrections" ADD CONSTRAINT "correction_method" CHECK (case when "gym"."financial_corrections"."kind" in ('refund','refund_credit') then "gym"."financial_corrections"."method" is not null and "gym"."financial_corrections"."method" in ('cash','bank_transfer','other') else "gym"."financial_corrections"."method" is null end);
