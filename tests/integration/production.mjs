@@ -50,7 +50,54 @@ try {
   assert.equal(denied.headers.get("cache-control"), "no-store");
   assert.equal((await denied.json()).error.code, "UNAUTHENTICATED");
   const org = "00000000-0000-4000-8000-000000000001";
+  const planValues = {
+    name: "Blocked plan",
+    amountMinor: 450000,
+    currency: "PKR",
+    durationUnit: "months",
+    durationCount: 1,
+    accessMode: "home_branch",
+    gymFloor: true,
+    classes: false,
+    personalTraining: false,
+  };
   for (const [path, method, body] of [
+    ["/api/plans", "GET"],
+    [`/api/plans/${org}?organizationId=${org}`, "GET"],
+    [
+      "/api/plans",
+      "POST",
+      {
+        organizationId: org,
+        branchId: org,
+        code: "BLOCKED",
+        requestKey: org,
+        values: planValues,
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      "/api/plans",
+      "PATCH",
+      {
+        organizationId: org,
+        id: org,
+        revision: 1,
+        requestKey: org,
+        values: planValues,
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      `/api/plans/${org}/archive`,
+      "POST",
+      {
+        organizationId: org,
+        revision: 1,
+        archived: true,
+        reason: "Anonymous denial check",
+      },
+    ],
     ["/api/settings", "GET"],
     ["/api/members", "GET"],
     [`/api/members/${org}`, "GET"],
@@ -160,7 +207,7 @@ try {
     assert.equal(result.headers.get("cache-control"), "no-store");
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
-  for (const path of ["/workspace", "/members", "/settings"]) {
+  for (const path of ["/workspace", "/members", "/settings", "/plans"]) {
     const protectedPage = await fetch("http://127.0.0.1:3200" + path);
     // Next inserts a meta redirect when the loading boundary has already streamed.
     assert.ok(
@@ -227,7 +274,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail/plan APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
   );
 } finally {
   server.kill();

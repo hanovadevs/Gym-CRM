@@ -2,10 +2,14 @@ import { SignOut } from "./sign-out";
 export function WorkspaceFrame({
   organization,
   canManageSettings,
+  canManageMembers = true,
+  active = "members",
   children,
 }: {
   organization: { id: string; name: string };
   canManageSettings: boolean;
+  canManageMembers?: boolean;
+  active?: "members" | "plans";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;
@@ -20,8 +24,21 @@ export function WorkspaceFrame({
         </a>
         <nav aria-label="Workspace navigation">
           <a href={"/workspace" + org}>Workspace</a>
-          <a className="selected" href={"/members" + org} aria-current="page">
-            Members
+          {canManageMembers ? (
+            <a
+              className={active === "members" ? "selected" : undefined}
+              href={"/members" + org}
+              aria-current={active === "members" ? "page" : undefined}
+            >
+              Members
+            </a>
+          ) : null}
+          <a
+            className={active === "plans" ? "selected" : undefined}
+            href={"/plans" + org}
+            aria-current={active === "plans" ? "page" : undefined}
+          >
+            Plans
           </a>
           {canManageSettings ? <a href={"/settings" + org}>Settings</a> : null}
         </nav>

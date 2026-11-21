@@ -22,6 +22,8 @@ Defaults allow local work. RELEASE_BLOCKER items must be resolved/verified befor
 | R16 | RELEASE_BLOCKER | Overprivileged hosted runtime | Verify custom role grants/RLS, no owner login |
 | R17 | DESIGN | Image sample inconsistencies | Written rules and consistent fixtures prevail |
 
+PLAN-01 update — 21 November 2026: explicit calendar-month/fixed-day units and exact date preview now implement R05 defaults, including leap/month-end checks. Versioned rates/access are retained and runtime immutable. Node display defaults were unsuitable for accounting PKR units; ISO exponents now govern parsing/storage. Branch-scoped ownership and owner-only all-gym access are ADR-026 defaults to confirm with pilot operations. SUB-01 must persist snapshots, reject archived members/plans and verify actual enrollment/renewal overlap; no membership/finance completion is inferred from the plan catalog. No local blocker to SUB-01 after final PLAN-01 checks.
+
 Defect template:
 
 ```text

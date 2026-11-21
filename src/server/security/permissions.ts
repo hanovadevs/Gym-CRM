@@ -23,6 +23,7 @@ export const permissions = {
   "members.manage": ["owner", "manager", "receptionist"],
   "members.assigned.read": ["owner", "manager", "trainer"],
   "plans.manage": ["owner", "manager"],
+  "plans.read": ["owner", "manager", "receptionist", "accountant"],
   "memberships.manage": ["owner", "manager", "receptionist"],
   "memberships.override": ["owner", "manager"],
   "billing.collect": ["owner", "manager", "receptionist", "accountant"],

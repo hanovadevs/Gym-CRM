@@ -27,6 +27,7 @@
     "test:members": "node --conditions=react-server --import tsx tests/integration/members.ts",
     "test:profiles": "node --conditions=react-server --import tsx tests/integration/profiles.ts",
     "test:mail": "node --conditions=react-server --import tsx tests/integration/mail.ts",
+    "test:plans": "node --conditions=react-server --import tsx tests/integration/plans.ts",
     "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts"
   },
   "keywords": [],

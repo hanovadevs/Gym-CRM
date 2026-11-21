@@ -47,6 +47,9 @@ Unit tests cover period/date/time-zone rules, money parsing/balance math, eligib
 | T39 | Archive/restore with contact/note races and stale forms | History retained; changes denied while archived; stale concurrent change rejected |
 | T40 | SMTP recovery and invitation setup | Fixed sender; actual inbox receipt; maintained one-use password flow |
 | T41 | Mail commit/failure/concurrent delivery/uncertain result | Account/outbox atomic; one claim; no duplication or blind ambiguous resend |
+| T42 | Plan publication/snapshot/archive and stale concurrency | Old rate/access retained; one revision winner; same-key replay; no mutable versions |
+| T43 | Plan scope, currency and term boundaries | Assigned branches only; current currency; exact ISO minor units; leap/month-end vs fixed-day dates |
+| T44 | Plan failure/refresh/history/pagination states | Draft retained; confirmed save requires reload after failed refresh; consistent scoped pages |
 
 Foundation should define actual project scripts for lint/typecheck/unit/integration/browser/build/db:generate/db:migrate/db:seed. These are desired interfaces, not a claim that scripts already exist. Reuse existing package manager/lockfile. CI uses isolated known data and credentials; browser tests assert visible behavior and remain independent.
 

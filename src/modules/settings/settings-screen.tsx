@@ -200,6 +200,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
             Workspace
           </a>
           <a href={"/members?organizationId=" + data.organizationId}>Members</a>
+          <a href={"/plans?organizationId=" + data.organizationId}>Plans</a>
           <a
             className="selected"
             href={"/settings?organizationId=" + data.organizationId}

@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 21 November 2026 (Asia/Karachi): profiles/notes/archival and fixed-sender SMTP recovery/invitations verified locally and published to GitHub. Memberships, attendance and finance remain upcoming.
+Updated 21 November 2026 (Asia/Karachi): PLAN-01 persisted catalog, immutable versions, snapshots and archive/restore verified locally. Membership enrollment/renewal (SUB-01), attendance and finance remain upcoming.
 
 ## State rules
 
@@ -8,11 +8,11 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | PLAN-01 |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | SUB-01 |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SET-01 DONE; policy/receipt consumers in SUB-01/PAY-02/ATT-01 |
 | M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | MEM-01/02 DONE; cross-module history/access in SUB/PAY/ATT |
-| M04 | Plans & memberships | A | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PLAN-01 → SUB-01 |
+| M04 | Plans & memberships | A | M03 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PLAN-01 DONE; next SUB-01 |
 | M05 | Billing, payments & receipts | A | M04 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PAY-01 → PAY-03 |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
@@ -116,3 +116,13 @@ Checks: test:profiles PASS on actual PostgreSQL/sessions/two gyms, including sta
 Visuals opened at 390/768/1280/1440: doc/evidence/profile-*.png, including archived mobile; source 03_member_profile.png reviewed. Empty/error/stale-input/permission/archived/refresh/keyboard states connected. Fixed an early-click hydration issue in member actions; final full suite supersedes the 35-pass/1-fail run. M03 QA/overall VERIFYING only for future membership/visit/payment history and actual ATT-01 archived visit denial; local MEM-02 task work is complete.
 
 MAIL-01 DONE locally: every gym's account mail uses contact@hanovadevs.com without tenant override. Nodemailer 10.6.1/types 8.0.2 pinned; private TLS SMTP auth passes. ONE real recovery email reached Hostinger INBOX, matched by Message-ID (UID 59); received link reset an isolated test account and rejected reuse. Token-free doc/evidence/mail-delivery.json. Owner login unchanged by explicit choice. Invitations let new staff choose a password; app/browser capture flow passes. Outbox commits before SMTP, clears successful links and holds uncertain sends for reconciliation. Automated suites capture; production cannot. Deployment scheduling/HTTPS/reachable URLs/proxy remain REL-01. No member campaign/send-anything endpoint. Next PLAN-01.
+
+## PLAN-01 evidence — 21 November 2026, Asia/Karachi
+
+Persisted /plans catalog with reference-style cards, active/archived filtering, scoped branches/search, 12/page and immutable 20/page history. Create/version/archive/restore use fixed authorized actions, current membership/grants and owning-branch checks. Owner/manager writes; reception/accountant read-only in their assigned branch; trainers denied. Accountants do not see inaccessible member navigation. Current catalog has no fabricated renewal/member-count data. Helpful section icons, exact date preview, validation/empty/error/retry/stale/permission/loading states and committed-save/failed-refresh lockout are connected.
+
+Schema: 0010_plan_catalog/0011_plan_security, applied to GYM/gym_test; previous 0000–0009 unchanged. Runtime cannot edit/delete any version or change plan code/branch; scoped UUID/FKs/version/key constraints and tenant RLS. New immutable version every edit; parent revision/lock serializes publication/archive; canonical actor/key/hash safely replays lost responses. Audit rollback covers plan/version/archive. Exact ISO accounting minor units independent of locale display defaults; calendar vs fixed-day and gym-local dates tested. Snapshots retain version identity/rate/duration/access. SUB-01 must persist them in actual membership/invoice transactions; no enrollment yet.
+
+Checks: test:plans PASS repeatedly including final two-tenant direct RLS/FK/grant denial, same code in two gyms, live revocation, all-branch entitlement read, stale/replay/archive concurrency, old snapshot/price preservation, currency mismatch and paging. Existing DB/auth/security/settings/member/profile/mail suites PASS serially. Unit 24 PASS; final full browser 43 PASS (2.0m), including seven new plan workflows and prior 36. Lint initially two unused-variable warnings corrected; final lint/build/production verification recorded in session log. db:generate no changes; production dependency audit zero vulnerabilities. GYM one real org/zero members/plans/queued mail; gym_test zero org/member/plan/queued mail after cleanup; both 12 migrations on PostgreSQL 18.4. Screenshots reviewed at 390/768/1280/1440 and narrow editor, retained doc/evidence/plans-*.png. No real owner credentials or SMTP settings changed; no external mail/public deployment. M04 remains IN_PROGRESS for SUB-01 membership lifecycle and later integration checks.
+
+Final PLAN-01 gate: lint/typecheck/build PASS; production smoke PASS with new plan read/write/history/archive API 401/no-store and protected page redirects; 21 client assets contain no configured database/auth/SMTP secrets. PLAN-01 DONE. Actual membership/invoice snapshot persistence, overlapping renewal prevention, freeze/cancel/activation and access-policy integration remain SUB-01 and its dependent tasks.

@@ -145,7 +145,7 @@ export default async function Workspace({
               ? "Manage your gym preferences and permitted staff settings. "
               : "Your workspace access is active. "}
             Register and maintain members in your permitted branches. Membership
-            and financial workflows are upcoming.
+            enrollment and financial workflows are upcoming.
           </p>
           {workspace.actions.includes("settings.read") ? (
             <a
@@ -167,6 +167,14 @@ export default async function Workspace({
               }
             >
               Open members
+            </a>
+          ) : null}
+          {workspace.actions.includes("plans.read") ? (
+            <a
+              className="text-action workspace-members-link"
+              href={"/plans?organizationId=" + workspace.organization.id}
+            >
+              Open plans
             </a>
           ) : null}
         </section>
