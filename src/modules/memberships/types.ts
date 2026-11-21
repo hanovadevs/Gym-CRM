@@ -1,0 +1,76 @@
+import type { PlanSnapshot } from "@/modules/plans/types";
+export type Freeze = {
+  id: string;
+  startOn: string;
+  endOn: string;
+  extensionDays: number;
+  reason: string;
+  reversedAt: string | null;
+};
+export type Membership = {
+  id: string;
+  homeBranchId: string;
+  planVersionId: string;
+  snapshot: PlanSnapshot;
+  amountMinor: number;
+  currency: string;
+  startOn: string;
+  endOn: string;
+  originalEndOn: string;
+  lifecycle: "pending" | "active" | "cancelled";
+  activatedAt: string | null;
+  cancelledEffectiveOn: string | null;
+  version: number;
+  freezes: Freeze[];
+  invoice: {
+    id: string;
+    number: string;
+    totalMinor: number;
+    currency: string;
+    issuedOn: string;
+    dueOn: string;
+  };
+  status: string;
+};
+export type Eligibility = { allowed: boolean; reason: string };
+export type MembershipContext = {
+  memberId: string;
+  memberVersion: number;
+  archived: boolean;
+  organizationId: string;
+  currency: string;
+  locale: string;
+  timeZone: string;
+  today: string;
+  canOverride: boolean;
+  paidActivation: boolean;
+  debtBlocksAccess: boolean;
+  graceDays: number;
+  memberships: Membership[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasHistory: boolean;
+  nextStartOn: string;
+  plans: {
+    id: string;
+    name: string;
+    amountMinor: number;
+    currency: string;
+    durationUnit: "months" | "days";
+    durationCount: number;
+  }[];
+  planCount: number;
+  eligibility: Eligibility;
+  requestId: string;
+};
+export type EnrollmentPreview = {
+  memberVersion: number;
+  plan: PlanSnapshot;
+  startOn: string;
+  endOn: string;
+  lastAccessOn: string;
+  activation: "pending" | "active";
+  reason: string;
+  requestId: string;
+};

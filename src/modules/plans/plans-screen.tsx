@@ -373,8 +373,8 @@ export function PlansScreen({ initial }: { initial: Catalog }) {
           help="Each saved change publishes an immutable version. Existing versions retain their name, rate, duration and access benefits. Archiving prevents new enrollment without removing history."
         />
         <p>
-          Changes apply to future memberships. Enrollment and renewals will be
-          connected in the next phase.
+          Changes apply to future memberships. Enroll and renew from a member’s
+          profile; existing memberships retain their saved rate and access.
         </p>
         {!data.canManage ? <p>Your access is read-only.</p> : null}
       </section>

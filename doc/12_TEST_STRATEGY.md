@@ -50,6 +50,10 @@ Unit tests cover period/date/time-zone rules, money parsing/balance math, eligib
 | T42 | Plan publication/snapshot/archive and stale concurrency | Old rate/access retained; one revision winner; same-key replay; no mutable versions |
 | T43 | Plan scope, currency and term boundaries | Assigned branches only; current currency; exact ISO minor units; leap/month-end vs fixed-day dates |
 | T44 | Plan failure/refresh/history/pagination states | Draft retained; confirmed save requires reload after failed refresh; consistent scoped pages |
+| T45 | Enrollment/renewal snapshots, charge and concurrent retries | Member/invoice/counter/audit/key atomic; one confirmation winner; old terms preserved |
+| T46 | Freeze/reversal/cancel and period collision | One extension; no overlap; cancellation preserves charges and history |
+| T47 | Membership policy and access consumers | Paid/configured activation; due debt vs dates; grace/freeze/archive/exclusive ends |
+| T48 | Shared sidebar rail/mobile navigation | Accessible icons, saved real collapse width, permitted routes, focus trap/Escape/return focus |
 
 Foundation should define actual project scripts for lint/typecheck/unit/integration/browser/build/db:generate/db:migrate/db:seed. These are desired interfaces, not a claim that scripts already exist. Reuse existing package manager/lockfile. CI uses isolated known data and credentials; browser tests assert visible behavior and remain independent.
 

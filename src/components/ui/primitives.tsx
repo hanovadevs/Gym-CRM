@@ -5,11 +5,13 @@ export function Drawer({
   children,
   onClose,
   busy = false,
+  className = "",
 }: {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
   busy?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -25,7 +27,7 @@ export function Drawer({
   return (
     <dialog
       ref={ref}
-      className="drawer"
+      className={"drawer " + className}
       aria-labelledby={titleId}
       aria-busy={busy}
       tabIndex={-1}

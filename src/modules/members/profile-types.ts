@@ -1,4 +1,8 @@
 import type { Directory, Member } from "./types";
+import type {
+  MembershipContext,
+  Eligibility,
+} from "@/modules/memberships/types";
 export type MemberNote = {
   id: string;
   body: string | null;
@@ -27,6 +31,7 @@ export type Profile = {
     actorName: string;
     occurredAt: string;
   }[];
-  eligibility: { allowed: false; reason: "archived" | "no_membership" };
+  eligibility: Eligibility;
+  memberships: MembershipContext;
   requestId: string;
 };

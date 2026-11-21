@@ -272,6 +272,17 @@ export function createMembersService(
         if (!scope.branchIds.includes(input.homeBranchId))
           throw new BusinessError("NOT_FOUND", "Branch not found.");
         const current = await readMember(db, scope, input.id, true);
+        if (current.homeBranchId !== input.homeBranchId) {
+          const live = await db.query(
+            `select m.id from gym.memberships m join gym.organizations o on o.id=m.organization_id where m.organization_id=$1 and m.member_id=$2 and least(m.end_on_exclusive,coalesce(m.cancelled_effective_on,m.end_on_exclusive))>m.start_on and (case when m.cancelled_effective_on is null then m.end_on_exclusive+o.grace_days else least(m.end_on_exclusive,m.cancelled_effective_on) end)>(now() at time zone o.time_zone)::date limit 1`,
+            [scope.organizationId, input.id],
+          );
+          if (live.rowCount)
+            throw new BusinessError(
+              "CONFLICT",
+              "Resolve current and future memberships before changing the home branch.",
+            );
+        }
         if (current.version !== input.version)
           throw new BusinessError(
             "CONFLICT",

@@ -62,6 +62,43 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/members/${org}/memberships?organizationId=${org}`, "GET"],
+    [
+      `/api/members/${org}/memberships`,
+      "POST",
+      {
+        organizationId: org,
+        memberVersion: 1,
+        mode: "enroll",
+        planVersionId: org,
+        requestKey: org,
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      `/api/members/${org}/memberships/preview`,
+      "POST",
+      {
+        organizationId: org,
+        memberVersion: 1,
+        mode: "enroll",
+        planVersionId: org,
+      },
+    ],
+    [
+      `/api/members/${org}/memberships`,
+      "PATCH",
+      {
+        organizationId: org,
+        memberVersion: 1,
+        membershipId: org,
+        version: 1,
+        operation: "cancel",
+        requestKey: org,
+        effectiveOn: "2026-11-21",
+        reason: "Anonymous denial check",
+      },
+    ],
     ["/api/plans", "GET"],
     [`/api/plans/${org}?organizationId=${org}`, "GET"],
     [
@@ -274,7 +311,7 @@ try {
       );
   }
   console.log(
-    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail/plan APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
+    `PASS: production preview disabled; workspace/settings/staff/branch/member/profile/note/mail/plan/membership APIs 401/no-store and protected pages redirect to sign-in; ${count} client assets contain no configured database URLs/auth/SMTP secret.`,
   );
 } finally {
   server.kill();

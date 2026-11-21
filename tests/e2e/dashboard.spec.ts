@@ -64,7 +64,8 @@ test("mobile navigation, modal focus trap and clean browser runtime", async ({
   await expect(
     page.getByRole("button", { name: "Members", exact: true }),
   ).toBeDisabled();
-  await menu.click();
+  await page.getByRole("button", { name: "Close drawer", exact: true }).click();
+  await expect(menu).toHaveAttribute("aria-expanded", "false");
   await page
     .getByRole("button", { name: "Add member", exact: true })
     .first()

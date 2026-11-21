@@ -28,6 +28,7 @@
     "test:profiles": "node --conditions=react-server --import tsx tests/integration/profiles.ts",
     "test:mail": "node --conditions=react-server --import tsx tests/integration/mail.ts",
     "test:plans": "node --conditions=react-server --import tsx tests/integration/plans.ts",
+    "test:memberships": "node --conditions=react-server --import tsx tests/integration/memberships.ts",
     "mail:deliver": "node --conditions=react-server --import tsx scripts/deliver-mail.ts"
   },
   "keywords": [],

@@ -254,7 +254,7 @@ test("archive preserves notes/contact, blocks changes and can be restored throug
     "History to preserve",
   );
   await expect(
-    page.getByText("Blocked: archived member", { exact: true }),
+    page.locator('.profile-overview').getByText("Blocked: archived member", { exact: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.screenshot({
@@ -293,7 +293,7 @@ test("archive preserves notes/contact, blocks changes and can be restored throug
   await expect(page.locator(".profile-note-list")).toContainText(
     "History to preserve",
   );
-  await expect(page.getByText("Not enrolled", { exact: true })).toBeVisible();
+  await expect(page.locator(".profile-overview").getByText("Not enrolled", { exact: true })).toBeVisible();
 });
 test("stale contact edits keep input and a committed note with failed refresh needs reload", async ({
   page,

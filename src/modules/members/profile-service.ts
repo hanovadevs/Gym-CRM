@@ -14,6 +14,7 @@ import {
   withdrawNote,
 } from "./profile-schemas";
 import type { Profile } from "./profile-types";
+import { readMembershipContext } from "@/modules/memberships/service";
 export function createProfileService(
   security: ReturnType<typeof createSecurity>,
 ) {
@@ -71,6 +72,7 @@ export function createProfileService(
             [scope.organizationId, id, management, scope.userId],
           )
         ).rows;
+        const memberships = await readMembershipContext(db, scope, member);
         return {
           organization,
           branches,
@@ -83,10 +85,8 @@ export function createProfileService(
           notesTotal: notes.total,
           canManage: management,
           history,
-          eligibility: {
-            allowed: false,
-            reason: member.archivedAt ? "archived" : "no_membership",
-          },
+          eligibility: memberships.eligibility,
+          memberships,
           requestId: scope.requestId,
         };
       },

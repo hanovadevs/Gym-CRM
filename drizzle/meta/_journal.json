@@ -85,6 +85,27 @@
       "when": 1795250067340,
       "tag": "0011_plan_security",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1795252077802,
+      "tag": "0012_membership_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1795252080997,
+      "tag": "0013_membership_security",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795254133789,
+      "tag": "0014_membership_snapshot_shape",
+      "breakpoints": true
     }
   ]
 }

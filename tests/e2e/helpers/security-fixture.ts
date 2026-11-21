@@ -27,6 +27,16 @@ export async function securityFixture(
     { id: string; email: string; password: string; name: string }
   > = {};
   async function cleanup() {
+    for (const table of [
+      "membership_requests",
+      "membership_freezes",
+      "invoices",
+      "memberships",
+    ])
+      await admin.query(
+        `delete from gym.${table} where organization_id=any($1::uuid[])`,
+        [[orgA, orgB]],
+      );
     await admin.query(
       "delete from gym.plan_versions where organization_id=any($1::uuid[])",
       [[orgA, orgB]],

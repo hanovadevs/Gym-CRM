@@ -4,6 +4,7 @@ import { getSecurity } from "@/server/security";
 import { AccessError } from "@/server/security/errors";
 import { SignOut } from "@/components/sign-out";
 import { SectionTitle } from "@/components/ui/section-title";
+import { WorkspaceFrame } from "@/components/workspace-frame";
 export const dynamic = "force-dynamic";
 export default async function Workspace({
   searchParams,
@@ -41,17 +42,14 @@ export default async function Workspace({
   }
   const selected = (await searchParams).branchId;
   return (
-    <div className="secure-workspace">
-      <header className="secure-header">
-        <a className="brand" href="/workspace">
-          <span className="brand-mark" aria-hidden="true">
-            J
-          </span>
-          Jym CRM
-        </a>
-        <SignOut />
-      </header>
-      <main className="secure-main">
+    <WorkspaceFrame
+      organization={workspace.organization}
+      active="workspace"
+      canManageSettings={workspace.actions.includes("settings.read")}
+      canManageMembers={workspace.actions.includes("members.manage")}
+      canReadPlans={workspace.actions.includes("plans.read")}
+    >
+      <div className="secure-main">
         <section className="page-heading">
           <div>
             <p className="eyebrow">{workspace.organization.name}</p>
@@ -145,7 +143,8 @@ export default async function Workspace({
               ? "Manage your gym preferences and permitted staff settings. "
               : "Your workspace access is active. "}
             Register and maintain members in your permitted branches. Membership
-            enrollment and financial workflows are upcoming.
+            enrollment is available from member profiles. Payment collection is
+            upcoming.
           </p>
           {workspace.actions.includes("settings.read") ? (
             <a
@@ -178,7 +177,7 @@ export default async function Workspace({
             </a>
           ) : null}
         </section>
-      </main>
-    </div>
+      </div>
+    </WorkspaceFrame>
   );
 }

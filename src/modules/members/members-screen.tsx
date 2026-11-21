@@ -24,6 +24,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
     [search, setSearch] = useState(initial.query.q),
     [listError, setListError] = useState(""),
     [notice, setNotice] = useState(""),
+    [nextMemberId, setNextMemberId] = useState(""),
     [loading, setLoading] = useState(false),
     [saving, setSaving] = useState(false),
     [reloadRequired, setReloadRequired] = useState(false),
@@ -104,6 +105,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
           moreMatches: result.error?.details?.moreMatches,
         };
       const member = result.data.member;
+      setNextMemberId(editing ? "" : member.id);
       setNotice(
         `${member.name} (${member.memberCode}) ${editing ? "updated" : "registered"}.`,
       );
@@ -155,7 +157,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
       <section className="members-directory" aria-busy={loading}>
         <SectionTitle
           title="Member directory"
-          help="Search by name, member code, phone or email within your permitted branches. Registration alone does not mean an active membership or gym access. Enrollment, payments and full profiles are upcoming workflows."
+          help="Search by name, member code, phone or email within your permitted branches. Registration alone does not mean an active membership or gym access. Open a profile to enroll, renew or manage membership history. Payment collection is upcoming."
         />
         <div className="member-filters">
           <label className="field directory-search">
@@ -245,6 +247,15 @@ export function MembersScreen({ initial }: { initial: Directory }) {
         {notice ? (
           <p className="form-message" role="status">
             {notice}
+            {nextMemberId ? (
+              <a
+                className="text-action"
+                style={{ marginLeft: 12 }}
+                href={`/members/${nextMemberId}?organizationId=${data.organization.id}`}
+              >
+                Open profile to enroll
+              </a>
+            ) : null}
             {reloadRequired
               ? " Refreshing saved records is required before editing again."
               : ""}

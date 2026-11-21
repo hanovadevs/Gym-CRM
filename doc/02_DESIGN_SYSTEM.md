@@ -17,13 +17,15 @@ Use `references/01_dashboard.png` as the visual anchor. Implement the flat appli
 | Warning | #FFF1DE / #8A571F | Labeled due/expiring |
 | Danger | #FBE8E7 / #983F3A | Error/denial |
 
-Check contrast in the real UI and adjust text colors if needed. Light theme, no gradients, glass blur, blinking dots, emojis, thick borders, ornamental lines, saturated green flooding, or clutter. Sidebar text needs no icon for each item.
+Check contrast in the real UI and adjust text colors if needed. Light theme, no gradients, glass blur, blinking dots, emojis, thick borders, ornamental lines, saturated green flooding, or clutter. User update (21 November 2026): sidebar options use consistent outline icons and labels, with a collapse control and accessible icon-only compact mode (ADR-028).
 
 Use Inter or similar clean sans-serif, preferably bundled locally. Heading approximately 28px/600; body 14–16px; labels 13–14px; tabular numerals for money. Spacing 4/8/12/16/24/32/40px. Panels radius 16px, controls 10px, very soft shadow. Tables around 56–64px row height; readable first.
 
 ## Shell
 
 Sidebar 210–240px, main padding 28–32px, header about 72px. Navigation: Dashboard, Members, Plans, Attendance, Payments, Classes, Trainers, Enquiries, Expenses, Reports; Settings bottom. Hide unauthorized/disabled modules. An extremely faint bottom weights illustration is optional and must not compete with text.
+
+Current shared sidebar: rounded floating white panel, 232px wide (84px collapsed), restrained sage selected state, readable labels and compact gym context. Persist only the non-sensitive desktop collapse preference in browser storage. Mobile uses a focus-trapped left navigation drawer, Escape/Close and focus return to Menu. Sidebar width and content offset switch together without a layout animation, avoiding temporary overlap on resize or expansion. Icons have accessible link/button names; unauthorized routes stay hidden and development preview controls stay explicitly disabled.
 
 Header contains organization/branch context, working search and avatar menu. Hide branch picker for one branch. Start global search with authorized member lookup rather than a fake universal search box. Page header has title, short subtitle, one main action. Avoid unnecessary KPI rows on every list.
 

@@ -6,6 +6,8 @@ import { Drawer } from "@/components/ui/primitives";
 import { MemberEditor } from "./member-editor";
 import { useHydrated } from "@/lib/use-hydrated";
 import type { Profile } from "./profile-types";
+import { MembershipsPanel } from "@/modules/memberships/memberships-panel";
+import { eligibilityLabel } from "@/modules/memberships/state";
 export function ProfileScreen({ initial }: { initial: Profile }) {
   const hydrated = useHydrated();
   const [data, setData] = useState(initial),
@@ -191,7 +193,7 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
               buttons[next].focus();
             }}
           >
-            {["Overview", "Notes", "History"].map((t) => (
+            {["Overview", "Memberships", "Notes", "History"].map((t) => (
               <button
                 id={"profile-tab-" + t}
                 aria-controls="profile-panel"
@@ -228,15 +230,11 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
                     <dt>Joined</dt>
                     <dd>{date(data.member.joinedOn)}</dd>
                     <dt>Access</dt>
-                    <dd>
-                      {data.eligibility.reason === "archived"
-                        ? "Blocked: archived member"
-                        : "Not enrolled"}
-                    </dd>
+                    <dd>{eligibilityLabel(data.eligibility)}</dd>
                   </dl>
                   <p className="support">
-                    Membership, attendance and payment histories will appear
-                    when those services are connected.
+                    Membership history is connected below. Attendance and
+                    payments will appear when those services are connected.
                   </p>
                 </section>
                 <section className="panel">
@@ -278,6 +276,22 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
                   </button>
                 </section>
               </div>
+            ) : null}
+            {tab === "Overview" || tab === "Memberships" ? (
+              <MembershipsPanel
+                key={data.member.version}
+                initial={data.memberships}
+                onChanged={async () => {
+                  await reload();
+                  setMessage("Membership changes saved.");
+                }}
+                onBlock={() => {
+                  setBlocked(true);
+                  setError(
+                    "Membership changes were saved, but the profile could not refresh. Reload before editing again.",
+                  );
+                }}
+              />
             ) : null}
             {tab === "Overview" || tab === "Notes" ? (
               <section className="panel profile-notes">

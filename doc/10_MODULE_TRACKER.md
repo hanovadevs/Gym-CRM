@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 21 November 2026 (Asia/Karachi): PLAN-01 persisted catalog, immutable versions, snapshots and archive/restore verified locally. Membership enrollment/renewal (SUB-01), attendance and finance remain upcoming.
+Updated 21 November 2026 (Asia/Karachi): SUB-01 membership lifecycle and UI-03 shared icon/collapse sidebar verified locally. Enrollment includes the issued invoice foundation. Payment collection, paid receipts and attendance remain upcoming.
 
 ## State rules
 
@@ -8,12 +8,12 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | SUB-01 |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-03 DONE; continue PAY-01 |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
-| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SET-01 DONE; policy/receipt consumers in SUB-01/PAY-02/ATT-01 |
-| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | MEM-01/02 DONE; cross-module history/access in SUB/PAY/ATT |
-| M04 | Plans & memberships | A | M03 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PLAN-01 DONE; next SUB-01 |
-| M05 | Billing, payments & receipts | A | M04 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | PAY-01 → PAY-03 |
+| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB policy verified; paid receipt/access consumers in PAY-02/ATT-01 |
+| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership history connected; payments/visits and ATT-01 archival denial remain |
+| M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01 DONE; automatic paid activation/attendance in PAY-02/ATT-01 |
+| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | Issued enrollment invoice foundation; next PAY-01 lists/lines/balances |
 | M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
 | M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
@@ -126,3 +126,21 @@ Schema: 0010_plan_catalog/0011_plan_security, applied to GYM/gym_test; previous 
 Checks: test:plans PASS repeatedly including final two-tenant direct RLS/FK/grant denial, same code in two gyms, live revocation, all-branch entitlement read, stale/replay/archive concurrency, old snapshot/price preservation, currency mismatch and paging. Existing DB/auth/security/settings/member/profile/mail suites PASS serially. Unit 24 PASS; final full browser 43 PASS (2.0m), including seven new plan workflows and prior 36. Lint initially two unused-variable warnings corrected; final lint/build/production verification recorded in session log. db:generate no changes; production dependency audit zero vulnerabilities. GYM one real org/zero members/plans/queued mail; gym_test zero org/member/plan/queued mail after cleanup; both 12 migrations on PostgreSQL 18.4. Screenshots reviewed at 390/768/1280/1440 and narrow editor, retained doc/evidence/plans-*.png. No real owner credentials or SMTP settings changed; no external mail/public deployment. M04 remains IN_PROGRESS for SUB-01 membership lifecycle and later integration checks.
 
 Final PLAN-01 gate: lint/typecheck/build PASS; production smoke PASS with new plan read/write/history/archive API 401/no-store and protected page redirects; 21 client assets contain no configured database/auth/SMTP secrets. PLAN-01 DONE. Actual membership/invoice snapshot persistence, overlapping renewal prevention, freeze/cancel/activation and access-policy integration remain SUB-01 and its dependent tasks.
+
+## SUB-01 / UI-03 evidence — 21 November 2026, Asia/Karachi
+
+SUB-01 task DONE locally: member-profile enrollment/renewal review shows exact local dates, current immutable plan version, charge and activation policy. Confirmation atomically commits membership snapshot, issued single-line invoice, org counter, sanitized audit and scoped request result. Lost-response retries replay IDs; changed payload/stale member or plan versions reject. Member locking/versioning serializes distinct-key renewals and lifecycle mutations; the independent database trigger rejects raw concurrent overlapping periods. Archive blocks enrollment/access changes; home-branch transfer is guarded while current/future/grace access remains.
+
+Reasoned owner/manager activation with debt, prospective freeze/reversal and effective cancellation preserve charge history. Freeze extends once and rejects future-renewal collisions; reversal removes the extension once and rechecks remaining ranges. Stored pending/active/cancelled and derived date/freeze/grace states remain separate from debt. Saved activation/grace/debt policies are exercised through actual settings and profile services. A pending renewal does not erase activated grace access. Enrollment stays pending under paid-activation policy until an explicit permitted override or future PAY-02 payment workflow. No payment, receipt, refund or credit is fabricated.
+
+Files: src/modules/memberships/*; member profile/directory integration; GET/POST/PATCH /api/members/[id]/memberships, POST /preview; src/server/db/membership-schema.ts. Reviewed 0012_membership_lifecycle, 0013_membership_security, 0014_membership_snapshot_shape applied to GYM/gym_test (15 journal entries). Original plan snapshots/dates and issued invoices immutable to runtime; tenant composite FKs, restricted column grants, RLS and JSON required-key/type constraints. Applied 0000–0011 unchanged. ADR-027 explains the minimal PAY-01 invoice foundation needed for enrollment atomicity; richer billing remains IN_PROGRESS.
+
+UI-03 DONE: src/components/app-sidebar.tsx shared by live workspace/settings/member/profile/plans and preview. Consistent outline option icons, sage selected state, 232px expanded/84px rail, persisted non-sensitive collapse preference and permission-filtered routes. Phone/tablet modal navigation traps focus, closes with Escape and returns focus to Menu. Width/offset switch together without layout animation after actual resize overlap/overflow was found. No decorative dots, blinking indicators, gradient or icon dependency. ADR-028 records the explicit user preference change.
+
+Checks: real PostgreSQL membership suite PASS for two-tenant/session/role/branch/RLS boundaries, immutable snapshots/invoices, actual policy/date/money/grace consumers, concurrent raw/service overlap, replay, rollback, freezes/cancel and bounded history/search. Profiles/members/plans/settings/security/mail/auth/database/adapter regression PASS serially after 0014. Unit 30 PASS in eight files; final full browser 52 scenarios PASS (test-results/.last-run.json passed, no failed IDs), including nine new membership/sidebar workflows. Lint/typecheck PASS. Final build/production confirmation follows in session log. db:generate no changes; production dependency audit zero vulnerabilities. GYM one real org and zero members/plans/memberships/invoices/queued mail; gym_test zero fixtures; both PostgreSQL 18.4, 15 migrations.
+
+Visuals: current captured member/profile/settings/plans/workspace/preview evidence retained in doc/evidence. New membership-{390,768,1280,1440}.png and sidebar-{expanded-1440,collapsed-1440,mobile-390}.png reviewed. White/sage/charcoal, small section info icons, readable actions and narrow layouts checked; desktop sidebar/content geometry and page overflow asserted. Original failed verification runs and corrections remain in session log.
+
+Module boundary: M04 UI/server/database DONE; QA/overall VERIFYING for automatic paid activation and actual attendance consumers in PAY-02/ATT-01. M02/M03 retain later payment/visit integration gates. M05 UI/server/database/QA IN_PROGRESS for the minimal issued enrollment invoice foundation; PAY-01 still needs invoice list/lines/balances/corrections. Next exact task PAY-01. No valued-data reset, actual external email, owner-identity change, cloud cutover or public deployment in this phase.
+
+Final SUB-01/UI-03 release checks: lint/typecheck, 30 units, full 52-browser regression, production build and production smoke PASS. All membership APIs reject anonymous valid requests with 401/no-store; 22 client assets contain no configured database/auth/SMTP secrets. Full evidence, corrected failed runs, final migration/data counts and publishing/runtime handoff are recorded in doc/15_SESSION_LOG.md.

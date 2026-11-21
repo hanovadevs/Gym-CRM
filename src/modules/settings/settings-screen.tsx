@@ -3,6 +3,7 @@ import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
 import { Drawer } from "@/components/ui/primitives";
 import { SignOut } from "@/components/sign-out";
+import { AppSidebar } from "@/components/app-sidebar";
 import type { SettingsData, Staff, Branch } from "./types";
 import type { SettingsValues } from "./schemas";
 const labels: Record<keyof SettingsValues, string> = {
@@ -185,32 +186,11 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
   }
   return (
     <div className="settings-layout">
-      <aside className="settings-sidebar">
-        <a
-          className="brand"
-          href={"/workspace?organizationId=" + data.organizationId}
-        >
-          <span className="brand-mark" aria-hidden="true">
-            J
-          </span>
-          Jym CRM
-        </a>
-        <nav aria-label="Workspace navigation">
-          <a href={"/workspace?organizationId=" + data.organizationId}>
-            Workspace
-          </a>
-          <a href={"/members?organizationId=" + data.organizationId}>Members</a>
-          <a href={"/plans?organizationId=" + data.organizationId}>Plans</a>
-          <a
-            className="selected"
-            href={"/settings?organizationId=" + data.organizationId}
-            aria-current="page"
-          >
-            Settings
-          </a>
-        </nav>
-        <p>{data.values.name}</p>
-      </aside>
+      <AppSidebar
+        organization={{ id: data.organizationId, name: data.values.name }}
+        active="settings"
+        canManageSettings
+      />
       <div className="settings-content">
         <header className="settings-topbar">
           <a href={"/workspace?organizationId=" + data.organizationId}>
