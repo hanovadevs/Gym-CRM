@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 20 November 2026 (Asia/Karachi): profiles/notes/archival and fixed-sender SMTP recovery/invitations verified locally. Memberships, attendance and finance remain upcoming.
+Updated 21 November 2026 (Asia/Karachi): profiles/notes/archival and fixed-sender SMTP recovery/invitations verified locally and published to GitHub. Memberships, attendance and finance remain upcoming.
 
 ## State rules
 
