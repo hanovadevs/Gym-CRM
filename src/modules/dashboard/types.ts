@@ -22,6 +22,20 @@ export type DashboardData = {
       renewOn: string;
     }[];
   };
+  classes:
+    | null
+    | {
+        id: string;
+        title: string;
+        trainerName: string;
+        branchId: string;
+        branchName: string;
+        startsAt: string;
+        endsAt: string;
+        localDate: string;
+        capacity: number;
+        booked: number;
+      }[];
   finance: {
     period: "today" | "month";
     fromOn: string;

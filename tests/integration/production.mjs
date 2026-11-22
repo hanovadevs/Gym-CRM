@@ -133,6 +133,9 @@ try {
     ["/api/platform/analytics", "GET"],
     ["/api/trainers", "GET"],
     ["/api/payroll", "GET"],
+    ["/api/classes", "GET"],
+    ["/api/classes/members?organizationId="+org+"&classId="+org+"&q=member", "GET"],
+    ["/api/classes", "POST", {operation:"room",organizationId:org,id:org,requestKey:org,branchId:org,name:"Anonymous room",capacity:10,active:true,reason:"Anonymous denial check"}],
     [
       "/api/payroll",
       "POST",

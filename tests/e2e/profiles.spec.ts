@@ -119,6 +119,7 @@ test("profile, emergency contact and notes persist with responsive reference lay
   test.setTimeout(60000);
   const errors: string[] = [];
   page.on("pageerror", (e) => errors.push(e.message));
+  page.on("console",m=>{if(m.type()==="error"&&/hydrated|hydration/i.test(m.text()))errors.push(m.text())});
   const m = await seed(page);
   await page.goto(`/members?organizationId=${f.orgA}`);
   await page
@@ -161,6 +162,9 @@ test("profile, emergency contact and notes persist with responsive reference lay
   await page.reload();
   await expect(page.getByText("Amina Ahmed", { exact: true })).toBeVisible();
   await expect(page.locator(".note-body")).toContainText("Prefers evening");
+  await expect(
+    page.getByRole("button", { name: "Edit member", exact: true }),
+  ).toBeEnabled();
   for (const width of [390, 768, 1280, 1440]) {
     await page.setViewportSize({ width, height: 1100 });
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -173,6 +177,7 @@ test("profile, emergency contact and notes persist with responsive reference lay
       ),
     ).toBeTruthy();
     await page.screenshot({
+      caret: "initial",
       path: `test-results/profile-${width}.png`,
       fullPage: true,
     });
@@ -278,6 +283,7 @@ test("archive preserves notes/contact, blocks changes and can be restored throug
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.screenshot({
+    caret: "initial",
     path: "test-results/profile-archived-390.png",
     fullPage: true,
   });
@@ -462,7 +468,7 @@ test("staff invitation sends fixed-sender setup link and recipient chooses a pas
     await recipient
       .getByRole("link", { name: "sign in", exact: false })
       .click();
-    await recipient.getByLabel("Work email", { exact: true }).fill(email);
+    await recipient.getByLabel("Login email", { exact: true }).fill(email);
     await recipient
       .getByLabel("Password", { exact: true })
       .fill("Invited user chosen password 2026");

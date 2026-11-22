@@ -1,4 +1,5 @@
 export type Trainer = {
+  employeeId: string | null;
   id: string;
   name: string;
   specialties: string;

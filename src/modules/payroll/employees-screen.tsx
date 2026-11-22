@@ -1041,7 +1041,7 @@ function PayrollEditor({
                 onClick={confirm}
               >
                 {pending
-                  ? "Saving�"
+                  ? "Saving..."
                   : attempted
                     ? "Retry save"
                     : "Confirm " + (isEmployee ? "employee" : "payroll")}

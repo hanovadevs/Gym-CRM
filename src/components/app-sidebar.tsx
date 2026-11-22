@@ -12,6 +12,7 @@ type Page =
   | "payments"
   | "settings"
   | "dashboard"
+  | "classes"
   | "employees"
   | "trainers"
   | "expenses"
@@ -106,6 +107,11 @@ export function AppSidebar({
       : []),
     ...(canManageMembers
       ? [{ name: "Members", page: "members", href: "/members" }]
+      : []),
+    ...(canManageMembers ||
+    canManageSettings ||
+    (!canReadBilling && !canReadPlans)
+      ? [{ name: "Classes", page: "classes", href: "/classes" }]
       : []),
     ...(canManageMembers ||
     canManageSettings ||

@@ -148,7 +148,17 @@ export function createSettingsService(
             )
           ).rows.map((r) => ({ ...r, occurredAt: r.occurredAt.toISOString() }));
         }
+        const primaryAccount =
+          scope.role === "owner"
+            ? ((
+                await db.query(
+                  'select u.email as "loginEmail",a.owner_email as "ownerEmail" from gym.gym_accounts a join app_auth."user" u on u.id=a.auth_user_id where a.organization_id=$1',
+                  [scope.organizationId],
+                )
+              ).rows[0] ?? null)
+            : null;
         return {
+          primaryAccount,
           organizationId: scope.organizationId,
           version,
           values: settingsFields.parse(values),

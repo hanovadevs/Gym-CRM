@@ -63,6 +63,7 @@ export function createDashboardService(
           'recentMembers',coalesce((select jsonb_agg(r) from (select m.id,m.name,m.member_code as "memberCode",m.joined_on::text as "joinedOn" from gym.members m where m.organization_id=$1 and m.home_branch_id=any($2::uuid[]) and m.archived_at is null order by m.created_at desc,m.id desc limit 6) r),'[]'::jsonb),
           'renewals',coalesce((select jsonb_agg(r) from (select * from (select distinct on(e.member_id) e.member_id id,e.name,e.member_code as "memberCode",e.end_on_exclusive::text as "renewOn" from effective e where e.end_on_exclusive<=c.today+14 and not exists(select 1 from gym.memberships next where next.organization_id=e.organization_id and next.member_id=e.member_id and next.start_on=e.end_on_exclusive and (next.cancelled_effective_on is null or next.cancelled_effective_on>next.start_on)) order by e.member_id,e.end_on_exclusive) selected order by "renewOn",id limit 8) r),'[]'::jsonb)
         ) else null end operational,
+        case when $6::boolean then coalesce((select jsonb_agg(r) from(select s.id,s.title,t.name as "trainerName",s.branch_id as "branchId",b.name as "branchName",s.starts_at as "startsAt",s.ends_at as "endsAt",(s.starts_at at time zone c.zone)::date::text as "localDate",cl.capacity,(select count(*)::int from gym.class_bookings x where x.organization_id=s.organization_id and x.slot_id=s.id and x.cancelled_at is null) booked from gym.schedule_slots s join gym.class_sessions cl on cl.organization_id=s.organization_id and cl.slot_id=s.id join gym.trainers t on t.organization_id=s.organization_id and t.id=s.trainer_id join gym.branches b on b.organization_id=s.organization_id and b.id=s.branch_id where s.organization_id=$1 and s.branch_id=any($2::uuid[]) and s.cancelled_at is null and s.starts_at>=statement_timestamp() and s.starts_at<((c.today+7)::timestamp at time zone c.zone) order by s.starts_at,s.id limit 6)r),'[]'::jsonb) else null end classes,
         jsonb_build_object(
           'period',case when $4::boolean then 'month' else 'today' end,
           'fromOn',c.cash_from::text,
@@ -78,6 +79,7 @@ export function createDashboardService(
               operational,
               financial,
               [...scope.authorizedBranchIds],
+              can(scope.role, "classes.read"),
             ],
           )
         ).rows[0];

@@ -137,7 +137,7 @@ export function TrainersScreen({ initial }: { initial: TrainingDirectory }) {
         ) : null}
         <nav className="pagination" aria-label="Trainer pages">
           <span>
-            {data.total} trainers � Page {data.page}
+            {data.total} trainers / Page {data.page}
           </span>
           {data.page > 1 ? (
             <Link
@@ -195,6 +195,34 @@ export function TrainersScreen({ initial }: { initial: TrainingDirectory }) {
               </>
             ) : null}
           </dl>
+          <div className="platform-heading-actions">
+            <Link
+              href={
+                "/classes?" +
+                new URLSearchParams({
+                  organizationId: data.organizationId,
+                  trainerId: view.id,
+                })
+              }
+            >
+              Availability & classes
+            </Link>
+            {data.canManage ? (
+              <Link
+                href={
+                  "/employees?" +
+                  new URLSearchParams({
+                    organizationId: data.organizationId,
+                    ...(view.employeeId
+                      ? { employeeId: view.employeeId }
+                      : { q: view.name }),
+                  })
+                }
+              >
+                Employee & salary profile
+              </Link>
+            ) : null}
+          </div>
           {data.canManage && view.canEdit ? (
             <button
               className="primary"
@@ -456,7 +484,7 @@ function TrainerEditor({
                 onClick={confirm}
               >
                 {pending
-                  ? "Saving�"
+                  ? "Saving..."
                   : attempted
                     ? "Retry save"
                     : "Confirm trainer"}

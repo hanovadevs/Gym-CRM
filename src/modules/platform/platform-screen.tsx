@@ -103,7 +103,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                 disabled={refreshing}
                 aria-busy={refreshing}
               >
-                {refreshing ? "Refreshing…" : "Refresh directory"}
+                {refreshing ? "RefreshingÃ¢â‚¬Â¦" : "Refresh directory"}
               </button>
               <button className="primary" onClick={() => setEditing("new")}>
                 Create gym
@@ -261,7 +261,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
             ) : null}
             <nav className="member-pagination" aria-label="Gym pages">
               <span>
-                {data.total} gyms · Page {data.page}
+                {data.total} gyms Ã‚Â· Page {data.page}
               </span>
               {data.page > 1 ? (
                 <Link href={href({ page: data.page - 1 })}>Previous</Link>
@@ -329,7 +329,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
             ) : null}
             <nav className="member-pagination" aria-label="Activity pages">
               <span>
-                {data.activityTotal} events · Page {data.activityPage}
+                {data.activityTotal} events Ã‚Â· Page {data.activityPage}
               </span>
               {data.activityPage > 1 ? (
                 <Link href={href({ activityPage: data.activityPage - 1 })}>
@@ -361,8 +361,10 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
               help="Contact details maintained for this workspace. Owner credentials and private member data are never displayed here."
             />
             <dl>
-              <dt>Email</dt>
+              <dt>Gym login ID</dt>
               <dd>{inspecting.email || "Not provided"}</dd>
+              <dt>Owner recovery email</dt>
+              <dd>{inspecting.ownerEmail || "Not configured"}</dd>
               <dt>Phone</dt>
               <dd>{inspecting.phone || "Not provided"}</dd>
               <dt>Address</dt>
@@ -524,6 +526,7 @@ function GymEditor({
               requestKey,
               name: String(form.get("name")),
               email: String(form.get("email")),
+              ownerEmail: String(form.get("ownerEmail")),
               phone: String(form.get("phone")),
               address: String(form.get("address")),
               reason: String(form.get("reason")),
@@ -531,7 +534,6 @@ function GymEditor({
                 ? {
                     slug: String(form.get("slug")),
                     ownerName: String(form.get("ownerName")),
-                    ownerEmail: String(form.get("ownerEmail")),
                     password: String(form.get("password")),
                   }
                 : {
@@ -608,13 +610,34 @@ function GymEditor({
               />
             </label>
             <label>
-              Gym email
+              Gym login email
               <input
                 name="email"
                 type="email"
                 defaultValue={creating ? "" : gym.email}
+                required={creating}
+                readOnly={!creating}
               />
             </label>
+            <p className="support">
+              This is the gym login ID. It may be a made-up email and is never
+              used as a delivery address.
+            </p>
+            <label>
+              Owner recovery email
+              <input
+                name="ownerEmail"
+                type="email"
+                required={creating}
+                defaultValue={creating ? "" : (gym.ownerEmail ?? "")}
+                maxLength={254}
+                autoComplete="email"
+              />
+            </label>
+            <p className="support">
+              Use the owner&apos;s real email for password recovery, fee reminders
+              and account notifications. It is separate from the login ID.
+            </p>
             <label>
               Gym contact number
               <input
@@ -656,16 +679,7 @@ function GymEditor({
                   />
                 </label>
                 <label>
-                  Owner email
-                  <input
-                    name="ownerEmail"
-                    type="email"
-                    required
-                    autoComplete="username"
-                  />
-                </label>
-                <label>
-                  Initial owner password
+                  Initial gym password
                   <input
                     name="password"
                     type="password"
@@ -723,7 +737,7 @@ function GymEditor({
           ) : (
             <button className="primary" type="submit" disabled={pending}>
               {pending
-                ? "Saving…"
+                ? "SavingÃ¢â‚¬Â¦"
                 : retry
                   ? "Retry saved request"
                   : creating

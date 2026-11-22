@@ -36,6 +36,7 @@ export const permissions = {
   "payroll.manage": ["owner", "manager", "accountant"],
   "expenses.manage": ["owner", "manager", "accountant"],
   "reports.financial": ["owner", "manager", "accountant"],
+  "classes.read": ["owner", "manager", "receptionist", "trainer"],
   "classes.manage": ["owner", "manager"],
   "classes.book": ["owner", "manager", "receptionist"],
   "trainer.own.read": ["owner", "manager", "trainer"],

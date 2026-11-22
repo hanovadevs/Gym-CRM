@@ -33,6 +33,7 @@ export function createTrainingService(
           coalesce((select jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) order by b.name,b.id)
             from gym.trainer_branches tb join gym.branches b on b.organization_id=tb.organization_id and b.id=tb.branch_id
             where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and tb.branch_id=any($6::uuid[])), '[]'::jsonb) branches,
+          case when $8::boolean then (select e.id from gym.employees e where e.organization_id=t.organization_id and e.trainer_id=t.id and e.branch_id=any($6::uuid[]) limit 1) else null end as "employeeId",
           not exists(select 1 from gym.trainer_branches tb where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and not(tb.branch_id=any($6::uuid[]))) as "canEdit"
         from gym.trainers t where t.organization_id=$1 and (not $4 or t.login_user_id=$5)
           and exists(select 1 from gym.trainer_branches tb where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and tb.branch_id=any($2::uuid[]))
@@ -47,6 +48,7 @@ export function createTrainingService(
             s.userId,
             [...s.authorizedBranchIds],
             q.page,
+            can(s.role, "payroll.manage"),
           ],
         );
         const logins =

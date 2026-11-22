@@ -34,7 +34,10 @@ export function AuthForm({
     <div className="auth-layout">
       <aside className="auth-story">
         <Link className="brand" href="/sign-in">
-          <span className="brand-mark"><BrandMark /></span>Mojym
+          <span className="brand-mark">
+            <BrandMark />
+          </span>
+          Mojym
         </Link>
         <h1>A better day at the gym starts here.</h1>
         <p>Members, payments and daily operations, in one calm workspace.</p>
@@ -82,13 +85,19 @@ export function AuthForm({
                   router.refresh();
                 }
               } else if (mode === "forgot") {
-                const result = await authClient.requestPasswordReset({
-                  email: String(data.get("email")),
-                  redirectTo: window.location.origin + "/reset-password",
+                const result = await fetch("/api/account-recovery", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    email: String(data.get("email")),
+                    gymLoginEmail: String(data.get("gymLoginEmail") ?? ""),
+                  }),
                 });
-                if (result.error)
+                if (!result.ok)
                   setError(
-                    "Password recovery is unavailable. Try again later.",
+                    result.status === 429
+                      ? "Too many recovery requests. Please wait a minute before trying again."
+                      : "Password recovery is unavailable. Try again later.",
                   );
                 else
                   setMessage(
@@ -126,16 +135,16 @@ export function AuthForm({
           <h2 className="auth-title">{title}</h2>
           <p className="auth-subtitle">
             {mode === "sign-in"
-              ? "Sign in to your gym workspace."
-              : "Use the email associated with your staff account."}
+              ? "Use your gym login ID or staff email."
+              : "Recovery links go to the real owner email, or to your own staff email."}
           </p>
           <SectionTitle
             title="Account access"
-            help="Staff accounts are created by your gym administrator. Public registration is disabled. Recovery and invitation emails are sent by contact@hanovadevs.com. Use a deliverable staff email for recovery."
+            help="Gym login emails identify a workspace and do not receive mail. Recovery and notifications use the recorded real owner email. Staff accounts use their own email. All account mail is sent by contact@hanovadevs.com."
           />
           {mode !== "reset" ? (
             <label className="field">
-              Work email
+              {mode === "forgot" ? "Recovery email" : "Login email"}
               <input
                 name="email"
                 type="email"
@@ -143,6 +152,21 @@ export function AuthForm({
                 required
                 maxLength={254}
               />
+            </label>
+          ) : null}
+          {mode === "forgot" ? (
+            <label className="field">
+              Gym login ID (optional)
+              <input
+                name="gymLoginEmail"
+                type="email"
+                maxLength={254}
+                autoComplete="username"
+              />
+              <small>
+                If one owner email manages several gyms, include the gym login
+                ID. Staff can leave this blank.
+              </small>
             </label>
           ) : null}
           {mode !== "forgot" ? (
@@ -195,7 +219,7 @@ export function AuthForm({
             type="submit"
           >
             {pending
-              ? "Please wait…"
+              ? "Please waitâ€¦"
               : retrySeconds > 0
                 ? `Try again in ${retrySeconds}s`
                 : mode === "sign-in"

@@ -139,6 +139,10 @@ try {
 } finally {
   if (owner) {
     await client.query(
+      "delete from gym.gym_accounts where organization_id=$1",
+      [owner.organizationId],
+    );
+    await client.query(
       "delete from gym.staff_branch_grants where organization_id=$1",
       [owner.organizationId],
     );

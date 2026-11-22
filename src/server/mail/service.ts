@@ -3,6 +3,7 @@ import nodemailer from "nodemailer";
 import type { Pool, PoolClient } from "pg";
 import { mkdir, writeFile } from "node:fs/promises";
 import { z } from "zod";
+import { accountMailTarget } from "@/server/auth/account-contact";
 import { mailConfig, SYSTEM_SENDER } from "./config";
 import { trustedOrigins } from "@/lib/origins";
 const payloadSchema = z
@@ -10,6 +11,7 @@ const payloadSchema = z
     email: z.email(),
     url: z.url(),
     gymName: z.string().max(100).optional(),
+    loginEmail: z.email().max(254).optional(),
   })
   .strict();
 export async function enqueueMail(
@@ -23,10 +25,27 @@ export async function enqueueMail(
     gymName?: string;
   },
 ) {
+  const target = await accountMailTarget(db, input.userId);
+  if (
+    !target?.recipient_email ||
+    target.recipient_email.toLowerCase() !== input.email.toLowerCase() ||
+    (target.is_gym_account && input.kind === "invitation") ||
+    (target.is_gym_account &&
+      input.organizationId &&
+      input.organizationId !== target.organization_id)
+  )
+    throw new Error("Account mail recipient does not match identity");
   const payload = payloadSchema.parse({
     email: input.email,
     url: input.url,
-    ...(input.gymName ? { gymName: input.gymName } : {}),
+    ...(target.is_gym_account
+      ? {
+          gymName: target.gym_name ?? undefined,
+          loginEmail: target.login_email,
+        }
+      : input.gymName
+        ? { gymName: input.gymName }
+        : {}),
   });
   const origins = trustedOrigins(
     process.env.APP_URL!,
@@ -36,9 +55,9 @@ export async function enqueueMail(
   if (!origins.includes(new URL(payload.url).origin))
     throw new Error("Untrusted account link");
   const result = await db.query(
-    `insert into app_auth.mail_outbox(auth_user_id,organization_id,kind,payload) select id,$1,$2,$3::jsonb from app_auth."user" where id=$4 and lower(email)=lower($5) returning id`,
+    `insert into app_auth.mail_outbox(auth_user_id,organization_id,kind,payload) select id,$1,$2,$3::jsonb from app_auth."user" u where u.id=$4 and exists(select 1 from gym.account_mail_target(u.id) t where lower(t.recipient_email)=lower($5)) returning id`,
     [
-      input.organizationId ?? null,
+      input.organizationId ?? target.organization_id ?? null,
       input.kind,
       JSON.stringify(payload),
       input.userId,
@@ -65,7 +84,7 @@ export function accountMessage(
     title = invitation ? "Set up your staff password" : "Reset your password";
   const intro = invitation
     ? `You have been invited to ${payload.gymName ?? "a gym workspace"} on Mojym.`
-    : "A password reset was requested for your Mojym account.";
+    : `A password reset was requested for ${payload.gymName ? payload.gymName + " on Mojym" : "your Mojym account"}.${payload.loginEmail ? " Gym login ID: " + payload.loginEmail + "." : ""}`;
   return {
     from: { name: "Mojym", address: SYSTEM_SENDER },
     to: payload.email,
@@ -125,6 +144,18 @@ export async function deliverMail(
     ) {
       await pool.query(
         "update app_auth.mail_outbox set status='expired',payload=null,error_code='STAFF_ACCESS_REVOKED' where id=$1",
+        [id],
+      );
+      return "expired";
+    }
+    const currentTarget = await accountMailTarget(pool, row.auth_user_id);
+    if (
+      !currentTarget?.recipient_email ||
+      currentTarget.recipient_email.toLowerCase() !==
+        String(row.payload?.email).toLowerCase()
+    ) {
+      await pool.query(
+        "update app_auth.mail_outbox set status='expired',payload=null,error_code='RECIPIENT_CHANGED' where id=$1",
         [id],
       );
       return "expired";

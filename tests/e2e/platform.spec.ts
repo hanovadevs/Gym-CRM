@@ -16,6 +16,7 @@ let f: Awaited<ReturnType<typeof securityFixture>>, platformId: string;
 const adminEmail = randomUUID() + "@example.invalid",
   adminPassword = randomBytes(20).toString("hex");
 const slug = "browser-" + randomUUID(),
+  gymLoginEmail = randomUUID() + "@mojym.local",
   ownerEmail = randomUUID() + "@example.invalid",
   ownerPassword = randomBytes(20).toString("hex");
 const name = "Harbor Fitness QA";
@@ -77,7 +78,7 @@ test.afterAll(async () => {
   ).rows.map((r) => r.id);
   const owner = (
     await admin.query('select id from app_auth."user" where email=$1', [
-      ownerEmail,
+      gymLoginEmail,
     ])
   ).rows.map((r) => r.id);
   await admin.query(
@@ -87,6 +88,7 @@ test.afterAll(async () => {
   for (const id of ids) {
     for (const table of [
       "audit_events",
+      "gym_accounts",
       "staff_branch_grants",
       "staff_memberships",
       "branches",
@@ -425,14 +427,14 @@ test("new gym safely replays a lost response; manage suspension, activity and re
   const drawer = page.getByRole("dialog");
   await drawer.getByLabel("Gym name", { exact: true }).fill(name);
   await drawer
-    .getByLabel("Gym email", { exact: true })
-    .fill("contact@example.invalid");
+    .getByLabel("Gym login email", { exact: true })
+    .fill(gymLoginEmail);
   await drawer.getByLabel("Gym contact number").fill("03001234567");
   await drawer.getByLabel("Gym address").fill("Lahore test gym address");
   await drawer.getByLabel("Gym slug").fill(slug);
   await drawer.getByLabel("Owner name").fill("Harbor owner QA");
-  await drawer.getByLabel("Owner email").fill(ownerEmail);
-  await drawer.getByLabel("Initial owner password").fill(ownerPassword);
+  await drawer.getByLabel("Owner recovery email").fill(ownerEmail);
+  await drawer.getByLabel("Initial gym password").fill(ownerPassword);
   await drawer.getByLabel("Reason").fill("Approved new gym registration");
   let lost = true;
   await page.route("**/api/platform", async (route) => {
@@ -527,7 +529,7 @@ test("new gym safely replays a lost response; manage suspension, activity and re
     has: page.getByRole("button", { name: `Manage ${name}`, exact: true }),
   });
   await expect(row.getByText("Suspended", { exact: true })).toBeVisible();
-  await loginCookies("new-owner", ownerEmail, ownerPassword);
+  await loginCookies("new-owner", gymLoginEmail, ownerPassword);
   await session(page, "new-owner");
   expect((await page.request.get("/api/workspace")).status()).toBe(403);
   await session(page, "admin");

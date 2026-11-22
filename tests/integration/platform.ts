@@ -194,7 +194,7 @@ try {
   createdOrgs.push(created.organizationId);
   const user = (
     await admin.query('select id from app_auth."user" where email=$1', [
-      payload.ownerEmail,
+      payload.email,
     ])
   ).rows[0];
   createdUsers.push(user.id);
@@ -227,11 +227,13 @@ try {
   assert.equal(data.total, 1);
   assert.equal(data.gyms[0].staff, 1);
   assert.equal(data.gyms[0].email, payload.email);
+  assert.equal(data.gyms[0].ownerEmail, payload.ownerEmail);
+  assert.equal(data.gyms[0].contactEmail, payload.ownerEmail);
   assert.equal(data.gyms[0].phone, payload.phone);
   assert.equal(data.gyms[0].address, payload.address);
   assert.ok(data.events.some((e) => e.action === "gym.created"));
   assert.ok(!JSON.stringify(data).includes(payload.password));
-  const freshOwner = await login(payload.ownerEmail, payload.password);
+  const freshOwner = await login(payload.email, payload.password);
   assert.equal(
     (await security.workspace(freshOwner, {})).organization.id,
     created.organizationId,
@@ -247,6 +249,7 @@ try {
       service.save(headers, {
         ...payload,
         ownerEmail: failedEmail,
+        email: failedEmail,
         requestKey: randomUUID(),
       }),
     "CONFLICT",
@@ -809,6 +812,7 @@ try {
   for (const id of createdOrgs) {
     for (const table of [
       "audit_events",
+      "gym_accounts",
       "staff_branch_grants",
       "staff_memberships",
       "branches",

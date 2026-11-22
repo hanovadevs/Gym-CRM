@@ -50,6 +50,11 @@ async function session(page: Page, name = "Owner A") {
 test("employee salary review, replay, partial payment and expense reversal persist on mobile", async ({
   page,
 }) => {
+  const hydrationErrors: string[] = [];
+  page.on("console", (m) => {
+    if (m.type() === "error" && /hydration|hydrated/i.test(m.text()))
+      hydrationErrors.push(m.text());
+  });
   await session(page);
   await page.goto("/employees?organizationId=" + f.orgA);
   await expect(
@@ -183,6 +188,9 @@ test("employee salary review, replay, partial payment and expense reversal persi
   await expect(
     page.getByRole("heading", { name: "Zara Team", exact: true }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Add employee", exact: true }),
+  ).toBeEnabled();
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 844 });
     expect(
@@ -191,6 +199,7 @@ test("employee salary review, replay, partial payment and expense reversal persi
       ),
     ).toBe(true);
     await page.screenshot({
+      caret: "initial",
       path: `doc/evidence/payroll-${width}.png`,
       fullPage: true,
     });
@@ -203,4 +212,5 @@ test("employee salary review, replay, partial payment and expense reversal persi
   await expect(
     page.getByRole("heading", { name: "Employees unavailable", exact: true }),
   ).toBeVisible();
+  expect(hydrationErrors).toEqual([]);
 });

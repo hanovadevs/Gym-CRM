@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 22 November 2026 (Asia/Karachi): PAY-03 and PLAT-01 verified. ATT-01 verified with full68 browser regression and production workflows; DASH-01 verified; EXP-01 verified with72 browser passes and production/native-image/hosted checks. SourceGYM/hostedSupabase30; allthree35 after reviewed trainer/platformbilling migrations. Remaining modules and production release are open.
+Updated 23 November 2026 (Asia/Karachi): payroll HR-01 verified; CLS-01 and separate owner-contact AUTH-02 implemented and hosted verified, final live release pending. SourceGYM, isolatedgym_test and hostedSupabase42 matching reviewed migrations. MEM-03 monthly member fees/reminders, PT, enquiries, reports/imports, final mobile/UI and release gates remain open.
 
 ## State rules
 
@@ -16,8 +16,8 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
 | M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | DONE | DONE | DONE | DONE | DONE | DASH-01 persisted branch/local-date aggregates, source reconciliation, browser/production/hosted verification; class feed added with CLS-01 |
-| M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
-| M09 | Classes & bookings | B | M08 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | CLS-01 |
+| M08 | Trainers & PT | B | M03 + M02 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
+| M09 | Classes & bookings | B | M08 + M06 | VERIFYING | VERIFYING | DONE | VERIFYING | VERIFYING | CLS-01 implemented; actual hosted workflow verified, final live release remains |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
@@ -244,3 +244,12 @@ Actualchecks: test:payroll PASS (ratechange/snapshot/stale/version/monthunique/r
 Committedreviewed0035/0036 sourceGYM/isolatedtest/hostedSupabase37 allhashesmatch; original35 unchanged, no reset. Privateprepayroll consistentbackup48tables/2gyms/30members/27payments/35migrations listed/SHA256 (notrestoreproof). .local/verify-payroll-hosted.mjs --seed PASS actualrestricted hostedpooler production:5 retainedHanova employeeprofiles (3linkedexistingtrainers/2otherstaff),5examplemonthlysalarydues, full/partial/unpaid states, correctionreversal and linkedexpenses. Explicitly authorized retainedclientwalkthrough data, not verifiedactualwages or fundtransfers. PKR195000 salarydue/80000netpaid/115000remaining; originalmemberfinance unchanged; cashdashboard now includes80000 new salaryexpenses once. Stableprivate .local/hanova-payroll-manifest.json;5employees/5charges/4expensepostings/1payrollreversal, no staffsignins/emails created. Keep all examples with earlierdata.
 
 Next CLS-01 classes, resources/availability and bookings. Draft0037/0038 remains uncommitted/unapplied pendingreview; service/API/UI notyetwritten. TRN-01 assignments/PT UI/service remainsIN_PROGRESS despite verifiedsharedrawslot guards. Remaininglead/report/import/restore/release and othergymremoval also open.
+
+
+## CLS-01 and AUTH-02 verification - 23 November 2026, Asia/Karachi
+
+CLS-01 implements /classes and authorized class/resource/availability/member-picker APIs, day/week/list views, capacity-safe persisted bookings, cancellations retaining history, trainer/room/member conflicts shared with PT, membership benefit/freeze/debt eligibility, scoped trainer rosters and upcoming dashboard classes. Reviewed committed0037/0038 applied to sourceGYM, isolatedtest and hostedSupabase:39 matching migration hashes. test:classes PASS including last-seat races, cross-class member conflicts, PT/class conflicts, raw SQL guards, role/branch restrictions, stale/replay and audit failure rollback. The integration DB explicitly uses UTC: this caught and fixed a local-time cast dependent on server timezone before hosted verification. No applied migration changed.
+
+Full78 browser regression PASS4.7m; final focused12 PASS1.6m without hydration warnings. Earlier caret-color hydration warnings came from screenshot DOM caret hiding during hydration; captures now preserve the initial caret and wait for interaction. Captures doc/evidence/classes-{320,390,768,1440}.png, desktop/mobile opened and reviewed. Production build PASS64s; production smoke PASS33client assets. Actual restricted hosted production verification .local/verify-classes-hosted.mjs --seed PASS53steps:21 coach availability windows,2 rooms,8 retained sessions (7active/1cancelled),19 active bookings/20 retained booking records, full capacity and cancellation/rebook, actual dashboard feed and salary links. No external mail. Live deployment check remains pending, so overall VERIFYING.
+
+AUTH-02 separates primary gym login ID from real owner recovery contact. Committed0039-0041 applied to isolatedgym_test42 only at this checkpoint; source/host remain39 pending consistent backup and guarded migration. test:account-contact PASS maintained reset/login, real-recipient capture, contact-change token invalidation, shared contact disambiguation, staff fallback, row-lock serialization and helper ACL. test:platform and test:mail PASS. Browser verification underway. User explicitly selected contact@hanovadevs.com as Hanova real owner contact while retaining existing gym login/password. No live contact mutation yet. MEM-03 must deliver owner reminders both inside CRM and by email, as explicitly requested; registration fee/date workflow remains next, not complete.

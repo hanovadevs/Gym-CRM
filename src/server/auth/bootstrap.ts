@@ -61,6 +61,16 @@ export async function bootstrapOwner(
       [orgId, staff.rows[0].id, branch.rows[0].id],
     );
     await client.query(
+      "insert into gym.gym_accounts(organization_id,auth_user_id,owner_email,created_by,updated_by) values($1,$2,$3,$2,$2)",
+      [
+        orgId,
+        result.user.id,
+        /\.(local|localhost|invalid|test)$/i.test(data.email)
+          ? null
+          : data.email,
+      ],
+    );
+    await client.query(
       'insert into gym.audit_events(organization_id,actor_user_id,action,entity_id,request_id,reason,"after") values($1,$2,$3,$1,$4,$5,$6::jsonb)',
       [
         orgId,

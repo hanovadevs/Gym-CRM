@@ -134,6 +134,7 @@ test("trainer profiles review, lost-response replay, update and responsive branc
       ),
     ).toBe(true);
     await page.screenshot({
+      caret: "initial",
       path: `doc/evidence/trainers-${width}.png`,
       fullPage: true,
     });

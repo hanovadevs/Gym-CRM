@@ -37,7 +37,7 @@ const mutationSchema = z.discriminatedUnion("operation", [
       ownerName: z.string().trim().min(1).max(100),
       ownerEmail: z.email().toLowerCase(),
       password: z.string().min(12).max(128),
-      email: contact.email.default(""),
+      email: z.email().toLowerCase(),
       phone: contact.phone.default(""),
       address: contact.address.default(""),
       reason,
@@ -51,6 +51,7 @@ const mutationSchema = z.discriminatedUnion("operation", [
       name: z.string().trim().min(1).max(100),
       active: z.boolean(),
       email: contact.email.optional(),
+      ownerEmail: contact.email.optional(),
       phone: contact.phone.optional(),
       address: contact.address.optional(),
       version: z.number().int().positive(),
@@ -67,6 +68,9 @@ export type PlatformGym = {
   active: boolean;
   version: number;
   email: string;
+  contactEmail?: string;
+  ownerEmail?: string | null;
+  ownerName?: string | null;
   phone: string;
   address: string;
   createdAt: string;
@@ -178,6 +182,16 @@ export function createPlatformService(
       };
     });
   }
+  async function invalidateRecovery(db: PoolClient, userId: string) {
+    // Better Auth 1.7.27 stores password-reset verification values as the auth user ID.
+    await db.query("delete from app_auth.verification where value=$1", [
+      userId,
+    ]);
+    await db.query(
+      "update app_auth.mail_outbox set status='expired',payload=null,error_code='RECIPIENT_CHANGED' where auth_user_id=$1 and kind='recovery' and status in ('pending','failed','uncertain')",
+      [userId],
+    );
+  }
   async function save(headers: Headers, raw: unknown) {
     return run(headers, async (db, user) => {
       const parsed = mutationSchema.safeParse(raw);
@@ -221,23 +235,23 @@ export function createPlatformService(
         after;
       if (input.operation === "create") {
         await db.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
-          "account-provision:" + input.ownerEmail,
+          "account-provision:" + input.email,
         ]);
         if (
           (
             await db.query(
               'select 1 from app_auth."user" where lower(email)=$1',
-              [input.ownerEmail],
+              [input.email],
             )
           ).rowCount
         )
           throw new BusinessError(
             "CONFLICT",
-            "That email already has an account. Choose a separate owner email for this new gym.",
+            "That gym login email already has an account. Choose a unique login ID for this gym.",
           );
         const owner = await provision(db, {
           name: input.ownerName,
-          email: input.ownerEmail,
+          email: input.email,
           password: input.password,
         });
         await db.query(
@@ -246,7 +260,7 @@ export function createPlatformService(
             id,
             input.name,
             input.slug,
-            input.email || input.ownerEmail,
+            input.ownerEmail,
             input.phone,
             input.address,
           ],
@@ -267,6 +281,10 @@ export function createPlatformService(
           "insert into gym.staff_branch_grants(organization_id,staff_membership_id,branch_id) values($1,$2,$3)",
           [id, staff.id, branch.id],
         );
+        await db.query(
+          "insert into gym.gym_accounts(organization_id,auth_user_id,owner_email,created_by,updated_by) values($1,$2,$3,$4,$4)",
+          [id, owner.id, input.ownerEmail, user.user.id],
+        );
         after = {
           name: input.name,
           slug: input.slug,
@@ -286,6 +304,56 @@ export function createPlatformService(
             "CONFLICT",
             "This gym changed since you opened it. Reload before saving.",
           );
+        let account = (
+          await db.query(
+            'select a.auth_user_id,a.owner_email,a.version,u.email login_email from gym.gym_accounts a join app_auth."user" u on u.id=a.auth_user_id where a.organization_id=$1 for update of a',
+            [id],
+          )
+        ).rows[0];
+        if (!account && input.ownerEmail) {
+          const primary = (
+            await db.query(
+              `select u.id,u.email from gym.staff_memberships sm join app_auth."user" u on u.id=sm.auth_user_id where sm.organization_id=$1 and sm.active and sm.role='owner' order by u.id limit 1`,
+              [id],
+            )
+          ).rows[0];
+          if (!primary)
+            throw new BusinessError(
+              "CONFLICT",
+              "An active primary owner account is required before setting the recovery contact.",
+            );
+          await db.query(
+            "insert into gym.gym_accounts(organization_id,auth_user_id,owner_email,created_by,updated_by) values($1,$2,$3,$4,$4)",
+            [id, primary.id, input.ownerEmail, user.user.id],
+          );
+          await invalidateRecovery(db, primary.id);
+          account = {
+            auth_user_id: primary.id,
+            owner_email: input.ownerEmail,
+            login_email: primary.email,
+            version: 1,
+          };
+        }
+        if (
+          input.email &&
+          account &&
+          input.email.toLowerCase() !== account.login_email.toLowerCase()
+        )
+          throw new BusinessError(
+            "CONFLICT",
+            "Gym login IDs stay fixed here. Change the real owner email for recovery and notifications instead.",
+          );
+        if (
+          input.ownerEmail &&
+          account &&
+          input.ownerEmail !== account.owner_email
+        ) {
+          await db.query(
+            "update gym.gym_accounts set owner_email=$2,version=version+1,updated_by=$3,updated_at=clock_timestamp() where organization_id=$1",
+            [id, input.ownerEmail, user.user.id],
+          );
+          await invalidateRecovery(db, account.auth_user_id);
+        }
         before = {
           name: org.name,
           slug: org.slug,
@@ -304,7 +372,7 @@ export function createPlatformService(
             input.name,
             input.active,
             id,
-            input.email ?? org.email,
+            input.ownerEmail || org.email,
             input.phone ?? org.phone,
             input.address ?? org.address,
           ],

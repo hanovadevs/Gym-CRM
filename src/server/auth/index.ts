@@ -2,6 +2,7 @@ import "server-only";
 import { createDatabase } from "@/server/db";
 import { enqueueMail, deliverMail } from "@/server/mail/service";
 import { readEnvironment } from "@/lib/env";
+import { accountMailTarget } from "./account-contact";
 import { configureAuth } from "./configure";
 let instance: ReturnType<typeof configureAuth> | undefined;
 export function getAuth() {
@@ -19,8 +20,19 @@ export function getAuth() {
           message.email,
         ])
       ).rows[0];
+      const target = await accountMailTarget(pool, user.id);
+      if (!target?.recipient_email) {
+        console.warn("Account recovery requires an owner contact", {
+          userId: user.id,
+        });
+        return;
+      }
       const id = await enqueueMail(pool, {
         ...message,
+        email: target.recipient_email,
+        ...(target.organization_id
+          ? { organizationId: target.organization_id }
+          : {}),
         userId: user.id,
         kind: "recovery",
       });

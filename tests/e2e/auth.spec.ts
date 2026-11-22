@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import pg from "pg";
 import { randomBytes } from "node:crypto";
 import { bootstrapOwner } from "../../src/server/auth/bootstrap";
+const ownerContact = `owner-${randomBytes(6).toString("hex")}@example.invalid`;
 const email = `browser-${randomBytes(6).toString("hex")}@example.invalid`,
   password = randomBytes(20).toString("hex");
 let owner: { userId: string; organizationId: string } | undefined;
@@ -24,10 +25,19 @@ test.beforeAll(async () => {
       baseURL: "http://127.0.0.1:3100",
     },
   );
+  await db.query(
+    "update gym.gym_accounts set owner_email=$2,version=version+1 where organization_id=$1",
+    [owner.organizationId, ownerContact],
+  );
 });
 test.afterAll(async () => {
   if (owner) {
-    await db.query("delete from app_auth.mail_outbox where auth_user_id=$1",[owner.userId]);
+    await db.query("delete from gym.gym_accounts where organization_id=$1", [
+      owner.organizationId,
+    ]);
+    await db.query("delete from app_auth.mail_outbox where auth_user_id=$1", [
+      owner.userId,
+    ]);
     await db.query(
       "delete from gym.staff_branch_grants where organization_id=$1",
       [owner.organizationId],
@@ -56,7 +66,7 @@ test("real staff login persists across reload and logout revokes access", async 
   // Browser uses the loopback alias while the test server is configured for 127.0.0.1.
   await page.goto("http://localhost:3100/workspace");
   await expect(page).toHaveURL(/sign-in/);
-  await page.getByLabel("Work email").fill(email);
+  await page.getByLabel("Login email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   const loginResponse = page.waitForResponse((r) =>
     r.url().includes("/api/auth/sign-in/email"),
@@ -95,7 +105,7 @@ test("sign-in honors the server retry countdown and preserves credentials", asyn
     });
   });
   await page
-    .getByLabel("Work email", { exact: true })
+    .getByLabel("Login email", { exact: true })
     .fill("cooldown@example.invalid");
   await page
     .getByLabel("Password", { exact: true })
@@ -104,7 +114,7 @@ test("sign-in honors the server retry countdown and preserves credentials", asyn
   await expect(
     page.getByRole("button", { name: /Try again in/ }),
   ).toBeDisabled();
-  await expect(page.getByLabel("Work email", { exact: true })).toHaveValue(
+  await expect(page.getByLabel("Login email", { exact: true })).toHaveValue(
     "cooldown@example.invalid",
   );
   await page.getByLabel("Password", { exact: true }).press("Enter");
@@ -118,7 +128,7 @@ for (const width of [390, 768, 1280, 1440])
   test(`sign-in visual ${width}`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     await page.goto("/sign-in");
-    await page.getByLabel("Work email").fill("");
+    await page.getByLabel("Login email").fill("");
     await page.getByRole("button", { name: "Show", exact: true }).click();
     await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
       "type",
@@ -141,7 +151,7 @@ test("local password recovery completes through the browser", async ({
   test.setTimeout(60000);
   const { readdir, readFile, unlink } = await import("node:fs/promises");
   await page.goto("/forgot-password");
-  await page.getByLabel("Work email").fill(email);
+  await page.getByLabel("Recovery email").fill(ownerContact);
   await page
     .getByRole("button", { name: "Request reset instructions" })
     .click();
@@ -149,11 +159,11 @@ test("local password recovery completes through the browser", async ({
     timeout: 20000,
   });
   const files = await readdir(".local/mail");
-  let mail: { url: string } | undefined;
+  let mail: { url: string; loginEmail: string } | undefined;
   let path = "";
   for (const file of files) {
     const candidate = JSON.parse(await readFile(".local/mail/" + file, "utf8"));
-    if (candidate.email === email) {
+    if (candidate.email === ownerContact) {
       mail = candidate;
       path = ".local/mail/" + file;
       break;
@@ -161,6 +171,7 @@ test("local password recovery completes through the browser", async ({
   }
   expect(Boolean(mail)).toBeTruthy();
   if (!mail) throw new Error("Recovery capture missing");
+  expect(mail.loginEmail).toBe(email);
   try {
     await page.goto(mail.url);
     await page
@@ -168,6 +179,13 @@ test("local password recovery completes through the browser", async ({
       .fill(password + "new");
     await page.getByRole("button", { name: "Update password" }).click();
     await expect(page.getByRole("status")).toContainText("Password updated");
+    await page.goto("/sign-in");
+    await page.getByLabel("Login email", { exact: true }).fill(email);
+    await page.getByLabel("Password", { exact: true }).fill(password + "new");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(
+      page.getByRole("heading", { name: "Gym overview" }),
+    ).toBeVisible();
   } finally {
     await unlink(path);
   }

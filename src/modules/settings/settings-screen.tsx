@@ -11,7 +11,7 @@ import type { SettingsValues } from "./schemas";
 const labels: Record<keyof SettingsValues, string> = {
   name: "Gym name",
   phone: "Phone",
-  email: "Gym email",
+  email: "Public contact email",
   address: "Address",
   currency: "Currency",
   timeZone: "Time zone",
@@ -339,6 +339,33 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                   });
                 }}
               >
+                {data.canManageStaff ? (
+                  <section className="panel">
+                    <SectionTitle
+                      title="Login & recovery"
+                      help="Your gym login ID is separate from the real owner email used for password recovery and owner notifications. The platform administrator manages these account details."
+                    />
+                    <dl className="detail-grid">
+                      <div>
+                        <dt>Gym login ID</dt>
+                        <dd>
+                          {data.primaryAccount?.loginEmail ?? "Not configured"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Owner recovery email</dt>
+                        <dd>
+                          {data.primaryAccount?.ownerEmail ??
+                            "Ask the platform administrator to add a real owner email."}
+                        </dd>
+                      </div>
+                    </dl>
+                    <p className="muted">
+                      Changing the public contact email below does not change
+                      your login or recovery address.
+                    </p>
+                  </section>
+                ) : null}
                 <div className="settings-columns">
                   <div className="settings-column">
                     <section className="panel">

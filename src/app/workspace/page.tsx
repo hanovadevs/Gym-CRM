@@ -91,6 +91,14 @@ export default async function Workspace({
       label: "Open plans",
     },
     {
+      action: "classes.read",
+      path: "/classes",
+      title: "Classes & bookings",
+      description:
+        "Schedule classes, manage spaces and reserve eligible member seats.",
+      label: "Open classes",
+    },
+    {
       action: "trainers.read",
       path: "/trainers",
       title: "Coaching team",

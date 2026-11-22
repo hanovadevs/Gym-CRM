@@ -24,6 +24,7 @@ export type SettingsData = {
   values: SettingsValues;
   editableFields: string[];
   canManageStaff: boolean;
+  primaryAccount?: { loginEmail: string; ownerEmail: string | null } | null;
   branches: Branch[];
   staff: Staff[];
   staffPage: number;
