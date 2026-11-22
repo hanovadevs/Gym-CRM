@@ -295,6 +295,20 @@
       "when": 1795383834595,
       "tag": "0041_contact_recovery_serialization",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1795384732160,
+      "tag": "0042_abandoned_karma",
+      "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1795384772505,
+      "tag": "0043_member_fee_security",
+      "breakpoints": true
     }
   ]
 }
