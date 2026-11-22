@@ -288,6 +288,13 @@
       "when": 1795383327880,
       "tag": "0040_gym_account_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1795383834595,
+      "tag": "0041_contact_recovery_serialization",
+      "breakpoints": true
     }
   ]
 }
