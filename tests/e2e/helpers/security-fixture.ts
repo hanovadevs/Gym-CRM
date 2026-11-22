@@ -28,6 +28,16 @@ export async function securityFixture(
   > = {};
   async function cleanup() {
     for (const table of [
+      "billing_requests",
+      "billing_reversals",
+      "billing_payments",
+      "billing_charges",
+    ])
+      await admin.query(
+        `delete from platform.${table} where organization_id=any($1::uuid[])`,
+        [[orgA, orgB]],
+      );
+    for (const table of [
       "schedule_requests",
       "personal_sessions",
       "schedule_slots",

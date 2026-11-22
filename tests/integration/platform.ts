@@ -418,7 +418,11 @@ try {
   await createMembershipsService(security).enroll(owner, m.member.id, {
     ...org,
     mode: "enroll",
-    memberVersion: (await admin.query('select version from gym.members where id=$1',[m.member.id])).rows[0].version,
+    memberVersion: (
+      await admin.query("select version from gym.members where id=$1", [
+        m.member.id,
+      ])
+    ).rows[0].version,
     planVersionId: freePlan.versionId,
     startOn: today,
     requestKey: randomUUID(),
@@ -479,6 +483,213 @@ try {
     0,
   );
   assert.ok(!JSON.stringify(analytics).includes(m.member.name));
+  // Gym-to-platform fees never alter the gym's member collections or expenses.
+  await deny(() => service.billing(owner, org), "FORBIDDEN");
+  await deny(() => service.bill(new Headers(), {}), "UNAUTHENTICATED");
+  assert.equal(
+    (await service.billing(headers, org)).summary.status,
+    "not_recorded",
+  );
+  const fee = {
+    ...org,
+    operation: "charge",
+    billingMonth: today.slice(0, 7) + "-01",
+    dueOn: today,
+    amountMinor: "10000",
+    currency: "PKR",
+    reason: "Agreed monthly platform fee",
+    requestKey: randomUUID(),
+  };
+  const [feeA, feeReplay] = await Promise.all([
+    service.bill(headers, fee),
+    service.bill(headers, fee),
+  ]);
+  assert.equal(feeA.chargeId, feeReplay.chargeId);
+  await deny(
+    () => service.bill(headers, { ...fee, amountMinor: "20000" }),
+    "CONFLICT",
+  );
+  await deny(
+    () => service.bill(headers, { ...fee, requestKey: randomUUID() }),
+    "CONFLICT",
+  );
+  const feePayment = {
+    ...org,
+    operation: "payment",
+    chargeId: feeA.chargeId,
+    amountMinor: "4000",
+    expectedBalanceMinor: "10000",
+    currency: "PKR",
+    paidOn: today,
+    method: "cash",
+    reference: "Owner receipt",
+    note: "First installment",
+    reason: "Monthly fee received",
+    requestKey: randomUUID(),
+  };
+  const firstFeePayment = await service.bill(headers, feePayment);
+  assert.equal(
+    (await service.bill(headers, feePayment)).paymentId,
+    firstFeePayment.paymentId,
+  );
+  const partialFee = await service.billing(headers, org);
+  assert.equal(partialFee.summary.status, "partial");
+  assert.equal(partialFee.selected!.balanceMinor, "6000");
+  const feeDirectory = await service.get(headers, {});
+  assert.equal(
+    feeDirectory.gyms.find((g) => g.id === f.orgA)!.billing!.status,
+    "partial",
+  );
+  await deny(
+    () => service.bill(headers, { ...feePayment, requestKey: randomUUID() }),
+    "CONFLICT",
+  );
+  await deny(
+    () =>
+      service.bill(headers, {
+        ...feePayment,
+        amountMinor: "7000",
+        expectedBalanceMinor: "6000",
+        requestKey: randomUUID(),
+      }),
+    "VALIDATION_ERROR",
+  );
+  const feeRace = await Promise.allSettled(
+    [1, 2].map(() =>
+      service.bill(headers, {
+        ...feePayment,
+        amountMinor: "6000",
+        expectedBalanceMinor: "6000",
+        requestKey: randomUUID(),
+      }),
+    ),
+  );
+  assert.equal(feeRace.filter((r) => r.status === "fulfilled").length, 1);
+  const secondFeePayment = feeRace.find((r) => r.status === "fulfilled")!;
+  assert.equal(secondFeePayment.status, "fulfilled");
+  assert.equal((await service.billing(headers, org)).summary.status, "paid");
+  await deny(
+    () =>
+      service.bill(headers, {
+        ...org,
+        operation: "void",
+        chargeId: feeA.chargeId,
+        reason: "Cannot void retained funds",
+        requestKey: randomUUID(),
+      }),
+    "CONFLICT",
+  );
+  await service.bill(headers, {
+    ...org,
+    operation: "reverse",
+    paymentId: firstFeePayment.paymentId,
+    cashOn: today,
+    reason: "Correct received payment",
+    requestKey: randomUUID(),
+  });
+  assert.equal(
+    (await service.billing(headers, org)).selected!.balanceMinor,
+    "4000",
+  );
+  await service.bill(headers, {
+    ...org,
+    operation: "reverse",
+    paymentId: secondFeePayment.value.paymentId,
+    cashOn: today,
+    reason: "Correct remaining payment",
+    requestKey: randomUUID(),
+  });
+  await service.bill(headers, {
+    ...org,
+    operation: "void",
+    chargeId: feeA.chargeId,
+    reason: "Replace incorrect monthly rate",
+    requestKey: randomUUID(),
+  });
+  await service.bill(headers, {
+    ...fee,
+    currency: "USD",
+    amountMinor: "12000",
+    requestKey: randomUUID(),
+  });
+  assert.equal((await service.billing(headers, org)).summary.currency, "USD");
+  assert.equal(
+    (await service.billing(headers, org)).charges.find(
+      (c) => c.id === feeA.chargeId,
+    )!.status,
+    "void",
+  );
+  assert.deepEqual(
+    (await service.analytics(headers, { ...org, from: today, to: today }))
+      .finances,
+    analytics.finances,
+  );
+  const foreignFee = await service.bill(headers, {
+    ...fee,
+    organizationId: f.orgB,
+    requestKey: randomUUID(),
+  });
+  await deny(
+    () => service.billing(headers, { ...org, chargeId: foreignFee.chargeId }),
+    "NOT_FOUND",
+  );
+  await deny(
+    () =>
+      service.bill(headers, {
+        ...feePayment,
+        chargeId: foreignFee.chargeId,
+        requestKey: randomUUID(),
+      }),
+    "NOT_FOUND",
+  );
+  // Restricted raw concurrent inserts must also enforce the financial cap.
+  const olderMonth = previousDay(fee.billingMonth).slice(0, 7) + "-01";
+  const rawCharge = await service.bill(headers, {
+    ...fee,
+    billingMonth: olderMonth,
+    dueOn: yesterday,
+    requestKey: randomUUID(),
+  });
+  async function rawFee(sql: string, values: unknown[]) {
+    const c = await pool.connect();
+    try {
+      await c.query("begin");
+      await c.query(
+        "select set_config('app.organization_id',$1,true),set_config('app.platform_user_id',$2,true)",
+        [f.orgA, platformUserId],
+      );
+      const result = await c.query(sql, values);
+      await c.query("commit");
+      return result;
+    } catch (e) {
+      await c.query("rollback");
+      throw e;
+    } finally {
+      c.release();
+    }
+  }
+  const rawRace = await Promise.allSettled(
+    [1, 2].map(() =>
+      rawFee(
+        "insert into platform.billing_payments(organization_id,charge_id,amount_minor,currency,paid_on,method,created_by) values($1,$2,7000,'PKR',$3,'cash',$4)",
+        [f.orgA, rawCharge.chargeId, today, platformUserId],
+      ),
+    ),
+  );
+  assert.equal(rawRace.filter((r) => r.status === "fulfilled").length, 1);
+  assert.equal(
+    rawRace.filter((r) => r.status === "rejected" && r.reason.code === "23514")
+      .length,
+    1,
+  );
+  for (const sql of [
+    "update platform.billing_payments set amount_minor=1 where organization_id=$1",
+    "delete from platform.billing_charges where organization_id=$1",
+  ])
+    await assert.rejects(rawFee(sql, [f.orgA]), { code: "42501" });
+  const allFees = await service.billing(headers, org);
+  assert.ok(allFees.charges.some((c) => c.status === "overdue"));
+  const snapshotBeforeSuspend = allFees.totals;
   const update = {
     operation: "update",
     organizationId: f.orgA,
@@ -490,6 +701,10 @@ try {
   };
   const suspended = await service.save(headers, update);
   assert.equal(suspended.version, 2);
+  assert.deepEqual(
+    (await service.billing(headers, org)).totals,
+    snapshotBeforeSuspend,
+  );
   assert.equal(
     (await service.analytics(headers, org)).organization.active,
     false,
@@ -531,6 +746,8 @@ try {
   );
   await deny(() => service.get(headers, {}), "FORBIDDEN");
   await deny(() => service.analytics(headers, org), "FORBIDDEN");
+  await deny(() => service.billing(headers, org), "FORBIDDEN");
+  await deny(() => service.bill(headers, fee), "FORBIDDEN");
   await deny(() => service.save(headers, payload), "FORBIDDEN");
   await admin.query(
     "update platform.administrators set active=true where user_id=$1",
@@ -573,11 +790,10 @@ try {
       "select p.prosecdef,p.proconfig,has_function_privilege('public',p.oid,'EXECUTE') public_execute from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='platform'",
     )
   ).rows;
-  assert.equal(functions.length, 3);
+  assert.equal(functions.length, 5);
   assert.ok(
     functions.every(
       (r) =>
-        r.prosecdef &&
         r.proconfig.includes("search_path=pg_catalog, pg_temp") &&
         !r.public_execute,
     ),

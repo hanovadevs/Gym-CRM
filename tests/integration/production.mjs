@@ -81,6 +81,8 @@ try {
     [`/api/members/${org}/access-code`, "POST", {organizationId:org}],
     ["/api/platform", "GET"],
     ["/api/platform/analytics", "GET"],
+    ["/api/platform/billing", "GET"],
+    ["/api/platform/billing", "POST", {}],
     ["/api/platform", "POST", {}],
     [`/api/invoices/${org}/corrections`,"POST",{organizationId:org,invoiceId:org,requestKey:org,kind:"credit",amountMinor:"1",expectedBalanceMinor:"1",currency:"PKR",cashOn:"2026-11-21",reason:"Anonymous correction guard"}],
     [`/api/payments?organizationId=${org}`,"GET"],

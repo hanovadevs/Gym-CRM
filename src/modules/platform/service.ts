@@ -6,6 +6,11 @@ import { AccessError } from "@/server/security/errors";
 import { BusinessError } from "@/server/errors";
 import { settingsFields } from "@/modules/settings/schemas";
 import { readGymAnalytics } from "./analytics";
+import {
+  readPlatformBilling,
+  savePlatformBilling,
+  type FeeSummary,
+} from "./billing";
 const contact = {
   email: settingsFields.shape.email,
   phone: settingsFields.shape.phone,
@@ -55,6 +60,7 @@ const mutationSchema = z.discriminatedUnion("operation", [
     .strict(),
 ]);
 export type PlatformGym = {
+  billing?: FeeSummary;
   id: string;
   name: string;
   slug: string;
@@ -351,5 +357,31 @@ export function createPlatformService(
       requestId: randomUUID(),
     }));
   }
-  return { available, get, save, analytics };
+  async function billing(headers: Headers, raw: unknown) {
+    return run(headers, async (db, user) => ({
+      ...(await readPlatformBilling(db, user.user.id, raw)),
+      requestId: randomUUID(),
+    }));
+  }
+  async function bill(headers: Headers, raw: unknown) {
+    try {
+      return await run(headers, async (db, user) => ({
+        ...(await savePlatformBilling(db, user.user.id, raw)),
+        requestId: randomUUID(),
+      }));
+    } catch (error) {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        ["23505", "23514", "23503"].includes(String(error.code))
+      )
+        throw new BusinessError(
+          "CONFLICT",
+          "This monthly fee or payment conflicts with saved records. Reload to review the latest balance and dates.",
+        );
+      throw error;
+    }
+  }
+  return { available, get, save, analytics, billing, bill };
 }

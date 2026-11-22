@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { feeStatus } from "./billing-labels";
+import { exactMoney } from "@/modules/billing/format";
 import Form from "next/form";
 import { useState } from "react";
 import { BrandMark } from "@/components/brand";
@@ -167,6 +169,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                   <th>Gym</th>
                   <th>Status</th>
                   <th>Active members</th>
+                  <th>Monthly fee</th>
                   <th>Staff / branches</th>
                   <th>Actions</th>
                 </tr>
@@ -192,6 +195,21 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                     </td>
                     <td>{gym.members}</td>
                     <td>
+                      <span>
+                        {feeStatus[gym.billing?.status ?? "not_recorded"]}
+                      </span>
+                      {gym.billing?.currency &&
+                      gym.billing.balanceMinor !== null ? (
+                        <small>
+                          {exactMoney(
+                            gym.billing.balanceMinor,
+                            gym.billing.currency,
+                          )}{" "}
+                          remaining
+                        </small>
+                      ) : null}
+                    </td>
+                    <td>
                       {gym.staff} / {gym.branches}
                     </td>
                     <td>
@@ -207,6 +225,9 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                           Manage
                         </button>
                         <Link href={"/admin/gyms/" + gym.id}>Analytics</Link>
+                        <Link href={"/admin/gyms/" + gym.id + "/billing"}>
+                          Monthly billing
+                        </Link>
                         <button
                           className="text-action"
                           onClick={() => {
@@ -388,6 +409,9 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
               >
                 {inspecting.active ? "Suspend gym" : "Reactivate gym"}
               </button>
+              <Link href={"/admin/gyms/" + inspecting.id + "/billing"}>
+                Monthly billing
+              </Link>
               <Link href={"/admin/gyms/" + inspecting.id}>
                 View gym analytics
               </Link>

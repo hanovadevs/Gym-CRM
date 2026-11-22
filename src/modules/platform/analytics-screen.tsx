@@ -31,6 +31,12 @@ export function GymAnalyticsScreen({ data }: { data: GymAnalytics }) {
         <Link className="text-action" href="/admin">
           Back to gym directory
         </Link>
+        <Link
+          className="text-action"
+          href={"/admin/gyms/" + data.organization.id + "/billing"}
+        >
+          Manage monthly platform fees
+        </Link>
         <section className="page-heading">
           <div>
             <p className="eyebrow">Gym analytics</p>

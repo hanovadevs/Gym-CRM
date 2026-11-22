@@ -215,6 +215,165 @@ test("platform analytics reconcile saved records with scoped filters and respons
   ).toBeVisible();
   expect(errors).toEqual([]);
 });
+test("monthly gym fees review, replay, partial/full payments and reversals persist independently", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await session(page, "owner");
+  expect(
+    (
+      await page.request.get("/api/platform/billing?organizationId=" + f.orgA)
+    ).status(),
+  ).toBe(403);
+  await session(page, "admin");
+  await page.goto("/admin/gyms/" + f.orgA + "/billing");
+  await expect(
+    page.getByRole("heading", { name: "Monthly charges", exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Add monthly charge", exact: true })
+    .click();
+  const drawer = page.getByRole("dialog");
+  await drawer.getByLabel("Monthly fee", { exact: true }).fill("1000");
+  await drawer
+    .getByLabel("Reason", { exact: true })
+    .fill("Agreed monthly service fee");
+  await drawer
+    .getByRole("button", { name: "Review billing entry", exact: true })
+    .click();
+  expect(
+    (
+      await admin.query(
+        "select count(*)::int n from platform.billing_charges where organization_id=$1",
+        [f.orgA],
+      )
+    ).rows[0].n,
+  ).toBe(0);
+  let drop = true;
+  await page.route("**/api/platform/billing", async (route) => {
+    if (route.request().method() === "POST" && drop) {
+      drop = false;
+      await route.fetch();
+      await route.abort("failed");
+    } else await route.continue();
+  });
+  await drawer
+    .getByRole("button", { name: "Confirm billing entry", exact: true })
+    .click();
+  await expect(
+    drawer.getByRole("button", { name: "Retry saved request", exact: true }),
+  ).toBeVisible();
+  await drawer
+    .getByRole("button", { name: "Retry saved request", exact: true })
+    .click();
+  await expect(
+    drawer.getByRole("heading", { name: "Billing saved", exact: true }),
+  ).toBeVisible();
+  await drawer.getByRole("button", { name: "Done", exact: true }).click();
+  expect(
+    (
+      await admin.query(
+        "select count(*)::int n from platform.billing_charges where organization_id=$1",
+        [f.orgA],
+      )
+    ).rows[0].n,
+  ).toBe(1);
+  await page.unroute("**/api/platform/billing");
+  async function pay(amount: string, reference: string) {
+    await page
+      .getByRole("button", { name: "Record gym payment", exact: true })
+      .click();
+    await drawer.getByLabel("Payment amount", { exact: true }).fill(amount);
+    await drawer.getByLabel("Reference", { exact: true }).fill(reference);
+    await drawer
+      .getByLabel("Reason", { exact: true })
+      .fill("Monthly gym fee received");
+    await drawer
+      .getByRole("button", { name: "Review billing entry", exact: true })
+      .click();
+    await drawer
+      .getByRole("button", { name: "Confirm billing entry", exact: true })
+      .click();
+    await expect(
+      drawer.getByRole("heading", { name: "Billing saved", exact: true }),
+    ).toBeVisible();
+    await drawer.getByRole("button", { name: "Done", exact: true }).click();
+  }
+  await pay("400", "FIRST-FEE");
+  let data = (
+    await (
+      await page.request.get("/api/platform/billing?organizationId=" + f.orgA)
+    ).json()
+  ).data;
+  expect(data.summary.status).toBe("partial");
+  expect(data.summary.balanceMinor).toBe("60000");
+  await pay("600", "SECOND-FEE");
+  data = (
+    await (
+      await page.request.get("/api/platform/billing?organizationId=" + f.orgA)
+    ).json()
+  ).data;
+  expect(data.summary.status).toBe("paid");
+  expect(data.summary.balanceMinor).toBe("0");
+  await page
+    .getByRole("row")
+    .filter({ hasText: "FIRST-FEE" })
+    .getByRole("button", { name: "Reverse payment", exact: true })
+    .click();
+  await drawer
+    .getByLabel("Reason", { exact: true })
+    .fill("Correct fee receipt entry");
+  await drawer
+    .getByRole("button", { name: "Review billing entry", exact: true })
+    .click();
+  await drawer
+    .getByRole("button", { name: "Confirm billing entry", exact: true })
+    .click();
+  await expect(
+    drawer.getByRole("heading", { name: "Billing saved", exact: true }),
+  ).toBeVisible();
+  await drawer.getByRole("button", { name: "Done", exact: true }).click();
+  data = (
+    await (
+      await page.request.get("/api/platform/billing?organizationId=" + f.orgA)
+    ).json()
+  ).data;
+  expect(data.summary.status).toBe("partial");
+  expect(data.summary.balanceMinor).toBe("40000");
+  expect(data.paymentTotal).toBe(2);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (width <= 960)
+      for (const table of await page.locator(".table-scroll").all())
+        expect(
+          await table.evaluate((el) => el.scrollWidth <= el.clientWidth),
+        ).toBe(true);
+    await page.screenshot({
+      path: `doc/evidence/platform-billing-${width}.png`,
+      fullPage: true,
+    });
+  }
+  await page
+    .getByRole("link", { name: "Back to gym directory", exact: true })
+    .click();
+  await expect(
+    page
+      .getByRole("row")
+      .filter({
+        has: page.getByRole("button", {
+          name: "Manage Scope Gym A",
+          exact: true,
+        }),
+      })
+      .getByText("Partially paid", { exact: true }),
+  ).toBeVisible();
+});
+
 test("platform login routes to console; owner, anonymous, cross-origin and revoked grants are denied", async ({
   page,
 }) => {
