@@ -5,7 +5,7 @@ GRANT UPDATE(voided_at,voided_by,void_reason) ON gym.payroll_charges TO gym_runt
 DO $$ DECLARE tab text; BEGIN
  FOREACH tab IN ARRAY ARRAY['employees','payroll_charges','payroll_payments','payroll_requests'] LOOP
   EXECUTE format('ALTER TABLE gym.%I ENABLE ROW LEVEL SECURITY',tab);
-  EXECUTE format('CREATE POLICY tenant_scope ON gym.%I TO gym_runtime USING(organization_id=nullif(current_setting(''app.organization_id'',true),)::uuid) WITH CHECK(organization_id=nullif(current_setting(app.organization_id,true),)::uuid)',tab);
+  EXECUTE format($policy$CREATE POLICY tenant_scope ON gym.%I TO gym_runtime USING(organization_id=nullif(current_setting('app.organization_id',true),'')::uuid) WITH CHECK(organization_id=nullif(current_setting('app.organization_id',true),'')::uuid)$policy$,tab);
  END LOOP;
 END $$;
 --> statement-breakpoint
