@@ -11,6 +11,8 @@ import {
   uniqueIndex,
   foreignKey,
   check,
+  boolean,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { gym, organizations, members, branches, plans } from "./schema";
 import { memberships } from "./membership-schema";
@@ -130,5 +132,55 @@ export const memberFeePeriods = gym.table(
       t.agreementId,
     ),
     index("member_fee_period_member_idx").on(t.organizationId, t.memberId),
+  ],
+);
+
+export const feeReminderSettings = gym.table(
+  "fee_reminder_settings",
+  {
+    organizationId: uuid("organization_id")
+      .primaryKey()
+      .references(() => organizations.id),
+    enabled: boolean().notNull().default(true),
+    version: integer().notNull().default(1),
+    updatedBy: text("updated_by")
+      .notNull()
+      .references(() => user.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [check("fee_reminder_settings_version", sql`${t.version}>0`)],
+);
+export const feeReminderDeliveries = gym.table(
+  "fee_reminder_deliveries",
+  {
+    id: uuid().defaultRandom().primaryKey(),
+    organizationId: uuid("organization_id")
+      .notNull()
+      .references(() => organizations.id),
+    localDay: date("local_day").notNull(),
+    authUserId: text("auth_user_id")
+      .notNull()
+      .references(() => user.id),
+    recipientEmail: text("recipient_email").notNull(),
+    status: text().notNull().default("queued"),
+    attempts: integer().notNull().default(0),
+    payload: jsonb(),
+    errorCode: text("error_code"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    unique("fee_reminder_one_daily_digest").on(t.organizationId, t.localDay),
+    index("fee_reminder_work_idx").on(t.status, t.createdAt),
+    index("fee_reminder_recipient_idx").on(t.authUserId),
+    check(
+      "fee_reminder_delivery_values",
+      sql`${t.status} in ('queued','sending','sent','failed','uncertain','skipped') and ${t.attempts} between 0 and 3 and length(${t.recipientEmail}) between 3 and 254 and (${t.payload} is null or jsonb_typeof(${t.payload})='object') and (${t.status}<>'sent' or ${t.sentAt} is not null)`,
+    ),
   ],
 );

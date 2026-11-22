@@ -309,6 +309,20 @@
       "when": 1795384772505,
       "tag": "0043_member_fee_security",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1795385366509,
+      "tag": "0044_rare_sway",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1795385368179,
+      "tag": "0045_fee_reminder_security",
+      "breakpoints": true
     }
   ]
 }
