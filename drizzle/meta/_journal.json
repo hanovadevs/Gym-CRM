@@ -211,6 +211,20 @@
       "when": 1795326221848,
       "tag": "0029_expense_security",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1795328154637,
+      "tag": "0030_fresh_cobalt_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795328317594,
+      "tag": "0031_training_security",
+      "breakpoints": true
     }
   ]
 }
