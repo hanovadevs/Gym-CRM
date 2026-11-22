@@ -225,6 +225,13 @@
       "when": 1795328317594,
       "tag": "0031_training_security",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1795345352094,
+      "tag": "0032_continuous_schedule_availability",
+      "breakpoints": true
     }
   ]
 }
