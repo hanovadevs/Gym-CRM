@@ -269,7 +269,7 @@ export const scheduleSlots = gym.table(
       t.startsAt,
       t.endsAt,
     ),
-    check("schedule_slot_kind", sql`${t.kind}='pt'`),
+    check("schedule_slot_kind", sql`${t.kind} in ('pt','class')`),
     check(
       "schedule_slot_values",
       sql`${t.endsAt}>${t.startsAt} and ${t.endsAt}<=${t.startsAt}+interval '24 hours' and length(btrim(${t.title})) between 3 and 120 and ${t.version}>0 and ((${t.cancelledAt} is null and ${t.cancelledBy} is null and ${t.cancellationReason}='') or (${t.cancelledAt} is not null and ${t.cancelledBy} is not null and length(btrim(${t.cancellationReason})) between 3 and 300))`,

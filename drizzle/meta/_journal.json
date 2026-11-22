@@ -260,6 +260,20 @@
       "when": 1795369157351,
       "tag": "0036_payroll_security",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1795370350864,
+      "tag": "0037_calm_cerise",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1795370352536,
+      "tag": "0038_class_booking_guards",
+      "breakpoints": true
     }
   ]
 }
