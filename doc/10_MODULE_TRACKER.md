@@ -17,7 +17,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | DONE | DONE | DONE | DONE | DONE | DASH-01 persisted branch/local-date aggregates, source reconciliation, browser/production/hosted verification; class feed added with CLS-01 |
 | M08 | Trainers & PT | B | M03 + M02 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
-| M09 | Classes & bookings | B | M08 + M06 | VERIFYING | VERIFYING | DONE | VERIFYING | VERIFYING | CLS-01 implemented; actual hosted workflow verified, final live release remains |
+| M09 | Classes & bookings | B | M08 + M06 | DONE | DONE | DONE | DONE | DONE | CLS-01 full78/production/actual live retained Hanova class booking verification PASS f439a4f; release gates separate |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
