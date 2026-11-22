@@ -232,6 +232,20 @@
       "when": 1795345352094,
       "tag": "0032_continuous_schedule_availability",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1795350442558,
+      "tag": "0033_platform_billing",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1795350445559,
+      "tag": "0034_platform_billing_security",
+      "breakpoints": true
     }
   ]
 }

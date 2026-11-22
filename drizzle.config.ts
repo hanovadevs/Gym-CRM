@@ -9,6 +9,7 @@ export default defineConfig({
     "./src/server/db/payment-schema.ts",
     "./src/server/db/correction-schema.ts",
     "./src/server/db/platform-schema.ts",
+    "./src/server/db/platform-billing-schema.ts",
     "./src/server/db/attendance-schema.ts",
     "./src/server/db/expense-schema.ts",
     "./src/server/db/training-schema.ts",
