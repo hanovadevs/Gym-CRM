@@ -16,7 +16,13 @@ export function WorkspaceFrame({
   canReadPlans?: boolean;
   canReadBilling?: boolean;
   active?:
-    "members" | "plans" | "payments" | "workspace" | "attendance" | "dashboard";
+    | "members"
+    | "plans"
+    | "payments"
+    | "workspace"
+    | "attendance"
+    | "dashboard"
+    | "expenses";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;

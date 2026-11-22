@@ -21,9 +21,9 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | DONE | Reviewed 0020–0022, raw DB caps/immutability, two correction browsers and production refund/credit/void/PDF flow pass; corrected void header rendered/reviewed |
 | ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | DONE | Reviewed0026/0027 all3 DBs28; acceptance DB suite, full68 browsers, independent downloaded QR decode, responsive review and actual production attendance/replay/checkout/private QR PASS |
 | DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | DONE | One-snapshot persisted branch/local-date aggregates, refund/currency/source reconciliation, role limits;10 focused browsers/40 units/production/hosted checks and four widths PASS |
-| EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | NOT_STARTED | None yet |
+| EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | DONE | Reviewed0028/0029 all3 DBs30; real service/raw finance/file/cleanup checks, full72 browsers, production nativeimage/ledger/private download and hosted page/API PASS |
 | RPT-01 | M12 | DASH-01 + EXP-01 | Reports and source reconciliation | NOT_STARTED | None yet |
-| IMP-01 | M13 | MEM-02 + PAY-03 + EXP-01 | Previewed CSV import/scoped exports/file access/audit | NOT_STARTED | None yet |
+| IMP-01 | M13 | MEM-02 + PAY-03 + EXP-01 | Previewed CSV import/scoped exports/file access/audit | IN_PROGRESS | Private image receipts/storage/authorization/maintenance verified with EXP-01; CSV preview/import/exports remain unimplemented |
 | REL-01 | M14 | RPT-01 + IMP-01 | Core acceptance/mail recovery/restore/local pilot | NOT_STARTED | None yet |
 | TRN-01 | M08 | MEM-02 + SET-01 | Trainer directory/assignments/PT schedules | NOT_STARTED | None yet |
 | CLS-01 | M09 | TRN-01 + ATT-01 | Timetable/bookings/capacity/trainer-room contention | NOT_STARTED | None yet |

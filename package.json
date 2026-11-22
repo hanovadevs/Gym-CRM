@@ -35,7 +35,8 @@
     "test:payments": "node --conditions=react-server --import tsx tests/integration/payments.ts",
     "test:platform": "node --conditions=react-server --import tsx tests/integration/platform.ts",
     "test:attendance": "node --conditions=react-server --import tsx tests/integration/attendance.ts",
-    "auth:platform-admin": "tsx scripts/bootstrap-platform-admin.ts"
+    "auth:platform-admin": "tsx scripts/bootstrap-platform-admin.ts",
+    "test:expenses": "node --conditions=react-server --import tsx tests/integration/expenses.ts"
   },
   "keywords": [],
   "author": "",
@@ -53,6 +54,7 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "0.0.1",
+    "sharp": "0.35.5",
     "zod": "4.6.7"
   },
   "private": true,

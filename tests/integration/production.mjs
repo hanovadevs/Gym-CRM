@@ -69,6 +69,11 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/expenses?organizationId=${org}`, "GET"],
+    [`/api/files/${org}?organizationId=${org}`, "GET"],
+    ["/api/expenses/categories", "POST", {organizationId:org,operation:"create",id:org,name:"Blocked category",reason:"Anonymous guard"}],
+    ["/api/expenses","POST",{organizationId:org,branchId:org,categoryId:org,requestKey:org,description:"Blocked expense",amountMinor:"100",currency:"PKR",paidOn:"2026-11-22",method:"cash"}],
+    [`/api/expenses/${org}/reverse`, "POST", {organizationId:org,requestKey:org,cashOn:"2026-11-22",reason:"Anonymous guard"}],
     [`/api/dashboard?organizationId=${org}`, "GET"],
     [`/api/attendance?organizationId=${org}`, "GET"],
     [`/api/attendance/lookup?organizationId=${org}&branchId=${org}&q=member`, "GET"],

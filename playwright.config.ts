@@ -16,6 +16,7 @@ export default defineConfig({
     timeout:120000,
     reuseExistingServer: false,
     env: {
+      MOJYM_BROWSER_TEST: "1",
       DATABASE_URL: process.env.TEST_DATABASE_URL,
       APP_URL: "http://127.0.0.1:3100",
       DEMO_MODE: "true",

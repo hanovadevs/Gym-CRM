@@ -5,7 +5,7 @@ import { AccessError } from "@/server/security/errors";
 import { accessFailure } from "@/server/security/http";
 import { BusinessError } from "./errors";
 import { trustedOrigins } from "@/lib/origins";
-export async function mutationBody(request: Request) {
+export function requireMutationOrigin(request: Request) {
   const env = readEnvironment(process.env);
   if (
     !trustedOrigins(
@@ -15,10 +15,14 @@ export async function mutationBody(request: Request) {
     request.headers.get("sec-fetch-site") === "cross-site"
   )
     throw new AccessError("FORBIDDEN");
-  if (!request.headers.get("content-type")?.startsWith("application/json"))
-    throw new BusinessError("VALIDATION_ERROR", "Send JSON form data.");
-  if (Number(request.headers.get("content-length") ?? 0) > 32768)
-    throw new BusinessError("VALIDATION_ERROR", "Form data is too large.");
+}
+export async function boundedBody(
+  request: Request,
+  maxBytes: number,
+  message: string,
+) {
+  if (Number(request.headers.get("content-length") ?? 0) > maxBytes)
+    throw new BusinessError("VALIDATION_ERROR", message);
   const reader = request.body?.getReader();
   const chunks: Uint8Array[] = [];
   let size = 0;
@@ -27,13 +31,21 @@ export async function mutationBody(request: Request) {
       const { done, value } = await reader.read();
       if (done) break;
       size += value.byteLength;
-      if (size > 32768) {
+      if (size > maxBytes) {
         await reader.cancel();
-        throw new BusinessError("VALIDATION_ERROR", "Form data is too large.");
+        throw new BusinessError("VALIDATION_ERROR", message);
       }
       chunks.push(value);
     }
-  const text = Buffer.concat(chunks).toString("utf8");
+  return Buffer.concat(chunks);
+}
+export async function mutationBody(request: Request) {
+  requireMutationOrigin(request);
+  if (!request.headers.get("content-type")?.startsWith("application/json"))
+    throw new BusinessError("VALIDATION_ERROR", "Send JSON form data.");
+  const text = (
+    await boundedBody(request, 32768, "Form data is too large.")
+  ).toString("utf8");
   try {
     return JSON.parse(text);
   } catch {

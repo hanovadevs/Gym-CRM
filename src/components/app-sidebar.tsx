@@ -11,6 +11,7 @@ type Page =
   | "payments"
   | "settings"
   | "dashboard"
+  | "expenses"
   | "attendance";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
@@ -107,6 +108,9 @@ export function AppSidebar({
       : []),
     ...(canReadBilling
       ? [{ name: "Payments", page: "payments", href: "/payments" }]
+      : []),
+    ...(canManageSettings || (canReadBilling && !canManageMembers)
+      ? [{ name: "Expenses", page: "expenses", href: "/expenses" }]
       : []),
   ];
   const href = (path: string) => path + "?organizationId=" + organization.id;

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
+  distDir: process.env.MOJYM_BROWSER_TEST === "1" ? ".next-browser-tests" : ".next",
   devIndicators: false,
   serverExternalPackages: ["pdfkit"],
   outputFileTracingIncludes: {

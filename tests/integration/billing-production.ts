@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { chromium } from "@playwright/test";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import sharp from "sharp";
 import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { securityFixture } from "../helpers/security-fixture";
 import { todayInZone } from "../../src/modules/plans/format";
@@ -78,6 +79,95 @@ try {
     assert.equal(r.status, 200, path);
     return (await r.json()).data;
   }
+  const expenseCategory = await post("/api/expenses/categories", {
+    organizationId: f.orgA,
+    operation: "create",
+    id: randomUUID(),
+    name: "Production checks",
+    reason: "Expense production verification",
+  });
+  const expenseImage = await sharp({
+    create: { width: 100, height: 60, channels: 3, background: "white" },
+  })
+    .png()
+    .toBuffer();
+  const fileResponse = await fetch(
+    base +
+      "/api/files?" +
+      new URLSearchParams({
+        organizationId: f.orgA,
+        branchId: f.a1,
+        requestKey: randomUUID(),
+        filename: "receipt.png",
+      }),
+    {
+      method: "POST",
+      headers: { origin: base, cookie, "content-type": "image/png" },
+      body: expenseImage,
+    },
+  );
+  assert.equal(fileResponse.status, 200);
+  const file = (await fileResponse.json()).data;
+  const expenseBody = {
+    organizationId: f.orgA,
+    branchId: f.a1,
+    categoryId: expenseCategory.categoryId,
+    requestKey: randomUUID(),
+    description: "Production service expense",
+    amountMinor: "250",
+    currency: "PKR",
+    paidOn: todayInZone("Asia/Karachi"),
+    method: "cash",
+    fileId: file.id,
+  };
+  const expense = await post("/api/expenses", expenseBody);
+  assert.equal(
+    (await post("/api/expenses", expenseBody)).expenseId,
+    expense.expenseId,
+  );
+  const privateReceipt = await fetch(
+    `${base}/api/files/${file.id}?organizationId=${f.orgA}`,
+    { headers: { cookie } },
+  );
+  assert.equal(privateReceipt.status, 200);
+  assert.equal(
+    privateReceipt.headers.get("cache-control"),
+    "private, no-store",
+  );
+  assert.equal(
+    (await sharp(Buffer.from(await privateReceipt.arrayBuffer())).metadata())
+      .format,
+    "png",
+  );
+  assert.equal(
+    (await fetch(`${base}/api/files/${file.id}?organizationId=${f.orgA}`))
+      .status,
+    401,
+  );
+  await post(`/api/expenses/${expense.expenseId}/reverse`, {
+    organizationId: f.orgA,
+    requestKey: randomUUID(),
+    cashOn: todayInZone("Asia/Karachi"),
+    reason: "Production corrected expense",
+  });
+  await post("/api/expenses", {
+    ...expenseBody,
+    requestKey: randomUUID(),
+    fileId: undefined,
+    amountMinor: "300",
+    replacesExpenseId: expense.expenseId,
+  });
+  const expenseLedger = await fetch(
+    `${base}/api/expenses?organizationId=${f.orgA}`,
+    { headers: { cookie } },
+  );
+  assert.equal(expenseLedger.status, 200);
+  const expenseData = (await expenseLedger.json()).data;
+  assert.equal(expenseData.total, 3);
+  assert.equal(expenseData.summary[0].netMinor, "300");
+  console.log(
+    "PASS production expenses: maintained login, native image decode/private storage/download, replay, full reversal/linked replacement and exact net ledger; anonymous receipt denied.",
+  );
   const member = await post("/api/members", {
     organizationId: f.orgA,
     name: "PDF production member",
@@ -456,6 +546,7 @@ try {
     const timings: Record<string, number> = {};
     for (const [name, heading] of [
       ["Dashboard", "Gym overview"],
+      ["Expenses", "Expenses"],
       ["Plans", "Membership plans"],
       ["Members", "Members"],
       ["Payments", "Invoices & balances"],

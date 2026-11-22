@@ -76,3 +76,12 @@ Platform console: /admin using the separately provisioned platform account. Ordi
 Operator-only platform bootstrap: provide PLATFORM_ADMIN_NAME, PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD privately, then npm.cmd run auth:platform-admin using operator migration configuration. Password minimum12. Existing ungranted identities require explicit review; existing granted identities are not silently reset. Never expose bootstrap through HTTP or import its operator credentials into Vercel. Local auth:bootstrap refuses non-loopback targets; hosted gym provisioning belongs to the protected console.
 
 PAY-03: open an issued invoice > Correct invoice as owner. Review reason, exact amount, local cash date and original receipt for refunds. Credit, refund, combined refund/credit or eligible void are preserved adjustment records. Refund alone reopens debt; credit does not create a paid receipt; original invoices/receipts remain. Saving and downloading cannot be used as evidence of recipient delivery. Run test:payments for DB/service correction caps/replays/rollback and test:platform for real-session administration/security.
+
+
+### Private expense receipt maintenance
+
+Expense receipts currently accept PNG/JPEG images only (max2MiB and16million pixels), fully decoded/re-encoded without inputmetadata. Small private bytes are in PostgreSQL through a replaceable serveradapter; include gym.private_files in database backups/restores. No public filesystem/cloud bucket or client database access. Downloads require current expense permission and a linked expense in the current branch scope.
+
+`node scripts/clean-staged-receipts.mjs` is a read-only dryrun against the configured migration database. Only unlinked uploads older24hours qualify, at most500 per invocation. An operator can review then use `--apply`; it writes exact IDs/checksums/databaseoperator to ignored .local/receipt-maintenance before deletion. Every linked receipt, including a reversed original, stays. `--test` explicitly selects isolatedgym_test. The actual isolated dryrun/apply test proved oldorphan removed/oldlinked retained. No valued source/host purge has been executed. Monitor orphan candidates and storage growth; use repeat invocations for larger maintenance batches.
+
+Browser tests now use ignored .next-browser-tests output with MOJYM_BROWSER_TEST=1, leaving regular .next/dev port3000 running. Playwright still owns isolatedgym_test port3100; never reuse the normal hosted-data devserver for fixtures. Next-added type paths and ESLint generated-output ignores are retained.
