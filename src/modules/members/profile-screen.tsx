@@ -10,6 +10,9 @@ import type { Profile } from "./profile-types";
 import { MembershipsPanel } from "@/modules/memberships/memberships-panel";
 import { eligibilityLabel } from "@/modules/memberships/state";
 import { PaymentLedger } from "@/modules/payments/payment-ledger";
+import { AccessCardDownload } from "@/modules/attendance/access-card";
+import { visitDuration } from "@/modules/attendance/format";
+import { Table } from "@/components/ui/primitives";
 export function ProfileScreen({ initial }: { initial: Profile }) {
   const hydrated = useHydrated();
   const [data, setData] = useState(initial),
@@ -129,6 +132,12 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
           </div>
         </div>
         <div className="profile-actions">
+          <AccessCardDownload
+            organizationId={data.organization.id}
+            memberId={data.member.id}
+            memberCode={data.member.memberCode}
+            disabled={locked}
+          />
           <Link
             className="button secondary"
             href={`/payments?organizationId=${data.organization.id}&memberId=${data.member.id}`}
@@ -201,32 +210,83 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
               buttons[next].focus();
             }}
           >
-            {["Overview", "Memberships", "Payments", "Notes", "History"].map(
-              (t) => (
-                <button
-                  id={"profile-tab-" + t}
-                  aria-controls="profile-panel"
-                  type="button"
-                  role="tab"
-                  key={t}
-                  tabIndex={tab === t ? 0 : -1}
-                  aria-selected={tab === t}
-                  disabled={pending}
-                  onClick={() => {
-                    setTab(t);
-                    setError("");
-                  }}
-                >
-                  {t}
-                </button>
-              ),
-            )}
+            {[
+              "Overview",
+              "Memberships",
+              "Visits",
+              "Payments",
+              "Notes",
+              "History",
+            ].map((t) => (
+              <button
+                id={"profile-tab-" + t}
+                aria-controls="profile-panel"
+                type="button"
+                role="tab"
+                key={t}
+                tabIndex={tab === t ? 0 : -1}
+                aria-selected={tab === t}
+                disabled={pending}
+                onClick={() => {
+                  setTab(t);
+                  setError("");
+                }}
+              >
+                {t}
+              </button>
+            ))}
           </div>
           <div
             id="profile-panel"
             role="tabpanel"
             aria-labelledby={"profile-tab-" + tab}
           >
+            {tab === "Visits" ? (
+              <section className="panel attendance-records">
+                <SectionTitle
+                  title="Member visits"
+                  help="The latest 20 visits in your permitted branches are shown, including retained history after archival. Open visits have no assumed checkout time."
+                />
+                <Table caption="Member attendance history">
+                  <thead>
+                    <tr>
+                      <th>Branch</th>
+                      <th>Check-in</th>
+                      <th>Check-out</th>
+                      <th>Duration</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.visits.rows.map((visit) => (
+                      <tr key={visit.id}>
+                        <td>
+                          {visit.branchName}
+                          {visit.overrideReason ? (
+                            <small>Override: {visit.overrideReason}</small>
+                          ) : null}
+                        </td>
+                        <td>{date(visit.checkedInAt, true)}</td>
+                        <td>
+                          {visit.checkedOutAt
+                            ? date(visit.checkedOutAt, true)
+                            : "Inside"}
+                        </td>
+                        <td>{visitDuration(visit.durationSeconds)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+                {!data.visits.rows.length ? (
+                  <p>No visits recorded in your branch scope.</p>
+                ) : null}
+                <p>{data.visits.total} recorded visits · latest 20 shown</p>
+                <Link
+                  href={`/attendance?organizationId=${data.organization.id}&view=history`}
+                >
+                  Open attendance history
+                </Link>
+              </section>
+            ) : null}
             {tab === "Overview" ? (
               <div className="profile-overview">
                 <section className="panel">
@@ -243,8 +303,8 @@ export function ProfileScreen({ initial }: { initial: Profile }) {
                     <dd>{eligibilityLabel(data.eligibility)}</dd>
                   </dl>
                   <p className="support">
-                    Membership and payment history are connected below.
-                    Attendance history will appear when visits are connected.
+                    Review memberships, recorded visits and payments in this
+                    profile.
                   </p>
                 </section>
                 <section className="panel">

@@ -105,3 +105,14 @@ All mutations retain existing JSON/body-size/trusted-origin/no-store wrappers. /
 - GET /api/receipts/[id]/pdf?organizationId: current authorization and atomic pdf_requested audit; generated application/pdf attachment, private/no-store/nosniff. Embedded local licensed fonts, no cloud fetch or external send. PDF/download failure retries never record a payment again.
 
 Invoice list/detail and member profile now embed scoped payment history; other full-profile permissions remain unchanged. Payment dates are local calendar dates between original invoice issue day and gym today. Original invoice currency remains payable after configuration changes. Settlement activates only a pending non-archived, non-cancelled, unexpired linked membership; future starts/freeze/grace/other due debt still determine eligibility. Receipt historical balances never change after subsequent payments. PAY-03 corrections/refunds/credits/void remain separate.
+
+
+## Implemented ATT-01 interfaces
+
+- GET /api/attendance: optional organizationId/branchId, view today/inside/history, fromOn/throughOn valid inclusive local dates (at most366 days), bounded page. Selected active branch defaults to first permitted branch;25 records per page. Summary reflects today's successful openings, current open/stale visits, and average of completed visits started today. It does not fabricate exit times.
+- GET /api/attendance/lookup: required organizationId/branchId/q (1–120 chars). At most20 candidates with member code/name/phone ending, eligibility reason, branch-safe open-visit state and whether reasoned override is permitted. No full phone, email or private notes. UUID/QR and complete member codes match exactly; other searches escape literal wildcards.
+- POST /api/attendance: strict check_in(memberId, branchId, optional overrideReason) or check_out(visitId, branchId), organizationId and requestKey required. Requires attendance.manage and fresh branch scope. Request replay reauthorizes; changed payload conflicts. Denial writes no visit. Only owner/manager one-visit exceptions, no archived entry. Safe repeat scan/checkout creates no extra visit/revision/audit.
+- POST /api/members/:id/access-code: strict organizationId only, members.manage + full profile branch permission. Returns generated SVG attachment, private/no-store/nosniff, stable random lookup identity. No membership entitlement or authentication in the QR; no mail side effect.
+- Profile DTO visits: latest20 visits/total scoped to authorized visit branches, retained on archival. Profile eligibility now uses the same live gym-floor benefit/debt/date policy as admission.
+
+All writes use central same-origin/body limits/error handling; member parent lock then visit lock, DB entry/exit times, immutable eligibility snapshot and auditable reason. Runtime cannot spoof entry timestamps or delete/rewrite visits; one-open-visit partial unique index is the final concurrency guard.

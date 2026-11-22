@@ -2438,5 +2438,15 @@ input[type="checkbox"] {
 .platform-row-actions button { padding:0;border:0;background:transparent; }
 .platform-section-heading { display:flex;gap:20px;align-items:center;justify-content:space-between; }
 .platform-empty { padding:24px 0;color:var(--muted); }
+.attendance-filters { display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:16px;align-items:end;margin:28px 0; }
+.attendance-filters .field,.attendance-search .field {margin:0;min-width:0;}
+.attendance-filters select {width:100%;min-width:0;height:46px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#FFFFFF;color:var(--text);font:inherit;}
+.attendance-filters input {height:46px;width:100%;min-width:0;}
+.attendance-lookup { padding:28px;margin-bottom:28px; }
+.attendance-search { display:flex;gap:16px;align-items:end;margin-top:24px; }.attendance-search .field {flex:1;}
+.attendance-candidates {display:grid;gap:14px;margin-top:20px;}.attendance-candidate {display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px;background:#F1F4F7;border:1px solid #DCE4EE;border-radius:16px;}.attendance-candidate h3 {font-size:17px;margin:0;}.attendance-candidate p {font-size:12px;color:var(--muted);margin:8px 0 0;}.attendance-candidate>div {flex:1;min-width:0;}
+.attendance-records {padding:28px;min-width:0;}.attendance-records .table-scroll {margin-top:24px;}.attendance-records table {width:100%;min-width:760px;border-collapse:collapse;font-size:13px;}.attendance-records th {text-align:left;background:#F1F4F7;color:var(--muted);font-weight:500;}.attendance-records th,.attendance-records td {padding:18px 16px;border-bottom:1px solid #DCE4EE;vertical-align:top;}.attendance-records small {display:block;max-width:250px;margin-top:6px;color:var(--muted);overflow-wrap:anywhere;}.attendance-records .attendance-warning {color:#8a551d;}.attendance-empty {padding:24px 0;color:var(--muted);font-size:14px;}
+@media(max-width:1000px){.attendance-filters{grid-template-columns:repeat(2,minmax(0,1fr));}.attendance-filters button{justify-self:start;}.attendance-candidate{flex-wrap:wrap;}.attendance-candidate>div{flex-basis:100%;}}
+@media(max-width:600px){.attendance-filters{gap:12px;}.attendance-lookup,.attendance-records{padding:20px;}.attendance-search{flex-direction:column;align-items:stretch;}.attendance-candidate{padding:16px;gap:14px;}.attendance-candidate button{width:100%;}}
 @media(max-width:700px) { .platform-header { gap:16px;flex-wrap:wrap;padding:18px 20px; }.platform-header>span { order:3;flex-basis:100%; }.platform-header .brand { flex:1; }.platform-main { padding-top:28px; }.platform-main .panel { padding:20px; }.platform-search { flex-wrap:wrap; }.platform-main .page-heading,.platform-section-heading { align-items:start;flex-direction:column; }.platform-main .table-scroll { margin-left:-4px;margin-right:-4px; }.platform-main th,.platform-main td { padding:14px 12px; }.platform-main table { min-width:680px; } }
 .members-main .invoice-table-panel .text-action { border:0; padding:0; background:transparent; color:var(--accent); }

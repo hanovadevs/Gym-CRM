@@ -87,6 +87,46 @@ try {
     joinedOn: todayInZone("Asia/Karachi"),
     registrationKey: randomUUID(),
   });
+  const entry = {
+    organizationId: f.orgA,
+    branchId: f.a1,
+    memberId: member.member.id,
+    operation: "check_in",
+    requestKey: randomUUID(),
+    overrideReason: "Authorized production visit verification",
+  };
+  const visit = await post("/api/attendance", entry);
+  assert.equal((await post("/api/attendance", entry)).visitId, visit.visitId);
+  await post("/api/attendance", {
+    organizationId: f.orgA,
+    branchId: f.a1,
+    visitId: visit.visitId,
+    operation: "check_out",
+    requestKey: randomUUID(),
+  });
+  const attendanceResponse = await fetch(
+    `${base}/api/attendance?organizationId=${f.orgA}&branchId=${f.a1}`,
+    { headers: { cookie } },
+  );
+  assert.equal(attendanceResponse.status, 200);
+  const attendance = (await attendanceResponse.json()).data;
+  assert.equal(attendance.summary.checkIns, 1);
+  assert.equal(attendance.summary.inside, 0);
+  assert.ok(attendance.visits[0].checkedOutAt);
+  const qr = await fetch(
+    `${base}/api/members/${member.member.id}/access-code`,
+    {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ organizationId: f.orgA }),
+    },
+  );
+  assert.equal(qr.status, 200);
+  assert.equal(qr.headers.get("cache-control"), "private, no-store");
+  assert.match(await qr.text(), /<svg/);
+  console.log(
+    "PASS production attendance: maintained login, reasoned visit, replay, checkout, source summaries/history and private QR attachment.",
+  );
   const draft = await post("/api/invoices", {
     organizationId: f.orgA,
     memberId: member.member.id,

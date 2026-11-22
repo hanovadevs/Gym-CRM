@@ -1,5 +1,6 @@
 import type { Directory, Member } from "./types";
 import type { PaymentPage } from "@/modules/payments/types";
+import type { Visit } from "@/modules/attendance/types";
 import type {
   MembershipContext,
   Eligibility,
@@ -15,6 +16,7 @@ export type MemberNote = {
   canWithdraw: boolean;
 };
 export type Profile = {
+  visits: { rows: Visit[]; total: number };
   payments: PaymentPage;
   organization: Directory["organization"];
   branches: Directory["branches"];

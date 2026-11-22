@@ -69,6 +69,10 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/attendance?organizationId=${org}`, "GET"],
+    [`/api/attendance/lookup?organizationId=${org}&branchId=${org}&q=member`, "GET"],
+    ["/api/attendance", "POST", {organizationId:org,branchId:org,memberId:org,requestKey:org,operation:"check_in"}],
+    [`/api/members/${org}/access-code`, "POST", {organizationId:org}],
     ["/api/platform", "GET"],
     ["/api/platform", "POST", {}],
     [`/api/invoices/${org}/corrections`,"POST",{organizationId:org,invoiceId:org,requestKey:org,kind:"credit",amountMinor:"1",expectedBalanceMinor:"1",currency:"PKR",cashOn:"2026-11-21",reason:"Anonymous correction guard"}],

@@ -19,7 +19,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | PAY-01 | M05 | SUB-01 | Invoices/balances/atomic numbering | DONE | 0015–0017; scoped draft/issue/lines/balances/numbering and private invoice PDF; 59 browser/35 unit + real-DB regression/build/production PDF PASS |
 | PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | DONE | 0018/0019; atomic collection, immutable paid receipts/print/PDF, valid activation; 64 browser/36 units + serial real-DB/production checks PASS |
 | PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | DONE | Reviewed 0020–0022, raw DB caps/immutability, two correction browsers and production refund/credit/void/PDF flow pass; corrected void header rendered/reviewed |
-| ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | IN_PROGRESS | Reference/business/security contracts reviewed; visits/request/token schema being prepared; no attendance behavior claimed yet |
+| ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | DONE | Reviewed0026/0027 all3 DBs28; acceptance DB suite, full68 browsers, independent downloaded QR decode, responsive review and actual production attendance/replay/checkout/private QR PASS |
 | DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | NOT_STARTED | None yet |
 | EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | NOT_STARTED | None yet |
 | RPT-01 | M12 | DASH-01 + EXP-01 | Reports and source reconciliation | NOT_STARTED | None yet |

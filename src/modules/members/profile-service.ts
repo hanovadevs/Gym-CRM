@@ -16,6 +16,8 @@ import {
 import type { Profile } from "./profile-types";
 import { readMembershipContext } from "@/modules/memberships/service";
 import { readPaymentPage } from "@/modules/payments/service";
+import { memberVisits } from "@/modules/attendance/service";
+import { memberAccess } from "@/modules/attendance/access";
 export function createProfileService(
   security: ReturnType<typeof createSecurity>,
 ) {
@@ -74,7 +76,21 @@ export function createProfileService(
           )
         ).rows;
         const memberships = await readMembershipContext(db, scope, member);
+        const admission = await memberAccess(
+          db,
+          scope,
+          {
+            id: member.id,
+            name: member.name,
+            memberCode: member.memberCode,
+            homeBranchId: member.homeBranchId,
+            archived: !!member.archivedAt,
+            phoneEnding: member.phone.replace(/\D/g, "").slice(-4),
+          },
+          member.homeBranchId,
+        );
         return {
+          visits: await memberVisits(db, scope, id),
           organization,
           payments: await readPaymentPage(db, scope, {
             organizationId: scope.organizationId,
@@ -93,7 +109,7 @@ export function createProfileService(
           notesTotal: notes.total,
           canManage: management,
           history,
-          eligibility: memberships.eligibility,
+          eligibility: admission.access,
           memberships,
           requestId: scope.requestId,
         };

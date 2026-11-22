@@ -15,7 +15,7 @@ export function WorkspaceFrame({
   canManageMembers?: boolean;
   canReadPlans?: boolean;
   canReadBilling?: boolean;
-  active?: "members" | "plans" | "payments" | "workspace";
+  active?: "members" | "plans" | "payments" | "workspace" | "attendance";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;

@@ -65,6 +65,7 @@ export function failure(error: unknown) {
           VALIDATION_ERROR: 422,
           NOT_FOUND: 404,
           FORBIDDEN: 403,
+          ACCESS_DENIED: 403,
         }[error.code],
         headers: { "Cache-Control": "no-store" },
       },

@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 22 November 2026 (Asia/Karachi): Mojym brand/navigation and preview removal verified. PAY-03 corrections and PLAT-01 separate platform administration are in final verification. Authorized Supabase connection/data transfer and Vercel import preparation recorded below; attendance and the remaining CRM modules still await implementation.
+Updated 22 November 2026 (Asia/Karachi): PAY-03 and PLAT-01 verified. ATT-01 verified with full68 browser regression and production workflows; sourceGYM, gym_test and hostedSupabase all28 matching migration entries. Remaining modules and production release are open.
 
 ## State rules
 
@@ -10,11 +10,11 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | PERF-01/BRAND-01 Mojym/navigation DONE; preview removed |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
-| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB/PAY policy and paid receipt consumers verified; actual ATT-01 enforcement remains |
-| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership/payments history connected; visits and ATT-01 archival denial remain |
-| M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01/PAY-02 activation verified; actual ATT-01 enforcement remains |
+| M02 | Settings & staff | A | M01 | DONE | DONE | DONE | DONE | DONE | Saved activation/grace/debt and receipt policies exercised in real consumers; release operations separate |
+| M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | Connected membership/payment/visit history, QR, actual archival admission denial and retained history verified |
+| M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | DONE | DONE | Actual paid/debt/grace/benefit/freeze/cancel/date/branch admission consumers verified |
 | M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
-| M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | IN_PROGRESS | NOT_STARTED | IN_PROGRESS | ATT-01 reviewed visits/request/token schema draft; unapplied |
+| M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
 | M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
 | M09 | Classes & bookings | B | M08 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | CLS-01 |
@@ -189,3 +189,6 @@ PLAT-01 DONE: explicit independent platform grant and maintained-auth operator b
 Latest relevant verification: lint/typecheck PASS;40 unit tests PASS; db:generate no drift before starting attendance schema. Full66 run passed65 with profile-navigation failure, correctly retained as failure. Fixed redundant directory hydration fetch/history race and keyed fresh server directory data; test now waits for the actual mutation responses rather than assuming cold dev compilation finishes within5s. All13 member/profile browser regressions PASS1.0m after fixes. Previous remaining65 cases include both new platform/correction cases. Final all-module release regression remains future work. Current production artifact authenticated invoice/payment/refund/credit/void/PDF/profile/navigation checks PASS, local measured client transitions111/80/74ms with no document reload. Hosted owner/admin browser login/workspace/directory/owner-platform denial and preserved original owner ID/hash PASS through TLS Supabase pooler; this test used a local production server, not the public deployment.
 
 Source/test/hosted still have one initialized original gym and no seeded operational records in valued GYM/hosted; isolated gym_test fixtures cleaned. User's retained Hanova gym/data is requested, privately prepared, not created yet. Attendance draft schema is unapplied and does not count as operational behavior. Full-scope pending work is doc/20_SCOPE_AUDIT.md.
+
+
+ATT-01 evidence —22 November2026: migrations0026/0027 committed7acfb7d before application; sourceGYM/gym_test/hostedSupabase28 matching hashes. test:attendance and profile/membership/settings regressions PASS;40 units PASS; full68 browser regression PASS3.2m; lint/typecheck/schema drift PASS. next build, anonymous production smoke26 client assets and authenticated production billing+attendance flow PASS. Browser independent jsQR decode of downloaded SVG, lost successful response/onevisit, reception denial and four responsive widths. Actual files src/modules/attendance, src/app/attendance, src/app/api/attendance, profileVisits/access-code; tests/integration/attendance.ts, tests/e2e/attendance.spec.ts and expanded production verifiers. Evidence doc/evidence/attendance-*.png. No camera/biometric integration claimed. Next DASH-01, remaining full-scope items doc/20.

@@ -365,6 +365,20 @@ export function createSettingsService(
           if (
             before.active &&
             !input.active &&
+            (
+              await db.query(
+                "select 1 from gym.attendance_visits where organization_id=$1 and branch_id=$2 and checked_out_at is null limit 1",
+                [scope.organizationId, input.id],
+              )
+            ).rowCount
+          )
+            throw new BusinessError(
+              "CONFLICT",
+              "Check out open visits before disabling this branch.",
+            );
+          if (
+            before.active &&
+            !input.active &&
             (await db.query("select id from gym.branches where active=true"))
               .rowCount! <= 1
           )

@@ -38,8 +38,18 @@ export function status(m: Membership, today: string) {
   if (daysBetween(today, m.endOn) <= 7) return "Expiring soon";
   return "Active";
 }
-export function eligibility(
-  rows: Membership[],
+export type AccessPeriod = Pick<
+  Membership,
+  "startOn" | "endOn" | "cancelledEffectiveOn" | "activatedAt"
+> & {
+  freezes: Pick<
+    Membership["freezes"][number],
+    "startOn" | "endOn" | "reversedAt"
+  >[];
+  invoice: Pick<Membership["invoice"], "totalMinor" | "dueOn">;
+};
+export function eligibility<T extends AccessPeriod>(
+  rows: T[],
   today: string,
   archived: boolean,
   grace: number,
@@ -103,6 +113,7 @@ export function eligibilityLabel(value: Eligibility) {
         frozen: "Frozen",
         debt_blocked: "Blocked: unpaid charges",
         wrong_branch: "Not available in this branch",
+        plan_excludes_access: "Plan does not include this access",
         allowed: "Membership active",
         grace: "Within expiry grace",
       } as Record<string, string>

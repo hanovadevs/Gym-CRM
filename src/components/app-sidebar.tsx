@@ -5,7 +5,7 @@ import { BrandMark } from "./brand";
 import { Drawer } from "./ui/primitives";
 import { useHydrated } from "@/lib/use-hydrated";
 type Page =
-  "workspace" | "members" | "plans" | "payments" | "settings" | "dashboard";
+  "workspace" | "members" | "plans" | "payments" | "settings" | "dashboard" | "attendance";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
 function snapshot() {
@@ -93,6 +93,7 @@ export function AppSidebar({
       ? [{ name: "Members", page: "members", href: "/members" }]
       : []),
     ...(canReadPlans ? [{ name: "Plans", page: "plans", href: "/plans" }] : []),
+    ...(canManageMembers ? [{name:"Attendance",page:"attendance",href:"/attendance"}]:[]),
     ...(canReadBilling
       ? [{ name: "Payments", page: "payments", href: "/payments" }]
       : []),
