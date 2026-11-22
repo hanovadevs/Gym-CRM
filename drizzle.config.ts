@@ -13,6 +13,7 @@ export default defineConfig({
     "./src/server/db/attendance-schema.ts",
     "./src/server/db/expense-schema.ts",
     "./src/server/db/training-schema.ts",
+    "./src/server/db/payroll-schema.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",
