@@ -330,6 +330,13 @@
       "when": 1795386729916,
       "tag": "0046_primary_gym_owner_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1795387911785,
+      "tag": "0047_agreed_fee_term_guard",
+      "breakpoints": true
     }
   ]
 }
