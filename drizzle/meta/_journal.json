@@ -323,6 +323,13 @@
       "when": 1795385368179,
       "tag": "0045_fee_reminder_security",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1795386729916,
+      "tag": "0046_primary_gym_owner_guard",
+      "breakpoints": true
     }
   ]
 }
