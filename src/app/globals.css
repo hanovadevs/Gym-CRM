@@ -2510,3 +2510,9 @@ input[type="checkbox"] {
 .trainer-filters input,.trainer-filters select { width:100%; min-width:0; }
 .table-secondary { display:block; margin-top:5px; color:var(--muted); overflow-wrap:anywhere; }
 @media(max-width:600px) { .trainer-filters { grid-template-columns:1fr; gap:12px; margin:16px 0; } .trainer-filters button { width:100%; } }
+
+.employee-sections { display:grid; gap:24px; min-width:0; }
+.employee-sections .review-list { display:grid; grid-template-columns:minmax(110px,.7fr) minmax(0,1fr); gap:12px 20px; max-width:720px; }
+.employee-sections .review-list dt { color:var(--muted); }
+.employee-sections .review-list dd { margin:0; overflow-wrap:anywhere; }
+@media(max-width:960px) { .employee-sections { gap:16px; } .employee-sections .review-list { gap:10px 12px; } }

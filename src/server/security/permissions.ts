@@ -32,6 +32,8 @@ export const permissions = {
   "billing.invoice": ["owner", "manager", "receptionist", "accountant"],
   "billing.adjust": ["owner"],
   "attendance.manage": ["owner", "manager", "receptionist"],
+  "employees.manage": ["owner", "manager"],
+  "payroll.manage": ["owner", "manager", "accountant"],
   "expenses.manage": ["owner", "manager", "accountant"],
   "reports.financial": ["owner", "manager", "accountant"],
   "classes.manage": ["owner", "manager"],

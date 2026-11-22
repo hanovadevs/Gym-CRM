@@ -12,6 +12,7 @@ type Page =
   | "payments"
   | "settings"
   | "dashboard"
+  | "employees"
   | "trainers"
   | "expenses"
   | "attendance";
@@ -56,6 +57,8 @@ const paths: Record<string, string> = {
     "M8 2v4 M16 2v4 M3 10h18 M5 4h14a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2 M8 15l3 3 5-5",
   Payments: "M3 5h18v14H3z M3 10h18 M7 15h4",
   Classes: "M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h4",
+  Employees:
+    "M4 21v-3a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v3 M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8",
   Trainers: "M3 8v8 M7 6v12 M7 12h10 M17 6v12 M21 8v8",
   Enquiries: "M4 4h16v13H9l-5 4V4 M8 8h8 M8 12h5",
   Expenses: "M6 3h12v18l-3-2-3 2-3-2-3 2V3 M9 8h6 M9 12h6",
@@ -117,7 +120,10 @@ export function AppSidebar({
       ? [{ name: "Payments", page: "payments", href: "/payments" }]
       : []),
     ...(canManageSettings || (canReadBilling && !canManageMembers)
-      ? [{ name: "Expenses", page: "expenses", href: "/expenses" }]
+      ? [
+          { name: "Expenses", page: "expenses", href: "/expenses" },
+          { name: "Employees", page: "employees", href: "/employees" },
+        ]
       : []),
   ];
   const selection = useSearchParams();

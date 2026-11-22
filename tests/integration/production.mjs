@@ -44,12 +44,16 @@ try {
   const html = await response.text();
   // fetch follows HTTP redirects, but Next may stream the legacy alias as a
   // meta redirect. Verify its real destination too, as a browser does.
-  let protectedResponse=response, protectedHtml=html;
-  if(html.includes('url=/workspace') || html.includes('url=/dashboard')){
-    protectedResponse=await fetch('http://127.0.0.1:3200/dashboard');
-    protectedHtml=await protectedResponse.text();
+  let protectedResponse = response,
+    protectedHtml = html;
+  if (html.includes("url=/workspace") || html.includes("url=/dashboard")) {
+    protectedResponse = await fetch("http://127.0.0.1:3200/dashboard");
+    protectedHtml = await protectedResponse.text();
   }
-  assert.ok(protectedResponse.url.endsWith('/sign-in') || protectedHtml.includes('url=/sign-in'));
+  assert.ok(
+    protectedResponse.url.endsWith("/sign-in") ||
+      protectedHtml.includes("url=/sign-in"),
+  );
   assert.ok(!html.includes("Good afternoon, Ali"));
   assert.ok(!html.includes("Demo data"));
   const denied = await fetch("http://127.0.0.1:3200/api/workspace");
@@ -71,33 +75,169 @@ try {
   for (const [path, method, body] of [
     [`/api/expenses?organizationId=${org}`, "GET"],
     [`/api/files/${org}?organizationId=${org}`, "GET"],
-    ["/api/expenses/categories", "POST", {organizationId:org,operation:"create",id:org,name:"Blocked category",reason:"Anonymous guard"}],
-    ["/api/expenses","POST",{organizationId:org,branchId:org,categoryId:org,requestKey:org,description:"Blocked expense",amountMinor:"100",currency:"PKR",paidOn:"2026-11-22",method:"cash"}],
-    [`/api/expenses/${org}/reverse`, "POST", {organizationId:org,requestKey:org,cashOn:"2026-11-22",reason:"Anonymous guard"}],
+    [
+      "/api/expenses/categories",
+      "POST",
+      {
+        organizationId: org,
+        operation: "create",
+        id: org,
+        name: "Blocked category",
+        reason: "Anonymous guard",
+      },
+    ],
+    [
+      "/api/expenses",
+      "POST",
+      {
+        organizationId: org,
+        branchId: org,
+        categoryId: org,
+        requestKey: org,
+        description: "Blocked expense",
+        amountMinor: "100",
+        currency: "PKR",
+        paidOn: "2026-11-22",
+        method: "cash",
+      },
+    ],
+    [
+      `/api/expenses/${org}/reverse`,
+      "POST",
+      {
+        organizationId: org,
+        requestKey: org,
+        cashOn: "2026-11-22",
+        reason: "Anonymous guard",
+      },
+    ],
     [`/api/dashboard?organizationId=${org}`, "GET"],
     [`/api/attendance?organizationId=${org}`, "GET"],
-    [`/api/attendance/lookup?organizationId=${org}&branchId=${org}&q=member`, "GET"],
-    ["/api/attendance", "POST", {organizationId:org,branchId:org,memberId:org,requestKey:org,operation:"check_in"}],
-    [`/api/members/${org}/access-code`, "POST", {organizationId:org}],
+    [
+      `/api/attendance/lookup?organizationId=${org}&branchId=${org}&q=member`,
+      "GET",
+    ],
+    [
+      "/api/attendance",
+      "POST",
+      {
+        organizationId: org,
+        branchId: org,
+        memberId: org,
+        requestKey: org,
+        operation: "check_in",
+      },
+    ],
+    [`/api/members/${org}/access-code`, "POST", { organizationId: org }],
     ["/api/platform", "GET"],
     ["/api/platform/analytics", "GET"],
     ["/api/trainers", "GET"],
-    ["/api/trainers", "POST", {organizationId: org, id: org, requestKey: org, name: "Anonymous trainer", branchIds: [org], reason: "Anonymous denial check"}],
+    ["/api/payroll", "GET"],
+    [
+      "/api/payroll",
+      "POST",
+      {
+        operation: "employee",
+        organizationId: org,
+        id: org,
+        requestKey: org,
+        name: "Anonymous employee",
+        title: "Anonymous employee",
+        branchId: org,
+        startOn: "2026-11-01",
+        active: true,
+        salaryMinor: null,
+        currency: "PKR",
+        payDay: 1,
+        reason: "Anonymous denial check",
+      },
+    ],
+    [
+      "/api/trainers",
+      "POST",
+      {
+        organizationId: org,
+        id: org,
+        requestKey: org,
+        name: "Anonymous trainer",
+        branchIds: [org],
+        reason: "Anonymous denial check",
+      },
+    ],
     ["/api/platform/billing", "GET"],
     ["/api/platform/billing", "POST", {}],
     ["/api/platform", "POST", {}],
-    [`/api/invoices/${org}/corrections`,"POST",{organizationId:org,invoiceId:org,requestKey:org,kind:"credit",amountMinor:"1",expectedBalanceMinor:"1",currency:"PKR",cashOn:"2026-11-21",reason:"Anonymous correction guard"}],
-    [`/api/payments?organizationId=${org}`,"GET"],
-    [`/api/payments/targets?organizationId=${org}`,"GET"],
-    [`/api/receipts/${org}?organizationId=${org}`,"GET"],
-    [`/api/receipts/${org}/pdf?organizationId=${org}`,"GET"],
-    ["/api/payments","POST",{organizationId:org,invoiceId:org,requestKey:org,amountMinor:"100",expectedBalanceMinor:"100",currency:"PKR",method:"cash",paidOn:"2026-11-21"}],
-    [`/api/invoices?organizationId=${org}`,"GET"],
-    [`/api/invoices/${org}?organizationId=${org}`,"GET"],
-    [`/api/invoices/${org}/pdf?organizationId=${org}`,"GET"],
-    [`/api/invoices/recipients?organizationId=${org}`,"GET"],
-    ["/api/invoices","POST",{organizationId:org,memberId:org,requestKey:org,reason:"Anonymous invoice guard",values:{description:"Blocked charge",currency:"PKR",dueOn:"2026-11-21",lines:[{description:"Blocked fee",quantity:1,unitMinor:100,discountMinor:0}]}}],
-    [`/api/invoices/${org}`,"PATCH",{organizationId:org,operation:"issue",version:1,requestKey:org,reason:"Anonymous invoice guard"}],
+    [
+      `/api/invoices/${org}/corrections`,
+      "POST",
+      {
+        organizationId: org,
+        invoiceId: org,
+        requestKey: org,
+        kind: "credit",
+        amountMinor: "1",
+        expectedBalanceMinor: "1",
+        currency: "PKR",
+        cashOn: "2026-11-21",
+        reason: "Anonymous correction guard",
+      },
+    ],
+    [`/api/payments?organizationId=${org}`, "GET"],
+    [`/api/payments/targets?organizationId=${org}`, "GET"],
+    [`/api/receipts/${org}?organizationId=${org}`, "GET"],
+    [`/api/receipts/${org}/pdf?organizationId=${org}`, "GET"],
+    [
+      "/api/payments",
+      "POST",
+      {
+        organizationId: org,
+        invoiceId: org,
+        requestKey: org,
+        amountMinor: "100",
+        expectedBalanceMinor: "100",
+        currency: "PKR",
+        method: "cash",
+        paidOn: "2026-11-21",
+      },
+    ],
+    [`/api/invoices?organizationId=${org}`, "GET"],
+    [`/api/invoices/${org}?organizationId=${org}`, "GET"],
+    [`/api/invoices/${org}/pdf?organizationId=${org}`, "GET"],
+    [`/api/invoices/recipients?organizationId=${org}`, "GET"],
+    [
+      "/api/invoices",
+      "POST",
+      {
+        organizationId: org,
+        memberId: org,
+        requestKey: org,
+        reason: "Anonymous invoice guard",
+        values: {
+          description: "Blocked charge",
+          currency: "PKR",
+          dueOn: "2026-11-21",
+          lines: [
+            {
+              description: "Blocked fee",
+              quantity: 1,
+              unitMinor: 100,
+              discountMinor: 0,
+            },
+          ],
+        },
+      },
+    ],
+    [
+      `/api/invoices/${org}`,
+      "PATCH",
+      {
+        organizationId: org,
+        operation: "issue",
+        version: 1,
+        requestKey: org,
+        reason: "Anonymous invoice guard",
+      },
+    ],
     [`/api/members/${org}/memberships?organizationId=${org}`, "GET"],
     [
       `/api/members/${org}/memberships`,
@@ -280,7 +420,16 @@ try {
     assert.equal(result.headers.get("cache-control"), "no-store");
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
-  for (const path of ["/workspace", "/members", "/settings", "/plans", "/payments", "/admin/gyms/00000000-0000-4000-8000-000000000001"]) {
+  for (const path of [
+    "/employees",
+    "/trainers",
+    "/workspace",
+    "/members",
+    "/settings",
+    "/plans",
+    "/payments",
+    "/admin/gyms/00000000-0000-4000-8000-000000000001",
+  ]) {
     const protectedPage = await fetch("http://127.0.0.1:3200" + path);
     // Next inserts a meta redirect when the loading boundary has already streamed.
     assert.ok(

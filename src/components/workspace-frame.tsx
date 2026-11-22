@@ -23,7 +23,8 @@ export function WorkspaceFrame({
     | "attendance"
     | "dashboard"
     | "expenses"
-    | "trainers";
+    | "trainers"
+    | "employees";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;

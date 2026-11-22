@@ -99,6 +99,14 @@ export default async function Workspace({
       label: "Open trainers",
     },
     {
+      action: "payroll.manage",
+      path: "/employees",
+      title: "Employees & salaries",
+      description:
+        "Manage employee profiles, monthly salary dues and payment history.",
+      label: "Open employees",
+    },
+    {
       action: "expenses.manage",
       path: "/expenses",
       title: "Expense ledger",

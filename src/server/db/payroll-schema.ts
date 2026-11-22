@@ -147,6 +147,7 @@ export const payrollPayments = gym.table(
       ],
     }),
     foreignKey({
+      name: "payroll_payments_expense_branch_fk",
       columns: [t.organizationId, t.expenseId, t.branchId],
       foreignColumns: [expenses.organizationId, expenses.id, expenses.branchId],
     }),
