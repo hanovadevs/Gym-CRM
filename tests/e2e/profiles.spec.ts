@@ -125,7 +125,7 @@ test("profile, emergency contact and notes persist with responsive reference lay
     .getByRole("link", { name: "View Sara Ahmed", exact: true })
     .click();
   // Next Link completes its click before the streamed client transition commits.
-  await page.waitForURL(url => url.pathname === `/members/${m.id}`);
+  await page.waitForURL((url) => url.pathname === `/members/${m.id}`);
   await expect(
     page.getByRole("heading", { name: "Sara Ahmed", exact: true }),
   ).toBeVisible();
@@ -135,12 +135,28 @@ test("profile, emergency contact and notes persist with responsive reference lay
   await d.getByLabel("Contact phone").fill("03019876543");
   await d.getByLabel("Relationship", { exact: true }).fill("Sibling");
   await d.getByLabel("Reason for change").fill("Record emergency contact");
-  await d.getByRole("button", { name: "Save changes", exact: true }).click();
+  const [contactResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/members/${m.id}/contact` &&
+        response.request().method() === "PATCH",
+    ),
+    d.getByRole("button", { name: "Save changes", exact: true }).click(),
+  ]);
+  expect(contactResponse.status()).toBe(200);
   await expect(d).toHaveCount(0);
   await page
     .getByLabel("New operational note")
     .fill("Prefers evening appointments. Contact before rescheduling.");
-  await page.getByRole("button", { name: "Add note", exact: true }).click();
+  const [noteResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        new URL(response.url()).pathname === `/api/members/${m.id}/notes` &&
+        response.request().method() === "POST",
+    ),
+    page.getByRole("button", { name: "Add note", exact: true }).click(),
+  ]);
+  expect(noteResponse.status()).toBe(200);
   await expect(page.locator(".note-body")).toContainText("Prefers evening");
   await page.reload();
   await expect(page.getByText("Amina Ahmed", { exact: true })).toBeVisible();
@@ -256,7 +272,9 @@ test("archive preserves notes/contact, blocks changes and can be restored throug
     "History to preserve",
   );
   await expect(
-    page.locator('.profile-overview').getByText("Blocked: archived member", { exact: true }),
+    page
+      .locator(".profile-overview")
+      .getByText("Blocked: archived member", { exact: true }),
   ).toBeVisible();
   await page.setViewportSize({ width: 390, height: 1000 });
   await page.screenshot({
@@ -295,7 +313,11 @@ test("archive preserves notes/contact, blocks changes and can be restored throug
   await expect(page.locator(".profile-note-list")).toContainText(
     "History to preserve",
   );
-  await expect(page.locator(".profile-overview").getByText("Not enrolled", { exact: true })).toBeVisible();
+  await expect(
+    page
+      .locator(".profile-overview")
+      .getByText("Not enrolled", { exact: true }),
+  ).toBeVisible();
 });
 test("stale contact edits keep input and a committed note with failed refresh needs reload", async ({
   page,

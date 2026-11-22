@@ -236,7 +236,14 @@ export function createPlatformService(
         });
         await db.query(
           "insert into gym.organizations(id,name,slug,email,phone,address) values($1,$2,$3,$4,$5,$6)",
-          [id, input.name, input.slug, input.email || input.ownerEmail, input.phone, input.address],
+          [
+            id,
+            input.name,
+            input.slug,
+            input.email || input.ownerEmail,
+            input.phone,
+            input.address,
+          ],
         );
         const branch = (
           await db.query(
@@ -273,7 +280,12 @@ export function createPlatformService(
             "CONFLICT",
             "This gym changed since you opened it. Reload before saving.",
           );
-        before = {name:org.name,slug:org.slug,active:org.active,version:org.version};
+        before = {
+          name: org.name,
+          slug: org.slug,
+          active: org.active,
+          version: org.version,
+        };
         after = {
           name: input.name,
           slug: org.slug,
@@ -282,7 +294,14 @@ export function createPlatformService(
         };
         await db.query(
           "update gym.organizations set name=$1,active=$2,email=$4,phone=$5,address=$6,settings_version=settings_version+1 where id=$3",
-          [input.name, input.active, id, input.email ?? org.email, input.phone ?? org.phone, input.address ?? org.address],
+          [
+            input.name,
+            input.active,
+            id,
+            input.email ?? org.email,
+            input.phone ?? org.phone,
+            input.address ?? org.address,
+          ],
         );
       }
       await db.query(

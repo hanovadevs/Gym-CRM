@@ -3,8 +3,14 @@ import pg from "pg";
 import { databaseConnection } from "./database-connection.mjs";
 import { bootstrapPlatformAdmin } from "../src/server/platform/bootstrap";
 config({ path: ".env.local", quiet: true });
-if (!process.env.MIGRATION_DATABASE_URL || !process.env.BETTER_AUTH_SECRET || !process.env.APP_URL)
-  throw new Error("Missing operator database, authentication secret or app URL configuration");
+if (
+  !process.env.MIGRATION_DATABASE_URL ||
+  !process.env.BETTER_AUTH_SECRET ||
+  !process.env.APP_URL
+)
+  throw new Error(
+    "Missing operator database, authentication secret or app URL configuration",
+  );
 const db = new pg.Client(
   databaseConnection(
     process.env.MIGRATION_DATABASE_URL!,

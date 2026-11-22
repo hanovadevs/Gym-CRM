@@ -13,8 +13,8 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | VERIFYING | VERIFYING | SUB/PAY policy and paid receipt consumers verified; actual ATT-01 enforcement remains |
 | M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | VERIFYING | VERIFYING | Membership/payments history connected; visits and ATT-01 archival denial remain |
 | M04 | Plans & memberships | A | M03 | DONE | DONE | DONE | VERIFYING | VERIFYING | PLAN-01/SUB-01/PAY-02 activation verified; actual ATT-01 enforcement remains |
-| M05 | Billing, payments & receipts | A | M04 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | PAY-01/02 invoices, payments and paid receipts DONE; next PAY-03 corrections |
-| M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | ATT-01 |
+| M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
+| M06 | Attendance & access | A | M04 + M05 | NOT_STARTED | NOT_STARTED | IN_PROGRESS | NOT_STARTED | IN_PROGRESS | ATT-01 reviewed visits/request/token schema draft; unapplied |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | DASH-01 |
 | M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
 | M09 | Classes & bookings | B | M08 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | CLS-01 |
@@ -22,8 +22,8 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M11 | Expenses | A | M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | EXP-01 |
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
 | M13 | Imports, exports & files | A | M03 + M05 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | IMP-01 |
-| M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | REL-01; DB-MIG-01 later |
-| M15 | Platform administration | A | M01 + M02 | VERIFYING | DONE | DONE | VERIFYING | VERIFYING | PLAT-01 isolated service and two browser scenarios pass; production/remaining regression underway |
+| M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | IN_PROGRESS | VERIFYING | VERIFYING | IN_PROGRESS | Hosted auth/config verified; restore/deployed/pilot and all remaining module gates open |
+| M15 | Platform administration | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | PLAT-01 console/contact fields/isolated provisioning/suspension/activity verified; retained Hanova setup remains DATA-01 |
 
 ## Evidence card template
 
@@ -178,3 +178,14 @@ UI-04 DONE: exact supplied #F1F4F7/#DCE4EE/#FFFFFF/#253C58/#1E2937 shared palett
 Visual evidence opened/reviewed: doc/evidence/silver-midnight-*.png (six screens at390/768/1280/1440, auth and review sheets); receipt-{390,768,1280,1440}.png; payment-review/confirm, ledger, profile-payments-*.png. Actual receipt-browser/print/production/partial/paid PDFs one page each; long-brand/mixed-script stress two pages. Rendered/reviewed no blank pages, overlap or missing Latin/Arabic glyphs. Fixed footer/header/font and screenshot-hydration/color-transition issues recorded honestly in session log.
 
 M05 remains IN_PROGRESS for PAY-03 refunds/credits/owner corrections/void; M02/M03/M04 await actual attendance/visit consumers. GYM preserved: one organization, zero fictional operational rows/queued mail; gym_test clean, both restricted roles verified. No local blocker, real-owner change, external send, cloud cutover or public deployment. Next exact task PAY-03. Final runtime/GitHub confirmation in session log.
+
+
+## PAY-03 / PLAT-01 verified slice —22 November2026
+
+PAY-03 DONE: owner-only reasoned credit, original-payment refund, paired refund/credit and eligible void; immutable original invoices/receipts, exact net balances, replay/concurrency/caps/audit rollback, latest25 adjustment history/original receipt links and explicit Void/Settled labels. Reviewed0020–0022 preserve applied predecessors. Raw restricted-role INSERT tests reject excess credit/refund, UPDATE/DELETE denied and missing context returns0. test:payments PASS, test:billing PASS, both correction browser workflows PASS; actual Next production refund/replay/credit/history/void/PDF workflow PASS. Voided PDF title originally wrapped over its number; fixed dynamic header sizing/number position and void explanation, regenerated/extracted/rendered/reviewed one-page output without overlap. Evidence .local/payment-evidence/invoice-void-production.{pdf,png}, corrections-390.png.
+
+PLAT-01 DONE: explicit independent platform grant and maintained-auth operator bootstrap; ordinary owner cannot elevate or read console; platform account has no tenant membership. /admin and /api/platform create an isolated gym, main branch and owner atomically, persist gym email/phone/address, rename/suspend/reactivate with stale-version/reason/audit protection, and page/filter gym activity. User-provided administrator established on Supabase without changing original owner. Service tests cover concurrent replay, changed body, duplicate-slug rollback of auth account, grant revocation including replay, runtime/function ACL/RLS/context clearing and suspension/reactivation. Two platform browser cases pass, including lost-response retry/contact fields/CSRF/access denial, with four-width captures opened/reviewed. Reviewed0023–0025 applied to source/test/hosted:26 entries; applied hash reconciliation passed. No blanket production/full-CRM completion inferred.
+
+Latest relevant verification: lint/typecheck PASS;40 unit tests PASS; db:generate no drift before starting attendance schema. Full66 run passed65 with profile-navigation failure, correctly retained as failure. Fixed redundant directory hydration fetch/history race and keyed fresh server directory data; test now waits for the actual mutation responses rather than assuming cold dev compilation finishes within5s. All13 member/profile browser regressions PASS1.0m after fixes. Previous remaining65 cases include both new platform/correction cases. Final all-module release regression remains future work. Current production artifact authenticated invoice/payment/refund/credit/void/PDF/profile/navigation checks PASS, local measured client transitions111/80/74ms with no document reload. Hosted owner/admin browser login/workspace/directory/owner-platform denial and preserved original owner ID/hash PASS through TLS Supabase pooler; this test used a local production server, not the public deployment.
+
+Source/test/hosted still have one initialized original gym and no seeded operational records in valued GYM/hosted; isolated gym_test fixtures cleaned. User's retained Hanova gym/data is requested, privately prepared, not created yet. Attendance draft schema is unapplied and does not count as operational behavior. Full-scope pending work is doc/20_SCOPE_AUDIT.md.

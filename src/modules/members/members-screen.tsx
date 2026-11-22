@@ -31,7 +31,9 @@ export function MembersScreen({ initial }: { initial: Directory }) {
     [reloadRequired, setReloadRequired] = useState(false),
     [editor, setEditor] = useState<{ record?: Member } | null>(null),
     [revision, setRevision] = useState(0);
-  const skipFirst = useRef(true);
+  const lastRequest = useRef(
+    JSON.stringify({ query: initial.query, revision: 0 }),
+  );
   useEffect(() => {
     const timer = setTimeout(
       () =>
@@ -43,10 +45,11 @@ export function MembersScreen({ initial }: { initial: Directory }) {
     return () => clearTimeout(timer);
   }, [search]);
   useEffect(() => {
-    if (skipFirst.current) {
-      skipFirst.current = false;
-      return;
-    }
+    // Both initial Strict Mode effect setups already have the server data.
+    // An unnecessary hydration fetch can rewrite history during a profile link transition.
+    const request = JSON.stringify({ query, revision });
+    if (request === lastRequest.current) return;
+    lastRequest.current = request;
     const controller = new AbortController();
     setLoading(true);
     setListError("");
@@ -58,7 +61,11 @@ export function MembersScreen({ initial }: { initial: Directory }) {
         const result = await response.json();
         if (!response.ok)
           throw new Error(result.error?.message ?? "Could not load members.");
-        if (controller.signal.aborted) return;
+        if (
+          controller.signal.aborted ||
+          window.location.pathname !== "/members"
+        )
+          return;
         setData(result.data);
         setReloadRequired(false);
         window.history.replaceState(

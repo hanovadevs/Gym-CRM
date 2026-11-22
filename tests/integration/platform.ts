@@ -174,9 +174,9 @@ try {
   });
   assert.equal(data.total, 1);
   assert.equal(data.gyms[0].staff, 1);
-  assert.equal(data.gyms[0].email,payload.email);
-  assert.equal(data.gyms[0].phone,payload.phone);
-  assert.equal(data.gyms[0].address,payload.address);
+  assert.equal(data.gyms[0].email, payload.email);
+  assert.equal(data.gyms[0].phone, payload.phone);
+  assert.equal(data.gyms[0].address, payload.address);
   assert.ok(data.events.some((e) => e.action === "gym.created"));
   assert.ok(!JSON.stringify(data).includes(payload.password));
   const freshOwner = await login(payload.ownerEmail, payload.password);

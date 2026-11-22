@@ -71,6 +71,8 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           : "-";
       }
       function heading(continued = false) {
+        const title = i.status === "void" ? "VOID INVOICE" : "INVOICE";
+        const titleSize = continued ? 16 : i.status === "void" ? 20 : 24;
         text(
           data.issuer.name,
           44,
@@ -81,19 +83,20 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           "#253C58",
         );
         text(
-          i.status === "void" ? "VOID INVOICE" : "INVOICE",
+          title,
           390,
           46,
           161,
-          continued ? 16 : 24,
+          titleSize,
           true,
           "#1E2937",
           "right",
         );
-        text(i.number!, 350, 82, 201, 10, true, "#253C58", "right");
+        const numberY = Math.max(82, 46 + height(title, 161, titleSize, true) + 10);
+        text(i.number!, 350, numberY, 201, 10, true, "#253C58", "right");
         if (continued)
           return Math.max(
-            111,
+            numberY + 29,
             44 + height(data.issuer.name, 330, 15, true) + 15,
           );
         let y = Math.max(85, 44 + height(data.issuer.name, 330, 23, true) + 12);
@@ -104,7 +107,7 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
           text(v, 44, y, 300, 9, false, "#526276");
           y += height(v, 300, 9) + 5;
         }
-        y = Math.max(y + 22, 135);
+        y = Math.max(y + 22, numberY + 42, 135);
         text("BILL TO", 44, y, 290, 8, true, "#526276");
         text("ISSUED", 365, y, 90, 8, true, "#526276");
         text("DUE", 460, y, 91, 8, true, "#526276");
@@ -234,7 +237,9 @@ export function invoicePdf(data: InvoiceDetail): Promise<Buffer> {
       );
       y += 69;
       const note =
-        "This invoice records a charge. It is not proof of payment. Payment collection and paid receipts are separate.";
+        i.status === "void"
+          ? "This invoice has been voided. Its original amount is shown for reference; no payment is due."
+          : "This invoice records a charge. It is not proof of payment. Payment collection and paid receipts are separate.";
       const fh = height(note, W, 9) + height(data.issuer.footer, W, 9) + 20;
       if (y + fh > 744) {
         doc.addPage();

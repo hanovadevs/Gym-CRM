@@ -41,16 +41,14 @@ async function loginCookies(key: string, email: string, password: string) {
 }
 async function session(page: Page, key: string) {
   await page.context().clearCookies();
-  await page
-    .context()
-    .addCookies(
-      cookies[key].map((c) => ({
-        ...c,
-        url: base,
-        httpOnly: true,
-        sameSite: "Lax" as const,
-      })),
-    );
+  await page.context().addCookies(
+    cookies[key].map((c) => ({
+      ...c,
+      url: base,
+      httpOnly: true,
+      sameSite: "Lax" as const,
+    })),
+  );
 }
 test.beforeAll(async () => {
   await admin.connect();
@@ -158,7 +156,9 @@ test("new gym safely replays a lost response; manage suspension, activity and re
   await page.getByRole("button", { name: "Create gym", exact: true }).click();
   const drawer = page.getByRole("dialog");
   await drawer.getByLabel("Gym name", { exact: true }).fill(name);
-  await drawer.getByLabel("Gym email",{exact:true}).fill("contact@example.invalid");
+  await drawer
+    .getByLabel("Gym email", { exact: true })
+    .fill("contact@example.invalid");
   await drawer.getByLabel("Gym contact number").fill("03001234567");
   await drawer.getByLabel("Gym address").fill("Lahore test gym address");
   await drawer.getByLabel("Gym slug").fill(slug);
@@ -228,11 +228,9 @@ test("new gym safely replays a lost response; manage suspension, activity and re
     drawer.getByRole("heading", { name: "Workspace saved" }),
   ).toBeVisible();
   await drawer.getByRole("button", { name: "Done", exact: true }).click();
-  const row = page
-    .getByRole("row")
-    .filter({
-      has: page.getByRole("button", { name: `Manage ${name}`, exact: true }),
-    });
+  const row = page.getByRole("row").filter({
+    has: page.getByRole("button", { name: `Manage ${name}`, exact: true }),
+  });
   await expect(row.getByText("Suspended", { exact: true })).toBeVisible();
   await loginCookies("new-owner", ownerEmail, ownerPassword);
   await session(page, "new-owner");

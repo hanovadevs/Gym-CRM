@@ -15,8 +15,14 @@ if (
   !process.env.APP_URL
 )
   throw new Error("Missing administrative setup configuration");
-if (!['localhost', '127.0.0.1', '[::1]'].includes(new URL(process.env.MIGRATION_DATABASE_URL).hostname))
-  throw new Error("Local owner bootstrap requires a local database. Use the platform console for hosted gym provisioning.");
+if (
+  !["localhost", "127.0.0.1", "[::1]"].includes(
+    new URL(process.env.MIGRATION_DATABASE_URL).hostname,
+  )
+)
+  throw new Error(
+    "Local owner bootstrap requires a local database. Use the platform console for hosted gym provisioning.",
+  );
 const client = new pg.Client({
   connectionString: process.env.MIGRATION_DATABASE_URL,
 });

@@ -35,5 +35,5 @@ export default async function MembersPage({
     }
     throw error;
   }
-  return <MembersScreen initial={initial} />;
+  return <MembersScreen key={initial.requestId} initial={initial} />;
 }

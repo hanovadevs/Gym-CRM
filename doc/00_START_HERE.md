@@ -27,6 +27,7 @@ The product helps gym owners and reception staff manage members, fees, membershi
 | [17_CODEX_PROMPTS.md](17_CODEX_PROMPTS.md) | Start, continue, audit, migration prompts |
 | [18_SUPABASE_MIGRATION.md](18_SUPABASE_MIGRATION.md) | Rehearsal, validation, cutover, rollback |
 | [19_REFERENCE_INDEX.md](19_REFERENCE_INDEX.md) | UI image mapping and technical sources |
+| [20_SCOPE_AUDIT.md](20_SCOPE_AUDIT.md) | Current full-scope acceptance audit and remaining work |
 
 Place `AGENTS.md` at the repository root so Codex discovers instructions for all code. A file only inside `doc/` would not automatically guide edits elsewhere.
 

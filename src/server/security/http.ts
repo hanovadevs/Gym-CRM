@@ -22,13 +22,17 @@ export function accessFailure(error: unknown) {
   console.error("Protected operation failed", {
     requestId,
     code:
-      error instanceof Error && "code" in error && typeof error.code === "string" && /^[A-Z0-9_]{3,40}$/.test(error.code)
+      error instanceof Error &&
+      "code" in error &&
+      typeof error.code === "string" &&
+      /^[A-Z0-9_]{3,40}$/.test(error.code)
         ? error.code
         : "DEPENDENCY_ERROR",
     category:
       error instanceof Error && /timeout/i.test(error.message)
         ? "timeout"
-        : error instanceof Error && error.message === "Unsafe database runtime role"
+        : error instanceof Error &&
+            error.message === "Unsafe database runtime role"
           ? "runtime_role"
           : "dependency",
   });

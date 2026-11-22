@@ -77,7 +77,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
               </Link>
             ) : null}
           </Form>
-          <Table caption="Persisted gym workspaces">
+          <Table caption="Gym directory">
             <thead>
               <tr>
                 <th>Gym</th>
@@ -372,9 +372,32 @@ function GymEditor({
                 maxLength={100}
               />
             </label>
-            <label>Gym email<input name="email" type="email" defaultValue={creating?"":gym.email}/></label>
-            <label>Gym contact number<input name="phone" type="tel" maxLength={40} defaultValue={creating?"":gym.phone}/></label>
-            <label>Gym address<textarea name="address" maxLength={500} rows={3} defaultValue={creating?"":gym.address}/></label>
+            <label>
+              Gym email
+              <input
+                name="email"
+                type="email"
+                defaultValue={creating ? "" : gym.email}
+              />
+            </label>
+            <label>
+              Gym contact number
+              <input
+                name="phone"
+                type="tel"
+                maxLength={40}
+                defaultValue={creating ? "" : gym.phone}
+              />
+            </label>
+            <label>
+              Gym address
+              <textarea
+                name="address"
+                maxLength={500}
+                rows={3}
+                defaultValue={creating ? "" : gym.address}
+              />
+            </label>
             {creating ? (
               <>
                 <label>
