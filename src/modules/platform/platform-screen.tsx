@@ -10,6 +10,7 @@ import type { PlatformData, PlatformGym } from "./service";
 export function PlatformScreen({ initial }: { initial: PlatformData }) {
   const [data, setData] = useState(initial),
     [editing, setEditing] = useState<PlatformGym | "new" | null>(null),
+    [accessChange, setAccessChange] = useState<boolean | undefined>(),
     [inspecting, setInspecting] = useState<PlatformGym | null>(null),
     [refreshing, setRefreshing] = useState(false),
     [refreshError, setRefreshError] = useState("");
@@ -197,10 +198,24 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                       <div className="platform-row-actions">
                         <button
                           className="text-action"
-                          onClick={() => setEditing(gym)}
+                          onClick={() => {
+                            setAccessChange(undefined);
+                            setEditing(gym);
+                          }}
                           aria-label={`Manage ${gym.name}`}
                         >
                           Manage
+                        </button>
+                        <Link href={"/admin/gyms/" + gym.id}>Analytics</Link>
+                        <button
+                          className="text-action"
+                          onClick={() => {
+                            setAccessChange(!gym.active);
+                            setEditing(gym);
+                          }}
+                          aria-label={`${gym.active ? "Suspend" : "Reactivate"} ${gym.name}`}
+                        >
+                          {gym.active ? "Suspend" : "Reactivate"}
                         </button>
                         <Link
                           href={href({
@@ -357,12 +372,25 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
               <button
                 className="primary"
                 onClick={() => {
+                  setAccessChange(undefined);
                   setEditing(inspecting);
                   setInspecting(null);
                 }}
               >
                 Manage workspace
               </button>
+              <button
+                onClick={() => {
+                  setAccessChange(!inspecting.active);
+                  setEditing(inspecting);
+                  setInspecting(null);
+                }}
+              >
+                {inspecting.active ? "Suspend gym" : "Reactivate gym"}
+              </button>
+              <Link href={"/admin/gyms/" + inspecting.id}>
+                View gym analytics
+              </Link>
               <Link
                 href={
                   href({
@@ -381,7 +409,11 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
       {editing ? (
         <GymEditor
           gym={editing}
-          onClose={() => setEditing(null)}
+          accessChange={accessChange}
+          onClose={() => {
+            setEditing(null);
+            setAccessChange(undefined);
+          }}
           refresh={async () => {
             const response = await fetch(
               href({}).replace("/admin?", "/api/platform?"),
@@ -401,10 +433,12 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
 }
 function GymEditor({
   gym,
+  accessChange,
   onClose,
   refresh,
 }: {
   gym: PlatformGym | "new";
+  accessChange?: boolean;
   onClose: () => void;
   refresh: () => Promise<void>;
 }) {
@@ -417,7 +451,15 @@ function GymEditor({
     [retry, setRetry] = useState<Record<string, unknown> | null>(null);
   return (
     <Drawer
-      title={creating ? "Create gym workspace" : "Manage gym workspace"}
+      title={
+        creating
+          ? "Create gym workspace"
+          : accessChange === false
+            ? "Suspend gym workspace"
+            : accessChange === true
+              ? "Reactivate gym workspace"
+              : "Manage gym workspace"
+      }
       onClose={onClose}
       busy={pending}
     >
@@ -427,6 +469,7 @@ function GymEditor({
             title="Workspace saved"
             help="The gym change and its audit record were committed together. No email was sent automatically."
           />
+
           <p>
             {creating
               ? "The gym and owner account are ready. Share the initial credentials securely; the owner can use password recovery to choose another password."
@@ -522,6 +565,14 @@ function GymEditor({
                 : "Suspension retains all records and staff assignments. Reactivation restores access for staff who still have active membership and branch grants."
             }
           />
+          {accessChange !== undefined ? (
+            <p className="analytics-notice">
+              {accessChange
+                ? "Confirm reactivation to restore access for staff whose memberships and branch grants remain active."
+                : "Confirm suspension to block all gym staff operations, including existing sessions on their next request. Member, invoice and payment records will be retained. Membership dates continue unchanged."}{" "}
+              Add a reason before confirming.
+            </p>
+          ) : null}
           <fieldset disabled={pending || !!retry || reload}>
             <label>
               Gym name
@@ -603,11 +654,19 @@ function GymEditor({
               </>
             ) : (
               <label>
+                {accessChange !== undefined ? (
+                  <input
+                    type="hidden"
+                    name="active"
+                    value={String(accessChange)}
+                  />
+                ) : null}
                 Workspace access
                 <select
                   name="active"
                   aria-label="Workspace access"
-                  defaultValue={String(gym.active)}
+                  disabled={accessChange !== undefined}
+                  defaultValue={String(accessChange ?? gym.active)}
                 >
                   <option value="true">Active</option>
                   <option value="false">Suspended</option>
@@ -645,7 +704,11 @@ function GymEditor({
                   ? "Retry saved request"
                   : creating
                     ? "Create gym and owner"
-                    : "Save workspace"}
+                    : accessChange === false
+                      ? "Confirm suspension"
+                      : accessChange === true
+                        ? "Confirm reactivation"
+                        : "Save workspace"}
             </button>
           )}
         </form>

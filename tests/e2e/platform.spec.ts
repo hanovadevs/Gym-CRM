@@ -106,6 +106,115 @@ test.afterAll(async () => {
   await pool.end();
   await admin.end();
 });
+
+test("platform analytics reconcile saved records with scoped filters and responsive layouts", async ({
+  page,
+}) => {
+  test.setTimeout(120000);
+  await session(page, "owner");
+  const today = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Karachi",
+    }),
+    categoryId = randomUUID();
+  const requestHeaders = { origin: base };
+  expect(
+    (
+      await page.request.get("/api/platform/analytics?organizationId=" + f.orgA)
+    ).status(),
+  ).toBe(403);
+  expect(
+    (
+      await page.request.post("/api/expenses/categories", {
+        headers: requestHeaders,
+        data: {
+          organizationId: f.orgA,
+          operation: "create",
+          id: categoryId,
+          name: "Analytics test operations",
+          reason: "Isolated browser analytics check",
+        },
+      })
+    ).status(),
+  ).toBe(200);
+  expect(
+    (
+      await page.request.post("/api/expenses", {
+        headers: requestHeaders,
+        data: {
+          organizationId: f.orgA,
+          branchId: f.a1,
+          categoryId,
+          description: "Browser analytics source expense",
+          payee: "Service vendor",
+          amountMinor: "10000",
+          currency: "PKR",
+          paidOn: today,
+          method: "cash",
+          reference: "",
+          requestKey: randomUUID(),
+        },
+      })
+    ).status(),
+  ).toBe(200);
+  await session(page, "admin");
+  const errors: string[] = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  const q = new URLSearchParams({
+    organizationId: f.orgA,
+    from: today,
+    to: today,
+  });
+  const result = await page.request.get("/api/platform/analytics?" + q);
+  expect(result.status()).toBe(200);
+  const analytics = (await result.json()).data;
+  expect(analytics.finances[0].netExpenseMinor).toBe("10000");
+  expect(analytics.finances[0].netCashMinor).toBe("-10000");
+  expect(analytics.daily).toHaveLength(1);
+  expect(
+    (
+      await page.request.get(
+        "/api/platform/analytics?" + q + "&branchId=" + f.b1,
+      )
+    ).status(),
+  ).toBe(404);
+  await page.goto("/admin/gyms/" + f.orgA + "?from=" + today + "&to=" + today);
+  await expect(
+    page.getByRole("heading", { name: "Scope Gym A", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Financial overview", exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".analytics-finance")).toContainText("100.00");
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (width <= 960)
+      for (const table of await page.locator(".table-scroll").all())
+        expect(
+          await table.evaluate((el) => el.scrollWidth <= el.clientWidth),
+        ).toBe(true);
+    await page.screenshot({
+      path: `doc/evidence/platform-analytics-${width}.png`,
+      fullPage: true,
+    });
+  }
+  await page.getByLabel("Branch", { exact: true }).selectOption(f.a2);
+  await page
+    .getByRole("button", { name: "Update analytics", exact: true })
+    .click();
+  await page.waitForURL((url) => url.searchParams.get("branchId") === f.a2);
+  await expect(
+    page.getByText(
+      "No financial postings or outstanding balances for these filters.",
+      { exact: true },
+    ),
+  ).toBeVisible();
+  expect(errors).toEqual([]);
+});
 test("platform login routes to console; owner, anonymous, cross-origin and revoked grants are denied", async ({
   page,
 }) => {
@@ -236,14 +345,20 @@ test("new gym safely replays a lost response; manage suspension, activity and re
     });
   }
   await page
-    .getByRole("button", { name: `Manage ${name}`, exact: true })
+    .getByRole("button", { name: `Suspend ${name}`, exact: true })
     .click();
-  await drawer
-    .getByLabel("Workspace access", { exact: true })
-    .selectOption("false");
+  await expect(
+    drawer.getByRole("heading", { name: "Suspend gym workspace", exact: true }),
+  ).toBeVisible();
+  await expect(
+    drawer.getByLabel("Workspace access", { exact: true }),
+  ).toHaveValue("false");
+  await expect(
+    drawer.getByLabel("Workspace access", { exact: true }),
+  ).toBeDisabled();
   await drawer.getByLabel("Reason").fill("Paused until onboarding is complete");
   await drawer
-    .getByRole("button", { name: "Save workspace", exact: true })
+    .getByRole("button", { name: "Confirm suspension", exact: true })
     .click();
   await expect(
     drawer.getByRole("heading", { name: "Workspace saved" }),
@@ -259,14 +374,20 @@ test("new gym safely replays a lost response; manage suspension, activity and re
   await session(page, "admin");
   await page.goto("/admin");
   await page
-    .getByRole("button", { name: `Manage ${name}`, exact: true })
+    .getByRole("button", { name: `Reactivate ${name}`, exact: true })
     .click();
-  await drawer
-    .getByLabel("Workspace access", { exact: true })
-    .selectOption("true");
+  await expect(
+    drawer.getByRole("heading", {
+      name: "Reactivate gym workspace",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    drawer.getByLabel("Workspace access", { exact: true }),
+  ).toHaveValue("true");
   await drawer.getByLabel("Reason").fill("Onboarding complete; restore access");
   await drawer
-    .getByRole("button", { name: "Save workspace", exact: true })
+    .getByRole("button", { name: "Confirm reactivation", exact: true })
     .click();
   await expect(
     drawer.getByRole("heading", { name: "Workspace saved" }),

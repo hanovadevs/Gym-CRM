@@ -7,6 +7,15 @@ import { bootstrapPlatformAdmin } from "../../src/server/platform/bootstrap";
 import { createPlatformService } from "../../src/modules/platform/service";
 import { createSecurity } from "../../src/server/security/service";
 import { securityFixture } from "../helpers/security-fixture";
+import { createMembersService } from "../../src/modules/members/service";
+import { createBillingService } from "../../src/modules/billing/service";
+import { createPaymentsService } from "../../src/modules/payments/service";
+import { createCorrectionsService } from "../../src/modules/billing/corrections";
+import { createExpensesService } from "../../src/modules/expenses/service";
+import { createAttendanceService } from "../../src/modules/attendance/service";
+import { createPlansService } from "../../src/modules/plans/service";
+import { createMembershipsService } from "../../src/modules/memberships/service";
+import { todayInZone, previousDay } from "../../src/modules/plans/format";
 config({ path: ".env.local", quiet: true });
 for (const key of ["TEST_DATABASE_URL", "TEST_MIGRATION_DATABASE_URL"])
   if (new URL(process.env[key]!).pathname !== "/gym_test")
@@ -101,6 +110,49 @@ try {
   );
   await deny(() => service.get(new Headers(), {}), "UNAUTHENTICATED");
   await deny(() => service.get(owner, {}), "FORBIDDEN");
+  await deny(
+    () => service.analytics(new Headers(), { organizationId: f.orgA }),
+    "UNAUTHENTICATED",
+  );
+  await deny(
+    () => service.analytics(owner, { organizationId: f.orgA }),
+    "FORBIDDEN",
+  );
+  const emptyAnalytics = await service.analytics(headers, {
+    organizationId: f.orgA,
+  });
+  assert.equal(emptyAnalytics.members.total, 0);
+  assert.deepEqual(emptyAnalytics.finances, []);
+  await deny(
+    () => service.analytics(headers, { organizationId: randomUUID() }),
+    "NOT_FOUND",
+  );
+  await deny(
+    () =>
+      service.analytics(headers, { organizationId: f.orgA, branchId: f.b1 }),
+    "NOT_FOUND",
+  );
+  await deny(
+    () =>
+      service.analytics(headers, {
+        organizationId: f.orgA,
+        from: "2020-01-01",
+      }),
+    "VALIDATION_ERROR",
+  );
+  await deny(
+    () =>
+      service.analytics(headers, {
+        organizationId: f.orgA,
+        from: "2026-02-30",
+      }),
+    "VALIDATION_ERROR",
+  );
+  await deny(
+    () =>
+      service.analytics(headers, { organizationId: f.orgA, extra: "invalid" }),
+    "VALIDATION_ERROR",
+  );
   assert.equal(await service.available(owner), false);
   const unsafePool = new pg.Pool({
     connectionString: process.env.TEST_MIGRATION_DATABASE_URL,
@@ -209,6 +261,224 @@ try {
     0,
     "Unique-slug failure must roll back the new auth account",
   );
+  // Reconcile independent persisted source workflows, including an old expense
+  // reversed today and currencies which must never be combined.
+  const today = todayInZone("Asia/Karachi"),
+    yesterday = previousDay(today),
+    org = { organizationId: f.orgA };
+  const members = createMembersService(security),
+    billing = createBillingService(security),
+    payments = createPaymentsService(security),
+    expenses = createExpensesService(security);
+  const m = await members.create(owner, {
+    ...org,
+    name: "Analytics member",
+    email: randomUUID() + "@example.invalid",
+    phone: "",
+    homeBranchId: f.a1,
+    joinedOn: today,
+    registrationKey: randomUUID(),
+  });
+  await members.create(owner, {
+    ...org,
+    name: "Other branch member",
+    email: randomUUID() + "@example.invalid",
+    phone: "",
+    homeBranchId: f.a2,
+    joinedOn: today,
+    registrationKey: randomUUID(),
+  });
+  const invoice = await billing.create(owner, {
+    ...org,
+    memberId: m.member.id,
+    values: {
+      description: "Analytics charge",
+      currency: "PKR",
+      dueOn: today,
+      lines: [
+        {
+          description: "Coaching",
+          quantity: 1,
+          unitMinor: 10000,
+          discountMinor: 0,
+        },
+      ],
+    },
+    requestKey: randomUUID(),
+    reason: "Analytics source reconciliation",
+  });
+  await billing.change(owner, invoice.invoiceId, {
+    ...org,
+    operation: "issue",
+    version: 1,
+    requestKey: randomUUID(),
+    reason: "Issue agreed charge",
+  });
+  const paid = await payments.record(owner, {
+    ...org,
+    invoiceId: invoice.invoiceId,
+    amountMinor: "4000",
+    expectedBalanceMinor: "10000",
+    currency: "PKR",
+    method: "cash",
+    paidOn: today,
+    reference: "",
+    note: "",
+    requestKey: randomUUID(),
+  });
+  await createCorrectionsService(security).record(owner, {
+    ...org,
+    invoiceId: invoice.invoiceId,
+    paymentId: paid.paymentId,
+    kind: "refund",
+    amountMinor: "1000",
+    expectedBalanceMinor: "6000",
+    currency: "PKR",
+    method: "cash",
+    cashOn: today,
+    reference: "Analytics refund",
+    reason: "Approved refund reconciliation",
+    requestKey: randomUUID(),
+  });
+  const categoryId = randomUUID();
+  await expenses.category(owner, {
+    ...org,
+    id: categoryId,
+    operation: "create",
+    name: "Analytics operations",
+    reason: "Source expense reconciliation",
+  });
+  const expense = {
+    ...org,
+    branchId: f.a1,
+    categoryId,
+    description: "Retained service expense",
+    payee: "Service vendor",
+    amountMinor: "2000",
+    currency: "PKR",
+    paidOn: yesterday,
+    method: "cash",
+    reference: "",
+    requestKey: randomUUID(),
+  };
+  const oldExpense = await expenses.post(owner, expense);
+  await expenses.reverse(owner, {
+    ...org,
+    expenseId: oldExpense.expenseId,
+    cashOn: today,
+    reason: "Correct service posting",
+    requestKey: randomUUID(),
+  });
+  await expenses.post(owner, {
+    ...expense,
+    amountMinor: "1000",
+    paidOn: today,
+    requestKey: randomUUID(),
+    replacesExpenseId: oldExpense.expenseId,
+  });
+  await admin.query("update gym.organizations set currency='USD' where id=$1", [
+    f.orgA,
+  ]);
+  await expenses.post(owner, {
+    ...expense,
+    amountMinor: "500",
+    paidOn: today,
+    currency: "USD",
+    requestKey: randomUUID(),
+  });
+  await admin.query("update gym.organizations set currency='PKR' where id=$1", [
+    f.orgA,
+  ]);
+  await createAttendanceService(security).record(owner, {
+    ...org,
+    branchId: f.a1,
+    memberId: m.member.id,
+    operation: "check_in",
+    overrideReason: "Approved single-visit analytics fixture",
+    requestKey: randomUUID(),
+  });
+  const freePlan = await createPlansService(security).create(owner, {
+    ...org,
+    branchId: f.a1,
+    code: "ANALYTICS-FREE",
+    values: {
+      name: "Seven day access",
+      amountMinor: 0,
+      currency: "PKR",
+      durationCount: 7,
+      durationUnit: "days",
+      accessMode: "home_branch",
+      gymFloor: true,
+      classes: false,
+      personalTraining: false,
+    },
+    requestKey: randomUUID(),
+    reason: "Current membership analytics source",
+  });
+  await createMembershipsService(security).enroll(owner, m.member.id, {
+    ...org,
+    mode: "enroll",
+    memberVersion: (await admin.query('select version from gym.members where id=$1',[m.member.id])).rows[0].version,
+    planVersionId: freePlan.versionId,
+    startOn: today,
+    requestKey: randomUUID(),
+    reason: "Analytics effective term check",
+  });
+  const analytics = await service.analytics(headers, {
+    ...org,
+    from: today,
+    to: today,
+  });
+  assert.equal(analytics.members.total, 2);
+  assert.equal(analytics.members.newRegistrations, 2);
+  assert.equal(analytics.members.currentTerms, 1);
+  assert.equal(analytics.members.renewals, 1);
+  assert.equal(analytics.attendance.visits, 1);
+  assert.equal(analytics.attendance.inside, 1);
+  assert.equal(analytics.attendance.uniqueVisitors, 1);
+  assert.equal(analytics.attendance.averageSeconds, null);
+  assert.equal(analytics.daily.length, 1);
+  assert.equal(analytics.daily[0].registrations, 2);
+  assert.equal(analytics.daily[0].visits, 1);
+  assert.deepEqual(
+    analytics.finances.find((f) => f.currency === "PKR"),
+    {
+      currency: "PKR",
+      receivedMinor: "4000",
+      refundedMinor: "1000",
+      netCollectedMinor: "3000",
+      postedExpenseMinor: "1000",
+      reversedExpenseMinor: "2000",
+      netExpenseMinor: "-1000",
+      netCashMinor: "4000",
+      outstandingMinor: "7000",
+      overdueMinor: "0",
+      invoicedMinor: "10000",
+    },
+  );
+  assert.equal(
+    analytics.finances.find((f) => f.currency === "USD")!.netCashMinor,
+    "-500",
+  );
+  assert.equal(
+    (
+      await service.analytics(headers, { ...org, from: yesterday, to: today })
+    ).finances.find((f) => f.currency === "PKR")!.netExpenseMinor,
+    "1000",
+  );
+  const otherBranch = await service.analytics(headers, {
+    ...org,
+    branchId: f.a2,
+  });
+  assert.equal(otherBranch.members.total, 1);
+  assert.equal(otherBranch.attendance.visits, 0);
+  assert.deepEqual(otherBranch.finances, []);
+  assert.equal(
+    (await service.analytics(headers, { organizationId: f.orgB })).members
+      .total,
+    0,
+  );
+  assert.ok(!JSON.stringify(analytics).includes(m.member.name));
   const update = {
     operation: "update",
     organizationId: f.orgA,
@@ -220,6 +490,11 @@ try {
   };
   const suspended = await service.save(headers, update);
   assert.equal(suspended.version, 2);
+  assert.equal(
+    (await service.analytics(headers, org)).organization.active,
+    false,
+  );
+  assert.equal((await service.analytics(headers, org)).members.total, 2);
   await deny(
     () => security.workspace(owner, { organizationId: f.orgA }),
     "NOT_FOUND",
@@ -255,6 +530,7 @@ try {
     [platformUserId],
   );
   await deny(() => service.get(headers, {}), "FORBIDDEN");
+  await deny(() => service.analytics(headers, org), "FORBIDDEN");
   await deny(() => service.save(headers, payload), "FORBIDDEN");
   await admin.query(
     "update platform.administrators set active=true where user_id=$1",
@@ -266,6 +542,11 @@ try {
       (await c.query("select count(*)::int n from platform.events")).rows[0].n,
       0,
       "Platform context must clear after pooled operation",
+    );
+    assert.equal(
+      (await c.query("select count(*)::int n from gym.members")).rows[0].n,
+      0,
+      "Analytics tenant context must clear after transaction",
     );
     await assert.rejects(
       c.query("select * from platform.administrators"),

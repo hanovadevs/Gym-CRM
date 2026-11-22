@@ -80,6 +80,7 @@ try {
     ["/api/attendance", "POST", {organizationId:org,branchId:org,memberId:org,requestKey:org,operation:"check_in"}],
     [`/api/members/${org}/access-code`, "POST", {organizationId:org}],
     ["/api/platform", "GET"],
+    ["/api/platform/analytics", "GET"],
     ["/api/platform", "POST", {}],
     [`/api/invoices/${org}/corrections`,"POST",{organizationId:org,invoiceId:org,requestKey:org,kind:"credit",amountMinor:"1",expectedBalanceMinor:"1",currency:"PKR",cashOn:"2026-11-21",reason:"Anonymous correction guard"}],
     [`/api/payments?organizationId=${org}`,"GET"],
@@ -275,7 +276,7 @@ try {
     assert.equal(result.headers.get("cache-control"), "no-store");
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
-  for (const path of ["/workspace", "/members", "/settings", "/plans", "/payments"]) {
+  for (const path of ["/workspace", "/members", "/settings", "/plans", "/payments", "/admin/gyms/00000000-0000-4000-8000-000000000001"]) {
     const protectedPage = await fetch("http://127.0.0.1:3200" + path);
     // Next inserts a meta redirect when the loading boundary has already streamed.
     assert.ok(

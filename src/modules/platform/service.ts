@@ -5,6 +5,7 @@ import type { Pool, PoolClient } from "pg";
 import { AccessError } from "@/server/security/errors";
 import { BusinessError } from "@/server/errors";
 import { settingsFields } from "@/modules/settings/schemas";
+import { readGymAnalytics } from "./analytics";
 const contact = {
   email: settingsFields.shape.email,
   phone: settingsFields.shape.phone,
@@ -344,5 +345,11 @@ export function createPlatformService(
       throw error;
     });
   }
-  return { available, get, save };
+  async function analytics(headers: Headers, raw: unknown) {
+    return run(headers, async (db) => ({
+      ...(await readGymAnalytics(db, raw)),
+      requestId: randomUUID(),
+    }));
+  }
+  return { available, get, save, analytics };
 }
