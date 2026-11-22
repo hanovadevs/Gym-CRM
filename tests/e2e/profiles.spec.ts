@@ -471,7 +471,7 @@ test("staff invitation sends fixed-sender setup link and recipient chooses a pas
       .click();
     await expect(
       recipient.getByRole("heading", {
-        name: "Welcome, Invited Reception",
+        name: "Gym overview",
         exact: true,
       }),
     ).toBeVisible();

@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveTable } from "@/components/responsive-tables";
 import Link from "next/link";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -197,7 +198,7 @@ export function PaymentLedger({
           }
         >
           <div className="table-scroll">
-            <table className="payment-table">
+            <ResponsiveTable className="payment-table">
               <thead>
                 <tr>
                   <th>Receipt</th>
@@ -239,7 +240,7 @@ export function PaymentLedger({
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </ResponsiveTable>
           </div>
           {!data.payments.length ? (
             <p className="empty">

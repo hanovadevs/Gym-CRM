@@ -11,7 +11,7 @@ for (const width of [390, 768, 1280, 1440])
       /Good afternoon, Ali|Crown Fitness|286,500|Demo data/,
     );
   });
-test("root opens authenticated workspace rather than a fictional dashboard", async ({
+test("root opens the protected dashboard", async ({
   page,
 }) => {
   await page.goto("/");

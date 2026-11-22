@@ -64,11 +64,11 @@ test("real staff login persists across reload and logout revokes access", async 
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   expect((await loginResponse).status()).toBe(200);
   await expect(
-    page.getByRole("heading", { name: "Welcome, Browser Owner" }),
+    page.getByRole("heading", { name: "Gym overview" }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Welcome, Browser Owner" }),
+    page.getByRole("heading", { name: "Gym overview" }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await expect(page).toHaveURL(/sign-in/);

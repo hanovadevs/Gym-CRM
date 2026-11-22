@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveTable } from "@/components/responsive-tables";
 import { useEffect, useRef, useId } from "react";
 export function Drawer({
   title,
@@ -97,10 +98,10 @@ export function Table({
 }) {
   return (
     <div className="table-scroll">
-      <table>
+      <ResponsiveTable>
         <caption>{caption}</caption>
         {children}
-      </table>
+      </ResponsiveTable>
     </div>
   );
 }

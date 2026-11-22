@@ -17,6 +17,7 @@ export default async function Dashboard({
   } catch (error) {
     if (error instanceof AccessError || error instanceof BusinessError) {
       if (error.code === "UNAUTHENTICATED") redirect("/sign-in");
+      if (error.code === "FORBIDDEN") redirect("/workspace");
       return (
         <main className="setup access-state">
           <h1>Dashboard unavailable</h1>

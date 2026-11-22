@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveTable } from "@/components/responsive-tables";
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
@@ -290,7 +291,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
             {data.members.length ? (
               <>
                 <div className="table-scroll">
-                  <table>
+                  <ResponsiveTable>
                     <caption className="sr-only">Registered members</caption>
                     <thead>
                       <tr>
@@ -364,7 +365,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ResponsiveTable>
                 </div>
                 <div className="member-pagination">
                   <span>

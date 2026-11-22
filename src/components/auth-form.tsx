@@ -78,7 +78,7 @@ export function AuthForm({
                         : "Unable to sign in. Check your email and password.",
                   );
                 else {
-                  router.replace("/workspace");
+                  router.replace("/dashboard");
                   router.refresh();
                 }
               } else if (mode === "forgot") {

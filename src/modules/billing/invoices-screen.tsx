@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveTable } from "@/components/responsive-tables";
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
@@ -500,7 +501,7 @@ export function InvoicesScreen({
               aria-label="Invoice list"
             >
               <div className="table-scroll">
-                <table>
+                <ResponsiveTable>
                   <thead>
                     <tr>
                       <th>Invoice</th>
@@ -561,7 +562,7 @@ export function InvoicesScreen({
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                </ResponsiveTable>
               </div>
               {!data.invoices.length ? (
                 <div className="empty">

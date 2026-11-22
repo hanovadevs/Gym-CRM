@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, useSyncExternalStore } from "react";
 import { BrandMark } from "./brand";
 import { Drawer } from "./ui/primitives";
@@ -113,7 +114,18 @@ export function AppSidebar({
       ? [{ name: "Expenses", page: "expenses", href: "/expenses" }]
       : []),
   ];
-  const href = (path: string) => path + "?organizationId=" + organization.id;
+  const selection = useSearchParams();
+  const href = (path: string) => {
+    const query = new URLSearchParams({ organizationId: organization.id });
+    const branch = selection.get("branchId");
+    if (branch) query.set("branchId", branch);
+    return path + "?" + query.toString();
+  };
+  const primary = items.filter((i) =>
+    ["dashboard", "members", "attendance", "payments"].includes(i.page),
+  );
+  if (!primary.length) primary.push(items[0]);
+  const secondary = items.filter((i) => !primary.includes(i));
   function links(label: string) {
     return (
       <nav aria-label={label}>
@@ -170,7 +182,7 @@ export function AppSidebar({
         <Link
           className="app-brand"
           aria-label="Mojym"
-          href={href("/workspace")}
+          href={href(canReadBilling ? "/dashboard" : "/workspace")}
         >
           <span className="app-brand-symbol">
             <BrandMark />
@@ -216,33 +228,65 @@ export function AppSidebar({
           </button>
         </div>
       </aside>
-      <button
-        className="app-mobile-menu"
-        disabled={!hydrated}
-        aria-label="Menu"
-        aria-expanded={mobile}
-        aria-controls="mobile-app-navigation"
-        onClick={() => setMobile(true)}
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          aria-hidden="true"
+      <nav className="mobile-bottom-nav" aria-label="Primary navigation">
+        {primary.map((item) => (
+          <Link
+            key={item.page}
+            href={href(item.href)}
+            prefetch={true}
+            aria-label={item.name}
+            aria-current={active === item.page ? "page" : undefined}
+            onNavigate={() => setMobile(false)}
+          >
+            <Icon name={item.name} />
+            <span>{item.name}</span>
+          </Link>
+        ))}
+        <button
+          disabled={!hydrated}
+          aria-label="More"
+          aria-expanded={mobile}
+          aria-controls="mobile-app-navigation"
+          data-active={
+            secondary.some((i) => i.page === active) || active === "settings"
+          }
+          onClick={() => setMobile(true)}
         >
-          <path d="M4 6h16 M4 12h16 M4 18h16" />
-        </svg>
-      </button>
+          <svg
+            viewBox="0 0 24 24"
+            width="21"
+            height="21"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            aria-hidden="true"
+          >
+            <path d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+          <span>More</span>
+        </button>
+      </nav>
       {mobile ? (
         <Drawer
-          title="Navigation"
+          title="More navigation"
           className="app-nav-drawer"
           onClose={() => setMobile(false)}
         >
           <div id="mobile-app-navigation" className="app-mobile-links">
-            {links("Workspace navigation")}
+            <nav aria-label="Secondary navigation">
+              {secondary.map((item) => (
+                <Link
+                  key={item.page}
+                  href={href(item.href)}
+                  aria-label={item.name}
+                  aria-current={active === item.page ? "page" : undefined}
+                  onNavigate={() => setMobile(false)}
+                >
+                  <Icon name={item.name} />
+                  <span>{item.name}</span>
+                </Link>
+              ))}
+            </nav>
             {settings}
             <p className="app-mobile-gym">{organization.name}</p>
           </div>

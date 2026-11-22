@@ -1,4 +1,5 @@
 "use client";
+import { ResponsiveTable } from "@/components/responsive-tables";
 import Link from "next/link";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -453,7 +454,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                   </button>
                 </div>
                 <div className="table-scroll">
-                  <table>
+                  <ResponsiveTable>
                     <caption className="sr-only">Gym branches</caption>
                     <thead>
                       <tr>
@@ -483,7 +484,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ResponsiveTable>
                 </div>
               </section>
             ) : null}
@@ -506,7 +507,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                   </button>
                 </div>
                 <div className="table-scroll">
-                  <table>
+                  <ResponsiveTable>
                     <caption className="sr-only">Staff access</caption>
                     <thead>
                       <tr>
@@ -575,7 +576,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
                         </tr>
                       ))}
                     </tbody>
-                  </table>
+                  </ResponsiveTable>
                 </div>
                 <div className="staff-pagination">
                   <span>
