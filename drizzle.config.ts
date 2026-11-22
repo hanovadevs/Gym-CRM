@@ -15,6 +15,7 @@ export default defineConfig({
     "./src/server/db/training-schema.ts",
     "./src/server/db/payroll-schema.ts",
     "./src/server/db/class-schema.ts",
+    "./src/server/db/gym-account-schema.ts",
   ],
   out: "./drizzle",
   dialect: "postgresql",
