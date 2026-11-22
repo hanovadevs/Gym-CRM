@@ -8911,18 +8911,20 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "payroll_payments_organization_id_expense_id_expenses_organization_id_id_fk": {
-          "name": "payroll_payments_organization_id_expense_id_expenses_organization_id_id_fk",
+        "payroll_payments_expense_branch_fk": {
+          "name": "payroll_payments_expense_branch_fk",
           "tableFrom": "payroll_payments",
           "tableTo": "expenses",
           "schemaTo": "gym",
           "columnsFrom": [
             "organization_id",
-            "expense_id"
+            "expense_id",
+            "branch_id"
           ],
           "columnsTo": [
             "organization_id",
-            "id"
+            "id",
+            "branch_id"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

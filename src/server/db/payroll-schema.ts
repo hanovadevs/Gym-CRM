@@ -147,8 +147,8 @@ export const payrollPayments = gym.table(
       ],
     }),
     foreignKey({
-      columns: [t.organizationId, t.expenseId],
-      foreignColumns: [expenses.organizationId, expenses.id],
+      columns: [t.organizationId, t.expenseId, t.branchId],
+      foreignColumns: [expenses.organizationId, expenses.id, expenses.branchId],
     }),
     unique().on(t.organizationId, t.expenseId),
     index("payroll_charge_payment_idx").on(t.organizationId, t.chargeId),
