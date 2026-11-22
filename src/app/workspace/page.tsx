@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Form from "next/form";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSecurity } from "@/server/security";
@@ -48,6 +49,68 @@ export default async function Workspace({
     throw error;
   }
   const selected = (await searchParams).branchId;
+  const query = new URLSearchParams({
+    organizationId: workspace.organization.id,
+  });
+  if (typeof selected === "string" && selected) query.set("branchId", selected);
+  const destinations = [
+    {
+      action: "dashboard.read",
+      path: "/dashboard",
+      title: "Gym overview",
+      description: "Today’s attendance, collections and upcoming renewals.",
+      label: "Open dashboard",
+    },
+    {
+      action: "members.manage",
+      path: "/members",
+      title: "Members & memberships",
+      description:
+        "Register members, manage profiles and maintain their memberships.",
+      label: "Open members",
+    },
+    {
+      action: "attendance.manage",
+      path: "/attendance",
+      title: "Front desk",
+      description: "Check access, welcome members and manage visits.",
+      label: "Open attendance",
+    },
+    {
+      action: "billing.read",
+      path: "/payments",
+      title: "Payments & invoices",
+      description: "Review balances, record payments and download receipts.",
+      label: "Open payments",
+    },
+    {
+      action: "plans.read",
+      path: "/plans",
+      title: "Membership plans",
+      description: "Review the plans and benefits available at your gym.",
+      label: "Open plans",
+    },
+    {
+      action: "expenses.manage",
+      path: "/expenses",
+      title: "Expense ledger",
+      description:
+        "Record operating expenses and retain private receipt images.",
+      label: "Open expenses",
+    },
+    {
+      action: "settings.read",
+      path: "/settings",
+      title: "Gym settings",
+      description:
+        "Maintain gym preferences, branches and permitted staff settings.",
+      label: "Open settings",
+    },
+  ].filter((item) =>
+    workspace.actions.includes(
+      item.action as (typeof workspace.actions)[number],
+    ),
+  );
   return (
     <WorkspaceFrame
       organization={workspace.organization}
@@ -57,17 +120,25 @@ export default async function Workspace({
       canReadPlans={workspace.actions.includes("plans.read")}
       canReadBilling={workspace.actions.includes("billing.read")}
     >
-      <div className="secure-main">
-        <section className="page-heading">
+      <div className="secure-main workspace-home">
+        <section className="page-heading workspace-welcome">
           <div>
             <p className="eyebrow">{workspace.organization.name}</p>
             <h1>Welcome, {workspace.userName}</h1>
-            <p>Your staff workspace and access.</p>
+            <p>Everything you need to run your gym, in one place.</p>
+            <div className="workspace-context">
+              <span className="role-name">{workspace.role}</span>
+              <span>
+                {workspace.branches.length} permitted{" "}
+                {workspace.branches.length === 1 ? "branch" : "branches"}
+              </span>
+              <span>{workspace.organization.timeZone}</span>
+            </div>
           </div>
         </section>
         <div className="scope-selectors">
           {workspace.organizations.length > 1 ? (
-            <form action="/workspace">
+            <Form action="/workspace">
               <div className="field">
                 <label htmlFor="organization">Gym workspace</label>
                 <select
@@ -83,10 +154,10 @@ export default async function Workspace({
                 </select>
               </div>
               <button type="submit">Switch workspace</button>
-            </form>
+            </Form>
           ) : null}
           {workspace.availableBranches.length > 1 ? (
-            <form action="/workspace">
+            <Form action="/workspace">
               <input
                 type="hidden"
                 name="organizationId"
@@ -108,9 +179,38 @@ export default async function Workspace({
                 </select>
               </div>
               <button type="submit">Apply branch</button>
-            </form>
+            </Form>
           ) : null}
         </div>
+        <section className="workspace-launchpad">
+          <SectionTitle
+            title="Your workspace"
+            help="Open a workflow below. Available tools follow your current role and selected branch; every operation rechecks your access."
+          />
+          {destinations.length ? (
+            <div className="workspace-tools">
+              {destinations.map((item) => (
+                <Link
+                  key={item.path}
+                  href={item.path + "?" + query.toString()}
+                  className="workspace-tool"
+                >
+                  <h3>{item.title}</h3>
+                  <p>{item.description}</p>
+                  <span className="workspace-tool-link">
+                    {item.label}
+                    <span aria-hidden="true">→</span>
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="dashboard-empty">
+              Your role currently has no general management tools. Contact your
+              gym administrator to review your assigned access.
+            </p>
+          )}
+        </section>{" "}
         <div className="secure-grid">
           <section className="panel">
             <SectionTitle
@@ -141,50 +241,6 @@ export default async function Workspace({
             </ul>
           </section>
         </div>
-        <section className="panel workspace-next">
-          <SectionTitle
-            title="Your workspace"
-            help="Your session, gym and branch scope are connected to persisted records. Owners and managers can open settings. Other workflows become available as their modules are implemented."
-          />
-          <p>
-            {workspace.actions.includes("settings.read")
-              ? "Manage your gym preferences and permitted staff settings. "
-              : "Your workspace access is active. "}
-            Register and maintain members in your permitted branches. Membership
-            enrollment is available from member profiles. Record funds received
-            and share paid receipts from Payments.
-          </p>
-          {workspace.actions.includes("settings.read") ? (
-            <Link
-              className="text-action"
-              href={"/settings?organizationId=" + workspace.organization.id}
-            >
-              Open settings
-            </Link>
-          ) : null}
-          {workspace.actions.includes("members.manage") ? (
-            <Link
-              className="text-action workspace-members-link"
-              href={
-                "/members?organizationId=" +
-                workspace.organization.id +
-                (typeof selected === "string" && selected
-                  ? "&branchId=" + selected
-                  : "")
-              }
-            >
-              Open members
-            </Link>
-          ) : null}
-          {workspace.actions.includes("plans.read") ? (
-            <Link
-              className="text-action workspace-members-link"
-              href={"/plans?organizationId=" + workspace.organization.id}
-            >
-              Open plans
-            </Link>
-          ) : null}
-        </section>
       </div>
     </WorkspaceFrame>
   );

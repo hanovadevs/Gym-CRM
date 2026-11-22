@@ -199,6 +199,27 @@ test("new gym safely replays a lost response; manage suspension, activity and re
   await expect(
     page.getByRole("button", { name: `Manage ${name}`, exact: true }),
   ).toBeVisible();
+  await page.getByRole("button", { name: `View ${name}`, exact: true }).click();
+  await expect(
+    drawer.getByRole("heading", { name: "Gym workspace details", exact: true }),
+  ).toBeVisible();
+  await expect(
+    drawer.getByRole("heading", { name: "Gym contacts", exact: true }),
+  ).toBeVisible();
+  await expect(drawer).toContainText("Workspace footprint");
+  await drawer
+    .getByRole("button", { name: "Close drawer", exact: true })
+    .click();
+  const refreshed = page.waitForResponse(
+    (r) => r.url().includes("/api/platform") && r.request().method() === "GET",
+  );
+  await page
+    .getByRole("button", { name: "Refresh directory", exact: true })
+    .click();
+  expect((await refreshed).status()).toBe(200);
+  await expect(
+    page.getByRole("button", { name: "Refresh directory", exact: true }),
+  ).toBeEnabled();
   for (const width of [1440, 1280, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 });
     await expect(

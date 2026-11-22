@@ -9,7 +9,34 @@ import { Drawer, Table, Pill } from "@/components/ui/primitives";
 import type { PlatformData, PlatformGym } from "./service";
 export function PlatformScreen({ initial }: { initial: PlatformData }) {
   const [data, setData] = useState(initial),
-    [editing, setEditing] = useState<PlatformGym | "new" | null>(null);
+    [editing, setEditing] = useState<PlatformGym | "new" | null>(null),
+    [inspecting, setInspecting] = useState<PlatformGym | null>(null),
+    [refreshing, setRefreshing] = useState(false),
+    [refreshError, setRefreshError] = useState("");
+  async function reload() {
+    setRefreshing(true);
+    setRefreshError("");
+    try {
+      const response = await fetch(
+        href({}).replace("/admin?", "/api/platform?"),
+        { cache: "no-store" },
+      );
+      const result = await response.json();
+      if (!response.ok)
+        throw Error(
+          result.error?.message || "Unable to refresh the directory.",
+        );
+      setData(result.data);
+    } catch (error) {
+      setRefreshError(
+        error instanceof Error
+          ? error.message
+          : "Unable to refresh the directory.",
+      );
+    } finally {
+      setRefreshing(false);
+    }
+  }
   function href(changes: Record<string, string | number | undefined>) {
     const q: Record<string, string | number | undefined> = {
       search: data.search || undefined,
@@ -42,182 +69,315 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
         <span>Platform administration</span>
         <SignOut />
       </header>
-      <main className="platform-main">
-        <section className="page-heading">
-          <div>
-            <p className="eyebrow">{data.userName}</p>
-            <h1>Your gym network</h1>
-            <p>
-              Create workspaces, manage access and review recorded activity.
-            </p>
-          </div>
-          <button className="primary" onClick={() => setEditing("new")}>
-            Create gym
-          </button>
-        </section>
-        <section className="panel platform-directory">
-          <SectionTitle
-            title="Gym workspaces"
-            help="Each gym has isolated members, billing and staff. Suspending a gym blocks staff access while retaining its records. Platform access is granted separately from gym ownership."
-          />
-          <Form action="/admin" className="platform-search">
-            <label className="field">
-              Find a gym
-              <input
-                name="search"
-                defaultValue={data.search}
-                maxLength={100}
-                placeholder="Gym name or slug"
-              />
-            </label>
-            <button type="submit">Search</button>
-            {data.search ? (
-              <Link href="/admin" className="text-action">
-                Clear
-              </Link>
-            ) : null}
-          </Form>
-          <Table caption="Gym directory">
-            <thead>
-              <tr>
-                <th>Gym</th>
-                <th>Status</th>
-                <th>Members</th>
-                <th>Staff / branches</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.gyms.map((gym) => (
-                <tr key={gym.id}>
-                  <td>
-                    <strong>{gym.name}</strong>
-                    <small>{gym.slug}</small>
-                  </td>
-                  <td>
-                    <Pill tone={gym.active ? "success" : "warning"}>
-                      {gym.active ? "Active" : "Suspended"}
-                    </Pill>
-                  </td>
-                  <td>{gym.members}</td>
-                  <td>
-                    {gym.staff} / {gym.branches}
-                  </td>
-                  <td>
-                    <div className="platform-row-actions">
-                      <button
-                        className="text-action"
-                        onClick={() => setEditing(gym)}
-                        aria-label={`Manage ${gym.name}`}
-                      >
-                        Manage
-                      </button>
-                      <Link
-                        href={href({
-                          organizationId: gym.id,
-                          activityPage: undefined,
-                        })}
-                      >
-                        Activity
-                      </Link>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          {!data.gyms.length ? (
-            <p className="platform-empty">
-              {data.search
-                ? "No gyms match your search."
-                : "No gyms yet. Create the first workspace to get started."}
-            </p>
-          ) : null}
-          <nav className="member-pagination" aria-label="Gym pages">
-            <span>
-              {data.total} gyms · Page {data.page}
-            </span>
-            {data.page > 1 ? (
-              <Link href={href({ page: data.page - 1 })}>Previous</Link>
-            ) : null}
-            {data.page * 15 < data.total ? (
-              <Link href={href({ page: data.page + 1 })}>Next</Link>
-            ) : null}
+      <div className="platform-body">
+        <aside className="platform-rail" aria-label="Platform navigation">
+          <p className="eyebrow">Administration</p>
+          <nav>
+            <a href="#gym-directory">Gym workspaces</a>
+            <a href="#gym-activity">Recorded activity</a>
           </nav>
-        </section>
-        <section className="panel platform-activity">
-          <div className="platform-section-heading">
+          <section>
             <SectionTitle
-              title="Recorded activity"
-              help="Audited gym and platform changes, newest first. This is recorded application activity, not a live visitor tracker. Passwords, private note bodies and payment details are excluded."
+              title="Platform access"
+              help="Platform administrators manage workspace accounts. This does not grant access to a gym's private member profiles, notes or financial records."
             />
-            {data.organizationId ? (
-              <Link
-                href={href({
-                  organizationId: undefined,
-                  activityPage: undefined,
-                })}
+            <p>{data.userName}</p>
+            <span>Workspace administration</span>
+          </section>
+        </aside>
+        <main className="platform-main">
+          <section className="page-heading">
+            <div>
+              <p className="eyebrow">{data.userName}</p>
+              <h1>Your gym network</h1>
+              <p>
+                Create workspaces, manage access and review recorded activity.
+              </p>
+            </div>
+            <div className="platform-heading-actions">
+              <button
+                onClick={reload}
+                disabled={refreshing}
+                aria-busy={refreshing}
               >
-                Show all gyms
-              </Link>
-            ) : null}
-          </div>
-          <Table caption="Audited gym and platform activity">
-            <thead>
-              <tr>
-                <th>When</th>
-                <th>Gym / actor</th>
-                <th>Action</th>
-                <th>Reason</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.events.map((event) => (
-                <tr key={event.source + event.id}>
-                  <td>
-                    <time dateTime={event.occurredAt}>
-                      {new Date(event.occurredAt)
-                        .toISOString()
-                        .replace("T", " ")
-                        .slice(0, 16)}{" "}
-                      UTC
-                    </time>
-                  </td>
-                  <td>
-                    <strong>{event.gymName}</strong>
-                    <small>{event.actor}</small>
-                  </td>
-                  <td>
-                    <span>{event.action}</span>
-                    <small>{event.source}</small>
-                  </td>
-                  <td>{event.reason}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-          {!data.events.length ? (
-            <p className="platform-empty">
-              No recorded activity for this selection.
+                {refreshing ? "Refreshing…" : "Refresh directory"}
+              </button>
+              <button className="primary" onClick={() => setEditing("new")}>
+                Create gym
+              </button>
+            </div>
+          </section>
+          {refreshError ? (
+            <p role="alert" className="form-error">
+              {refreshError}
             </p>
           ) : null}
-          <nav className="member-pagination" aria-label="Activity pages">
-            <span>
-              {data.activityTotal} events · Page {data.activityPage}
-            </span>
-            {data.activityPage > 1 ? (
-              <Link href={href({ activityPage: data.activityPage - 1 })}>
-                Previous
-              </Link>
+          <div className="platform-overview">
+            <section className="panel">
+              <SectionTitle
+                title="Gym directory"
+                help="The number of gyms matching your current directory search, across every page."
+              />
+              <strong>{data.total}</strong>
+              <span>
+                {data.search
+                  ? "Workspaces matching your search"
+                  : "Registered gym workspaces"}
+              </span>
+            </section>
+            <section className="panel">
+              <SectionTitle
+                title="Activity history"
+                help="The total retained audit events for the selected gym, or all gyms when no activity filter is selected."
+              />
+              <strong>{data.activityTotal}</strong>
+              <span>
+                {data.organizationId
+                  ? "Events for selected workspace"
+                  : "Recorded events across your network"}
+              </span>
+            </section>
+          </div>
+          <section className="panel platform-directory" id="gym-directory">
+            <SectionTitle
+              title="Gym workspaces"
+              help="Each gym has isolated members, billing and staff. Suspending a gym blocks staff access while retaining its records. Platform access is granted separately from gym ownership."
+            />
+            <Form action="/admin" className="platform-search">
+              <label className="field">
+                Find a gym
+                <input
+                  name="search"
+                  defaultValue={data.search}
+                  maxLength={100}
+                  placeholder="Gym name or slug"
+                />
+              </label>
+              <button type="submit">Search</button>
+              {data.search ? (
+                <Link href="/admin" className="text-action">
+                  Clear
+                </Link>
+              ) : null}
+            </Form>
+            <Table caption="Gym directory">
+              <thead>
+                <tr>
+                  <th>Gym</th>
+                  <th>Status</th>
+                  <th>Active members</th>
+                  <th>Staff / branches</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.gyms.map((gym) => (
+                  <tr key={gym.id}>
+                    <td>
+                      <button
+                        className="platform-gym-name text-action"
+                        onClick={() => setInspecting(gym)}
+                        aria-label={`View ${gym.name}`}
+                      >
+                        {gym.name}
+                      </button>
+                      <small>{gym.slug}</small>
+                      {gym.email ? <small>{gym.email}</small> : null}
+                    </td>
+                    <td>
+                      <Pill tone={gym.active ? "success" : "warning"}>
+                        {gym.active ? "Active" : "Suspended"}
+                      </Pill>
+                    </td>
+                    <td>{gym.members}</td>
+                    <td>
+                      {gym.staff} / {gym.branches}
+                    </td>
+                    <td>
+                      <div className="platform-row-actions">
+                        <button
+                          className="text-action"
+                          onClick={() => setEditing(gym)}
+                          aria-label={`Manage ${gym.name}`}
+                        >
+                          Manage
+                        </button>
+                        <Link
+                          href={href({
+                            organizationId: gym.id,
+                            activityPage: undefined,
+                          })}
+                        >
+                          Activity
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            {!data.gyms.length ? (
+              <p className="platform-empty">
+                {data.search
+                  ? "No gyms match your search."
+                  : "No gyms yet. Create the first workspace to get started."}
+              </p>
             ) : null}
-            {data.activityPage * 20 < data.activityTotal ? (
-              <Link href={href({ activityPage: data.activityPage + 1 })}>
-                Next
-              </Link>
+            <nav className="member-pagination" aria-label="Gym pages">
+              <span>
+                {data.total} gyms · Page {data.page}
+              </span>
+              {data.page > 1 ? (
+                <Link href={href({ page: data.page - 1 })}>Previous</Link>
+              ) : null}
+              {data.page * 15 < data.total ? (
+                <Link href={href({ page: data.page + 1 })}>Next</Link>
+              ) : null}
+            </nav>
+          </section>
+          <section className="panel platform-activity" id="gym-activity">
+            <div className="platform-section-heading">
+              <SectionTitle
+                title="Recorded activity"
+                help="Audited gym and platform changes, newest first. This is recorded application activity, not a live visitor tracker. Passwords, private note bodies and payment details are excluded."
+              />
+              {data.organizationId ? (
+                <Link
+                  href={href({
+                    organizationId: undefined,
+                    activityPage: undefined,
+                  })}
+                >
+                  Show all gyms
+                </Link>
+              ) : null}
+            </div>
+            <Table caption="Audited gym and platform activity">
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Gym / actor</th>
+                  <th>Action</th>
+                  <th>Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.events.map((event) => (
+                  <tr key={event.source + event.id}>
+                    <td>
+                      <time dateTime={event.occurredAt}>
+                        {new Date(event.occurredAt)
+                          .toISOString()
+                          .replace("T", " ")
+                          .slice(0, 16)}{" "}
+                        UTC
+                      </time>
+                    </td>
+                    <td>
+                      <strong>{event.gymName}</strong>
+                      <small>{event.actor}</small>
+                    </td>
+                    <td>
+                      <span>{event.action}</span>
+                      <small>{event.source}</small>
+                    </td>
+                    <td>{event.reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            {!data.events.length ? (
+              <p className="platform-empty">
+                No recorded activity for this selection.
+              </p>
             ) : null}
-          </nav>
-        </section>
-      </main>
+            <nav className="member-pagination" aria-label="Activity pages">
+              <span>
+                {data.activityTotal} events · Page {data.activityPage}
+              </span>
+              {data.activityPage > 1 ? (
+                <Link href={href({ activityPage: data.activityPage - 1 })}>
+                  Previous
+                </Link>
+              ) : null}
+              {data.activityPage * 20 < data.activityTotal ? (
+                <Link href={href({ activityPage: data.activityPage + 1 })}>
+                  Next
+                </Link>
+              ) : null}
+            </nav>
+          </section>
+        </main>
+      </div>
+      {inspecting ? (
+        <Drawer
+          title="Gym workspace details"
+          onClose={() => setInspecting(null)}
+        >
+          <div className="platform-inspector">
+            <p className="eyebrow">{inspecting.slug}</p>
+            <h3>{inspecting.name}</h3>
+            <Pill tone={inspecting.active ? "success" : "warning"}>
+              {inspecting.active ? "Active" : "Suspended"}
+            </Pill>
+            <SectionTitle
+              title="Gym contacts"
+              help="Contact details maintained for this workspace. Owner credentials and private member data are never displayed here."
+            />
+            <dl>
+              <dt>Email</dt>
+              <dd>{inspecting.email || "Not provided"}</dd>
+              <dt>Phone</dt>
+              <dd>{inspecting.phone || "Not provided"}</dd>
+              <dt>Address</dt>
+              <dd>{inspecting.address || "Not provided"}</dd>
+              <dt>Created</dt>
+              <dd>
+                {new Date(inspecting.createdAt).toISOString().slice(0, 10)} UTC
+              </dd>
+            </dl>
+            <SectionTitle
+              title="Workspace footprint"
+              help="Non-archived member, active staff and active branch counts from the last directory refresh. This view does not enter the gym workspace."
+            />
+            <dl>
+              <dt>Active members</dt>
+              <dd>{inspecting.members}</dd>
+              <dt>Staff</dt>
+              <dd>{inspecting.staff}</dd>
+              <dt>Branches</dt>
+              <dd>{inspecting.branches}</dd>
+            </dl>
+            <p>
+              {inspecting.active
+                ? "Staff can sign in according to their assigned roles and branches."
+                : "Staff access is suspended. Existing records are retained."}
+            </p>
+            <div className="platform-heading-actions">
+              <button
+                className="primary"
+                onClick={() => {
+                  setEditing(inspecting);
+                  setInspecting(null);
+                }}
+              >
+                Manage workspace
+              </button>
+              <Link
+                href={
+                  href({
+                    organizationId: inspecting.id,
+                    activityPage: undefined,
+                  }) + "#gym-activity"
+                }
+                onClick={() => setInspecting(null)}
+              >
+                Review activity
+              </Link>
+            </div>
+          </div>
+        </Drawer>
+      ) : null}
       {editing ? (
         <GymEditor
           gym={editing}

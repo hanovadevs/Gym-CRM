@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 22 November 2026 (Asia/Karachi): PAY-03 and PLAT-01 verified. ATT-01 verified with full68 browser regression and production workflows; DASH-01 verified; EXP-01 verified with72 browser passes and production/native-image/hosted checks. SourceGYM, gym_test and hostedSupabase all30 matching migration entries. Remaining modules and production release are open.
+Updated 22 November 2026 (Asia/Karachi): PAY-03 and PLAT-01 verified. ATT-01 verified with full68 browser regression and production workflows; DASH-01 verified; EXP-01 verified with72 browser passes and production/native-image/hosted checks. SourceGYM/hostedSupabase30; isolatedgym_test33 during TRN-01 preparation. Remaining modules and production release are open.
 
 ## State rules
 
@@ -16,14 +16,14 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
 | M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | DONE | DONE | DONE | DONE | DONE | DASH-01 persisted branch/local-date aggregates, source reconciliation, browser/production/hosted verification; class feed added with CLS-01 |
-| M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | TRN-01 |
+| M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | IN_PROGRESS | NOT_STARTED | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
 | M09 | Classes & bookings | B | M08 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | CLS-01 |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
 | M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
 | M13 | Imports, exports & files | A | M03 + M05 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | Private expense images/adapter/cleanup verified with EXP-01; CSV preview/import and scoped exports remain IMP-01 |
 | M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | IN_PROGRESS | VERIFYING | VERIFYING | IN_PROGRESS | Hosted auth/config verified; restore/deployed/pilot and all remaining module gates open |
-| M15 | Platform administration | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | PLAT-01 console/contact fields/isolated provisioning/suspension/activity verified; retained Hanova setup remains DATA-01 |
+| M15 | Platform administration | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | PLAT-01 verified; retained Hanova core account/data now verified, trainer/class extensions remain DATA-01 |
 
 ## Evidence card template
 
@@ -196,3 +196,8 @@ ATT-01 evidence —22 November2026: migrations0026/0027 committed7acfb7d before ap
 DASH-01 evidence —22 November2026: existing tables, no new migration. src/modules/dashboard, protected /dashboard and /api/dashboard. Source/reconciliation tests integrated into test:attendance PASS;40 units/lint/typecheck PASS;10 focused browsers36.1s PASS; production build/anonymous27-bundle scan/authenticated dashboard+finance+attendance and local client navigation PASS. Hosted production build through actual Supabase pooler owner/admin sign-in/dashboardAPI/page/sourceempty metrics PASS (private .local/hosted-production-verification.json, no valued rows mutated). Four final dashboard widths opened/reviewed, captured doc/evidence/dashboard-live-*.png. Actual public attendance/owner/admin flows also verified76c7e0d; dashboard public code awaits new push. Classes and expense cash flow intentionally appear only when their real modules are implemented. Next EXP-01.
 
 EXP-01 evidence —22 November2026: reviewed schema0028/0029 committed31819f5 before application; sourceGYM/gym_test/Supabase30 hashes match. test:expenses PASS includes raw full reversal concurrency/FK/future-date/immutable grants, categories/replays/historical snapshots, private image content/type/pixel/size/role/branch/tenant guards, PNG+JPEG decode/EXIF removal, providerchecksum/storage/audit failure, actual isolated staged cleanup retention. Full72 browsers PASS3.9m;40 units/lint/typecheck/drift PASS. Production build30s compile, anonymous28-client-assets secret scan, actual protected nativeimage/expense/replay/reversal/replacement/netledger/receipt plus earlier finance/attendance/dashboard flow PASS. Hosted production build+Supabase ownerexpenseAPI/page empty records PASS; userdev3000 retained. Four responsive captures opened/reviewed, doc/evidence/expenses-live-*.png. No recurrence/paymentvendor automation/email. Next TRN-01 then CLS-01/LEAD-01, remaining RPT/IMP/release; no allscope completion claim.
+
+
+## PERF-02 / ADMIN-02 - workspace and platform improvements, 22 November 2026
+
+DONE for this bounded improvement slice: reuse request-local authorization records (four fewer workspace queries, no stale permission cache); platform directory/activity one roundtrip; role-aware Workspace workflow cards and client scope forms; midnight admin rail, scoped source counts, gym contacts/footprint inspector, refresh/error state and mobile directory cards. Actual restricted hosted-pooler comparison identicalDTO14 to10queries,5samples each afterwarmup, median3513 to2497ms from localhost (not production SLA). Full72 browsers3.7m;40units; security/platform/training integration; lint/typecheck/build; production401/clientsecret scan; actualSupabasepooler productionowner/admin and inspector checks PASS. Four responsive widths opened/reviewed; doc/evidence/workspace-*.png and platform-*.png. Further admin functionality and remaining CRM/release scope are not completed by this slice.

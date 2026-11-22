@@ -28,6 +28,14 @@ export async function securityFixture(
   > = {};
   async function cleanup() {
     for (const table of [
+      "schedule_requests",
+      "personal_sessions",
+      "schedule_slots",
+      "trainer_assignments",
+      "trainer_availability",
+      "trainer_branches",
+      "trainers",
+      "schedule_rooms",
       "expense_reversals",
       "expenses",
       "expense_categories",

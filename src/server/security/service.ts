@@ -54,6 +54,16 @@ export function createSecurity(
       db: PoolClient,
       scope: Scope,
       identity: NonNullable<Session>,
+      context: {
+        organizations: DirectoryRow[];
+        organization: {
+          id: string;
+          name: string;
+          currency: string;
+          time_zone: string;
+        };
+        branches: { id: string; name: string; code: string }[];
+      },
     ) => Promise<T>,
   ) {
     const identity = await session(headers);
@@ -98,7 +108,7 @@ export function createSecurity(
           ["gym-admin:" + chosen.organization_id],
         );
       const organization = await client.query(
-        "select active from gym.organizations where id=$1 for share",
+        "select id,name,currency,time_zone,active from gym.organizations where id=$1 for share",
         [chosen.organization_id],
       );
       if (!organization.rows[0]?.active) throw new AccessError("FORBIDDEN");
@@ -112,11 +122,11 @@ export function createSecurity(
       if (!can(role, action)) throw new AccessError("FORBIDDEN");
       const branches =
         role === "owner"
-          ? await client.query<{ id: string }>(
-              "select id from gym.branches where active=true order by id for share",
+          ? await client.query<{ id: string; name: string; code: string }>(
+              "select id,name,code from gym.branches where active=true order by id for share",
             )
-          : await client.query<{ id: string }>(
-              "select b.id from gym.branches b join gym.staff_branch_grants g on g.organization_id=b.organization_id and g.branch_id=b.id where g.staff_membership_id=$1 and b.active=true order by b.id for share of b,g",
+          : await client.query<{ id: string; name: string; code: string }>(
+              "select b.id,b.name,b.code from gym.branches b join gym.staff_branch_grants g on g.organization_id=b.organization_id and g.branch_id=b.id where g.staff_membership_id=$1 and b.active=true order by b.id for share of b,g",
               [chosen.membership_id],
             );
       const branchIds = branches.rows.map((row) => row.id);
@@ -134,7 +144,11 @@ export function createSecurity(
           selection.branchId ? [selection.branchId] : branchIds,
         ),
       });
-      const result = await operation(client, scope, identity);
+      const result = await operation(client, scope, identity, {
+        organizations: directory.rows,
+        organization: organization.rows[0],
+        branches: branches.rows,
+      });
       await client.query("COMMIT");
       return result;
     } catch (error) {
@@ -149,48 +163,26 @@ export function createSecurity(
       headers,
       selection,
       "workspace.read",
-      async (db, scope, identity) => {
-        const org = await db.query<{
-          id: string;
-          name: string;
-          currency: string;
-          time_zone: string;
-        }>(
-          "select id,name,currency,time_zone from gym.organizations where id=$1",
-          [scope.organizationId],
-        );
-        const branches = await db.query<{
-          id: string;
-          name: string;
-          code: string;
-        }>(
-          "select id,name,code from gym.branches where id=any($1::uuid[]) order by name,id",
-          [[...scope.branchIds]],
-        );
-        const availableBranches = await db.query<{
-          id: string;
-          name: string;
-          code: string;
-        }>(
-          "select id,name,code from gym.branches where id=any($1::uuid[]) order by name,id",
-          [[...scope.authorizedBranchIds]],
-        );
-        const directory = await db.query<DirectoryRow>(
-          "select * from gym.staff_directory($1)",
-          [identity.user.id],
+      async (_db, scope, identity, context) => {
+        // Reuse records already read and locked during this request's authorization.
+        // Nothing survives the request: revocations remain fresh on every operation.
+        const availableBranches = [...context.branches].sort(
+          (a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id),
         );
         return {
           userName: identity.user.name,
           organization: {
-            id: org.rows[0].id,
-            name: org.rows[0].name,
-            currency: org.rows[0].currency,
-            timeZone: org.rows[0].time_zone,
+            id: context.organization.id,
+            name: context.organization.name,
+            currency: context.organization.currency,
+            timeZone: context.organization.time_zone,
           },
           role: scope.role,
-          branches: branches.rows,
-          availableBranches: availableBranches.rows,
-          organizations: directory.rows.map((row) => ({
+          branches: availableBranches.filter((b) =>
+            scope.branchIds.includes(b.id),
+          ),
+          availableBranches,
+          organizations: context.organizations.map((row) => ({
             id: row.organization_id,
             name: row.organization_name,
           })),

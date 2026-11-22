@@ -273,3 +273,8 @@ Expense receipt support starts with single-image PNG/JPEG, input/output max2MiB,
 ## ADR-039 — Isolated browser-test build output
 
 Accepted22 November2026. A concurrently running user development server on port3000 prevented Playwright's3100 server from acquiring the default Next dev directory lock. Preserve the user's server. Browser webServer now explicitly sets MOJYM_BROWSER_TEST=1 and Next distDir .next-browser-tests, ignored byGit; regular dev/production keep .next. This affects generated output location only, not test database/origin isolation. Installed Next distDir guide consulted.
+
+
+## ADR-040 - Reuse authorization reads within one request
+
+Accepted22 November2026. The security transaction already validates and holds shared locks on the current organization, staff membership and active permitted branches. Pass these trusted records plus the freshly queried staff directory as server-only callback context; workspace reuses them instead of four additional reads. No browser-supplied scope or cross-request authorization cache. Existing transaction/revocation ordering remains. Actual before/after restricted Supabase transaction-pooler benchmark returns identical workspaceDTO,14 vs10 queries,5 measured samples each after warmup;3513 vs2497ms median from local host, not production SLA. Platform's existing narrow directory/activity functions share a single SQL roundtrip without granting tenant access. No schema migration required.

@@ -37,6 +37,9 @@ export const permissions = {
   "classes.manage": ["owner", "manager"],
   "classes.book": ["owner", "manager", "receptionist"],
   "trainer.own.read": ["owner", "manager", "trainer"],
+  "trainers.read": ["owner", "manager", "receptionist", "trainer"],
+  "trainers.manage": ["owner", "manager"],
+  "training.book": ["owner", "manager", "receptionist"],
   "enquiries.manage": ["owner", "manager", "receptionist"],
 } as const satisfies Record<string, readonly Role[]>;
 export type Action = keyof typeof permissions;

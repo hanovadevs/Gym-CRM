@@ -148,20 +148,19 @@ export function createPlatformService(
       const parsed = querySchema.safeParse(raw);
       if (!parsed.success) throw new AccessError("VALIDATION_ERROR");
       const q = parsed.data;
-      const directory = (
-        await db.query("select platform.directory($1,$2,$3) data", [
-          user.user.id,
-          q.search,
-          q.page,
-        ])
-      ).rows[0].data;
-      const activity = (
-        await db.query("select platform.activity($1,$2,$3) data", [
-          user.user.id,
-          q.organizationId ?? null,
-          q.activityPage,
-        ])
-      ).rows[0].data;
+      const snapshot = (
+        await db.query(
+          "select platform.directory($1,$2,$3) directory, platform.activity($1,$4,$5) activity",
+          [
+            user.user.id,
+            q.search,
+            q.page,
+            q.organizationId ?? null,
+            q.activityPage,
+          ],
+        )
+      ).rows[0];
+      const { directory, activity } = snapshot;
       return {
         userName: user.user.name,
         ...directory,
