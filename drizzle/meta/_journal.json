@@ -183,6 +183,20 @@
       "when": 1795288893833,
       "tag": "0025_platform_contact_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1795322522286,
+      "tag": "0026_lowly_lester",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1795322788701,
+      "tag": "0027_attendance_security",
+      "breakpoints": true
     }
   ]
 }
