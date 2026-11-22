@@ -337,6 +337,13 @@
       "when": 1795387911785,
       "tag": "0047_agreed_fee_term_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1795387945981,
+      "tag": "0048_agreed_fee_guard_variable",
+      "breakpoints": true
     }
   ]
 }
