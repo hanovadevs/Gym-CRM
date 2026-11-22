@@ -466,6 +466,25 @@ try {
     "update gym.organizations set time_zone='Asia/Karachi' where id=$1",
     [f.orgA],
   );
+  const multi = {
+    ...profile,
+    id: randomUUID(),
+    requestKey: randomUUID(),
+    name: "Multi branch coach",
+    branchIds: [f.a1, f.a2],
+  };
+  await training.saveTrainer(headers, multi);
+  const filtered = await training.directory(headers, {
+    organizationId: f.orgA,
+    branchId: f.a1,
+    q: "Multi branch",
+  });
+  assert.deepEqual(
+    filtered.rows[0].branches.map((b) => b.id).sort(),
+    [f.a1, f.a2].sort(),
+    "Editing a branch-filtered coach must preserve every authorized assigned branch",
+  );
+  assert.equal(filtered.rows[0].canEdit, true);
   console.log(
     "PASS training: persisted trainer directory/create/update/replay/stale/branch/login/audit checks; raw concurrent trainer/room/member conflicts, adjacent/overnight coverage, DST gap/fold, cancellation, resource guards, deferred child integrity and RLS/no-delete. PT service/API/UI remain incomplete.",
   );

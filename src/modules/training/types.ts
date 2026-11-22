@@ -1,0 +1,30 @@
+export type Trainer = {
+  id: string;
+  name: string;
+  specialties: string;
+  active: boolean;
+  version: number;
+  phone: string;
+  email: string;
+  loginUserId: string | null;
+  branches: { id: string; name: string }[];
+  canEdit: boolean;
+};
+export type TrainingDirectory = {
+  logins: { id: string; name: string; branchIds: string[] }[];
+  organizationId: string;
+  organization: { id: string; name: string };
+  branches: { id: string; name: string }[];
+  branchId: string;
+  q: string;
+  total: number;
+  page: number;
+  rows: Trainer[];
+  own: boolean;
+  canManage: boolean;
+  canManageSettings: boolean;
+  canManageMembers: boolean;
+  canReadPlans: boolean;
+  canReadBilling: boolean;
+  requestId: string;
+};

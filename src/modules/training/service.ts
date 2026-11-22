@@ -5,18 +5,23 @@ import type { createSecurity, Scope } from "@/server/security/service";
 import { BusinessError } from "@/server/errors";
 import { audit } from "@/server/audit";
 import { parse } from "@/modules/members/service";
+import { can } from "@/server/security/permissions";
+import type { TrainingDirectory } from "./types";
 import { trainerInput, trainerQuery } from "./schemas";
 
 export function createTrainingService(
   security: ReturnType<typeof createSecurity>,
 ) {
-  async function directory(headers: Headers, raw: unknown) {
+  async function directory(
+    headers: Headers,
+    raw: unknown,
+  ): Promise<TrainingDirectory> {
     const q = parse(trainerQuery, raw);
     return security.run(
       headers,
       { organizationId: q.organizationId, branchId: q.branchId },
       "trainers.read",
-      async (db, s) => {
+      async (db, s, _identity, context) => {
         // Trainers receive their own operational identity only, without contacts or other coaches.
         const own = s.role === "trainer";
         const rows = await db.query(
@@ -27,7 +32,7 @@ export function createTrainingService(
           case when $4 then null else t.login_user_id end as "loginUserId",
           coalesce((select jsonb_agg(jsonb_build_object('id',b.id,'name',b.name) order by b.name,b.id)
             from gym.trainer_branches tb join gym.branches b on b.organization_id=tb.organization_id and b.id=tb.branch_id
-            where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and tb.branch_id=any($2::uuid[])), '[]'::jsonb) branches,
+            where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and tb.branch_id=any($6::uuid[])), '[]'::jsonb) branches,
           not exists(select 1 from gym.trainer_branches tb where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and not(tb.branch_id=any($6::uuid[]))) as "canEdit"
         from gym.trainers t where t.organization_id=$1 and (not $4 or t.login_user_id=$5)
           and exists(select 1 from gym.trainer_branches tb where tb.organization_id=t.organization_id and tb.trainer_id=t.id and tb.active and tb.branch_id=any($2::uuid[]))
@@ -44,9 +49,34 @@ export function createTrainingService(
             q.page,
           ],
         );
+        const logins =
+          s.role === "owner" || s.role === "manager"
+            ? (
+                await db.query(
+                  `select u.id,u.name,array(select g.branch_id from gym.staff_branch_grants g where g.organization_id=sm.organization_id and g.staff_membership_id=sm.id order by g.branch_id) as "branchIds"
+          from gym.staff_memberships sm join app_auth."user" u on u.id=sm.auth_user_id
+          where sm.organization_id=$1 and sm.active and sm.role='trainer'
+            and not exists(select 1 from gym.staff_branch_grants g where g.organization_id=sm.organization_id and g.staff_membership_id=sm.id and not(g.branch_id=any($2::uuid[])))
+          order by u.name,u.id limit 200`,
+                  [s.organizationId, [...s.authorizedBranchIds]],
+                )
+              ).rows
+            : [];
         return {
           ...rows.rows[0],
+          logins,
           organizationId: s.organizationId,
+          organization: {
+            id: context.organization.id,
+            name: context.organization.name,
+          },
+          branches: context.branches,
+          branchId: q.branchId ?? "",
+          q: q.q,
+          canManageSettings: can(s.role, "settings.read"),
+          canManageMembers: can(s.role, "members.manage"),
+          canReadPlans: can(s.role, "plans.read"),
+          canReadBilling: can(s.role, "billing.read"),
           own,
           canManage: s.role === "owner" || s.role === "manager",
           requestId: s.requestId,

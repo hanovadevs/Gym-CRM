@@ -91,6 +91,14 @@ export default async function Workspace({
       label: "Open plans",
     },
     {
+      action: "trainers.read",
+      path: "/trainers",
+      title: "Coaching team",
+      description:
+        "Maintain trainer profiles, specialties and branch assignments.",
+      label: "Open trainers",
+    },
+    {
       action: "expenses.manage",
       path: "/expenses",
       title: "Expense ledger",

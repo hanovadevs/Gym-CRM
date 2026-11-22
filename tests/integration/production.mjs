@@ -81,6 +81,8 @@ try {
     [`/api/members/${org}/access-code`, "POST", {organizationId:org}],
     ["/api/platform", "GET"],
     ["/api/platform/analytics", "GET"],
+    ["/api/trainers", "GET"],
+    ["/api/trainers", "POST", {organizationId: org, id: org, requestKey: org, name: "Anonymous trainer", branchIds: [org], reason: "Anonymous denial check"}],
     ["/api/platform/billing", "GET"],
     ["/api/platform/billing", "POST", {}],
     ["/api/platform", "POST", {}],

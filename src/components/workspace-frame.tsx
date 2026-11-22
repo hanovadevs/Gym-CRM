@@ -22,7 +22,8 @@ export function WorkspaceFrame({
     | "workspace"
     | "attendance"
     | "dashboard"
-    | "expenses";
+    | "expenses"
+    | "trainers";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;

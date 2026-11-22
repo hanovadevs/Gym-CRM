@@ -31,7 +31,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | RPT-01 | M12 | DASH-01 + EXP-01 | Reports and source reconciliation | NOT_STARTED | None yet |
 | IMP-01 | M13 | MEM-02 + PAY-03 + EXP-01 | Previewed CSV import/scoped exports/file access/audit | IN_PROGRESS | Private image receipts/storage/authorization/maintenance verified with EXP-01; CSV preview/import/exports remain unimplemented |
 | REL-01 | M14 | RPT-01 + IMP-01 | Core acceptance/mail recovery/restore/local pilot | NOT_STARTED | None yet |
-| TRN-01 | M08 | MEM-02 + SET-01 | Trainer directory/assignments/PT schedules | IN_PROGRESS | Reviewed0030-0032 isolated gym_test33; restricted directory/create/update/replay/stale/branch/login/audit and raw concurrency/overnight/DST checks PASS; PT service/API/UI open |
+| TRN-01 | M08 | MEM-02 + SET-01 | Trainer directory/assignments/PT schedules | IN_PROGRESS | Reviewed0030-0032 now source/test/hosted35; persisted trainer directory/profile/create/edit/contact/branch/login UI+API, lostresponse/ownscope/4width checks PASS;3 retainedHanova trainers via authorizedworkflow. Assignments/availability/PT service/API/UI still open |
 | CLS-01 | M09 | TRN-01 + ATT-01 | Timetable/bookings/capacity/trainer-room contention | NOT_STARTED | None yet |
 | LEAD-01 | M10 | MEM-02 | Pipeline/trials/follow-ups/idempotent conversion | NOT_STARTED | None yet |
 | DB-MIG-01 | M14 | REL-01 + authorized target | Supabase reconciliation and host change | VERIFYING | Authorized hosted configuration; initialized workspace copied and hashes reconciled, restricted TLS/pooler verified; application/restore/release gates remain |

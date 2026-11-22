@@ -12,6 +12,7 @@ type Page =
   | "payments"
   | "settings"
   | "dashboard"
+  | "trainers"
   | "expenses"
   | "attendance";
 const key = "jym.sidebar.collapsed.v1";
@@ -102,6 +103,11 @@ export function AppSidebar({
       : []),
     ...(canManageMembers
       ? [{ name: "Members", page: "members", href: "/members" }]
+      : []),
+    ...(canManageMembers ||
+    canManageSettings ||
+    (!canReadBilling && !canReadPlans)
+      ? [{ name: "Trainers", page: "trainers", href: "/trainers" }]
       : []),
     ...(canReadPlans ? [{ name: "Plans", page: "plans", href: "/plans" }] : []),
     ...(canManageMembers
