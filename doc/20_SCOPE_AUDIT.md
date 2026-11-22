@@ -4,14 +4,14 @@
 
 | Scope | Implemented evidence | Remaining gate |
 | --- | --- | --- |
-| Foundation / Mojym / UI | Shared responsive shell, user palette/glass/square buttons, help icons, collapsible sidebar, native SVG/PNG brand, Next client navigation, fictional dashboard removed | Keep new module layouts consistent; actual dashboard still DASH-01 |
+| Foundation / Mojym / UI | Shared responsive shell, user palette/glass/square buttons, help icons, collapsible sidebar, native SVG/PNG brand, Next client navigation, fictional dashboard removed | Keep new module layouts consistent; persisted dashboard now verified; keep new modules consistent |
 | Authentication / tenant security | Maintained Better Auth, login/logout/reset/invitations, fresh role/branch checks, restricted SQL role/RLS, audit and real two-gym tests; hosted owner/admin browser checks pass after bounded pool adjustment | Deployed origin/mail operations/recovery checks |
 | Settings / staff | Versioned persisted gym configuration, roles/branches, last-owner controls, fixed mail sender | Attendance policy consumer verified; hosted release/mail maintenance |
 | Members / profiles | Registration/directory/search/paging, emergency contact, role-scoped notes/withdrawal, archive/restore, membership/invoice/payment history | Visits/archive admission denial and full68 browser regression verified; release operations remain |
 | Plans / memberships | Immutable rates/access/term snapshots, enrollment/renewal, freeze/reversal/cancel, invoice and paid activation | Actual attendance policy consumers verified; final release regression |
 | Billing / receipts / corrections | Drafts/issue/exact money/numbering, balances, payments/allocations/paid receipts/private PDFs, owner credit/refund/combined/void, immutable history, concurrency/rollback tests; corrected void PDF rendered/reviewed and production flow passes | Reports must include net refunds; final release regression |
 | Attendance / access | ATT-01 implemented visits, minimal lookup/QR, check-in/out, reasoned overrides, immutable access decisions and profile history; PostgreSQL and two browser workflows pass | Full68 browsers and actual production flow verified; all3 DBs28; release operations remain |
-| Operational dashboard | Preview route removed; protected workspace landing exists | DASH-01 real scoped/local-date aggregates, chart/source reconciliation and useful actions |
+| Operational dashboard | DASH-01 real one-snapshot scoped/local-date source aggregates, net refunds/currencies, weekly chart, recent members/renewals, functional actions and role-limited finance; DB/browser/production/hosted checks pass | Classes feed added when CLS-01 exists; final release regression |
 | Trainers / personal training | No directory/scheduling implementation | TRN-01 staff-linked or standalone trainer records, assignments, availability, own-trainer scope, conflict-safe PT sessions |
 | Classes / booking | No timetable/booking implementation | CLS-01 trainer/room conflicts, capacity, eligibility, bookings/cancellation and last-seat contention |
 | Enquiries / trials | No pipeline implementation | LEAD-01 persisted stages/tasks/trial follow-up, safe member conversion and retained history |

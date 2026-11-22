@@ -77,3 +77,6 @@ Payments & receipts shows collections filtered by received date, branch, method 
 Run test:payments for real-PG financial/authorization/rollback/race/receipt/correction checks; run test:e2e for UI and test:billing:production after build for production invoice/payment/receipt/refund/credit/void/PDF checks. Suites sharing gym_test run serially because negative tests temporarily revoke runtime grants. PAY-03 owner corrections are implemented. No cancellation/archive implicitly refunds or deletes a payment.
 
 UI-04 applies the user's Silver & Midnight palette globally (ADR-030), restrained translucent glass surfaces, square button corners, unchanged accessible sidebar icons/collapse and small section help icons. Reduced transparency uses opaque surfaces; print removes navigation/actions. No gradients or decorative/blinking indicators.
+
+
+Current verified milestone (22 November2026): persisted attendance/access/QR and operational dashboard implemented; source/test/host migrations28. See doc/10_MODULE_TRACKER.md and doc/20_SCOPE_AUDIT.md for acceptance evidence and unfinished modules. Next EXP-01; full production release and retained Hanova walkthrough dataset remain open.

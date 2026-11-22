@@ -69,6 +69,7 @@ try {
     personalTraining: false,
   };
   for (const [path, method, body] of [
+    [`/api/dashboard?organizationId=${org}`, "GET"],
     [`/api/attendance?organizationId=${org}`, "GET"],
     [`/api/attendance/lookup?organizationId=${org}&branchId=${org}&q=member`, "GET"],
     ["/api/attendance", "POST", {organizationId:org,branchId:org,memberId:org,requestKey:org,operation:"check_in"}],

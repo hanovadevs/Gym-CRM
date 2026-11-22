@@ -127,6 +127,16 @@ try {
   console.log(
     "PASS production attendance: maintained login, reasoned visit, replay, checkout, source summaries/history and private QR attachment.",
   );
+  const overviewResponse = await fetch(
+    `${base}/api/dashboard?organizationId=${f.orgA}&branchId=${f.a1}`,
+    { headers: { cookie } },
+  );
+  assert.equal(overviewResponse.status, 200);
+  const overview = (await overviewResponse.json()).data;
+  assert.equal(overview.operational.checkIns, 1);
+  assert.equal(overview.operational.inside, 0);
+  assert.equal(overview.operational.activeMembers, 0);
+  assert.equal(overview.finance.collections.length, 0);
   const draft = await post("/api/invoices", {
     organizationId: f.orgA,
     memberId: member.member.id,
@@ -445,6 +455,7 @@ try {
     });
     const timings: Record<string, number> = {};
     for (const [name, heading] of [
+      ["Dashboard", "Gym overview"],
       ["Plans", "Membership plans"],
       ["Members", "Members"],
       ["Payments", "Invoices & balances"],

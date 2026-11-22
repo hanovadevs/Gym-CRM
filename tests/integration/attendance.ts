@@ -12,6 +12,7 @@ import { createPaymentsService } from "../../src/modules/payments/service";
 import { createCorrectionsService } from "../../src/modules/billing/corrections";
 import { createSettingsService } from "../../src/modules/settings/service";
 import { createAttendanceService } from "../../src/modules/attendance/service";
+import { createDashboardService } from "../../src/modules/dashboard/service";
 import { todayInZone } from "../../src/modules/plans/format";
 import { securityFixture } from "../helpers/security-fixture";
 config({ path: ".env.local", quiet: true });
@@ -51,6 +52,7 @@ const members = createMembersService(security),
   payments = createPaymentsService(security),
   corrections = createCorrectionsService(security),
   attendance = createAttendanceService(security),
+  dashboard = createDashboardService(security),
   settings = createSettingsService(security, async () => {
     throw Error("No provisioning in attendance checks");
   });
@@ -83,6 +85,7 @@ try {
     branch = f.a1,
     all = false,
     amount = 0,
+    duration = 30,
   ) =>
     plans.create(owner, {
       ...org,
@@ -92,7 +95,7 @@ try {
         name: code,
         amountMinor: amount,
         currency: "PKR",
-        durationCount: 30,
+        durationCount: duration,
         durationUnit: "days",
         accessMode: all ? "all_branches" : "home_branch",
         gymFloor: true,
@@ -724,6 +727,148 @@ try {
     await raw.query("rollback");
     raw.release();
   }
+  await deny(() => dashboard.get(new Headers(), org), "UNAUTHENTICATED");
+  await deny(() => dashboard.get(foreign, org), "NOT_FOUND");
+  await deny(
+    () => dashboard.get(reception, { ...org, branchId: f.a2 }),
+    "NOT_FOUND",
+  );
+  const overview = await dashboard.get(owner, org);
+  // Nine known activated/current non-frozen/non-cancelled/non-archived members.
+  // One of these is classes-only: active membership and gym-floor access differ.
+  assert.equal(overview.operational!.activeMembers, 9);
+  const central = await dashboard.get(owner, { ...org, branchId: f.a1 });
+  assert.equal(central.operational!.activeMembers, 8);
+  const north = await dashboard.get(owner, { ...org, branchId: f.a2 });
+  assert.equal(north.operational!.activeMembers, 1);
+  const visitsSource = await attendance.get(owner, { ...org, branchId: f.a1 });
+  assert.equal(central.operational!.checkIns, visitsSource.summary.checkIns);
+  assert.equal(central.operational!.inside, visitsSource.summary.inside);
+  assert.equal(central.operational!.week.length, 7);
+  assert.equal(central.operational!.week[6].day, today);
+  assert.equal(
+    central.operational!.week[6].visits,
+    visitsSource.summary.checkIns,
+  );
+  assert.equal(central.finance.collections[0].receivedMinor, "20000");
+  assert.equal(central.finance.collections[0].refundedMinor, "1000");
+  assert.equal(central.finance.collections[0].netMinor, "19000");
+  assert.equal(north.finance.collections.length, 0);
+  const shortPlan = await createPlan("DASH-WEEK", f.a1, false, 0, 7);
+  const dueSoon = await enrolled("Renewal due soon", shortPlan);
+  const renewed = await enrolled("Renewal already recorded", shortPlan);
+  const renewalContext = await subs.get(owner, renewed.member.id, org);
+  await subs.enroll(owner, renewed.member.id, {
+    ...org,
+    memberVersion: renewalContext.memberVersion,
+    mode: "renew",
+    planVersionId: shortPlan.versionId,
+    startOn: shift(7),
+    requestKey: randomUUID(),
+    reason: "Renewal already scheduled",
+  });
+  const renewalDashboard = await dashboard.get(owner, org);
+  assert.equal(renewalDashboard.operational!.activeMembers, 11);
+  assert.ok(
+    renewalDashboard.operational!.renewals.some(
+      (m) => m.id === dueSoon.member.id && m.renewOn === shift(7),
+    ),
+  );
+  assert.ok(
+    !renewalDashboard.operational!.renewals.some(
+      (m) => m.id === renewed.member.id,
+    ),
+  );
+  const stale = (
+    await admin.query(
+      "insert into gym.attendance_visits(organization_id,member_id,branch_id,checked_in_at,checked_in_by,eligibility_snapshot) values($1,$2,$3,$4,$5,$6::jsonb) returning id",
+      [
+        f.orgA,
+        homeOnly.member.id,
+        f.a1,
+        new Date(boundary - 1000),
+        f.users["Owner A"].id,
+        JSON.stringify({ allowed: true, reason: "allowed" }),
+      ],
+    )
+  ).rows[0].id;
+  const staleDashboard = await dashboard.get(owner, { ...org, branchId: f.a1 });
+  assert.equal(staleDashboard.operational!.stale, 1);
+  assert.equal(staleDashboard.operational!.inside, 1);
+  assert.equal(
+    staleDashboard.operational!.checkIns,
+    central.operational!.checkIns,
+  );
+  await attendance.record(owner, leave(stale));
+  // Historical migration fixture, not an edit to an issued invoice. Verify a
+  // refund today from old cash reduces today's/month's collections below gross.
+  const historical = (
+    await admin.query(
+      `insert into gym.memberships(organization_id,member_id,home_branch_id,plan_version_id,snapshot,amount_minor,currency,start_on,original_end_on_exclusive,end_on_exclusive,lifecycle,activated_at,created_by) select organization_id,member_id,home_branch_id,plan_version_id,snapshot,amount_minor,currency,'2000-01-01','2000-02-01','2000-02-01','active',now(),created_by from gym.memberships where id=$1 returning id`,
+      [owing.membershipId],
+    )
+  ).rows[0].id;
+  const oldInvoice = (
+    await admin.query(
+      `insert into gym.invoices(organization_id,membership_id,member_id,originating_branch_id,number,description,total_minor,currency,issued_on,due_on,created_by) values($1,$2,$3,$4,'DASH-HIST-1','Historical charge',10000,'PKR','2000-01-01','2000-02-01',$5) returning id`,
+      [f.orgA, historical, owing.member.id, f.a1, f.users["Owner A"].id],
+    )
+  ).rows[0].id;
+  const oldPayment = await payments.record(owner, {
+    ...org,
+    invoiceId: oldInvoice,
+    requestKey: randomUUID(),
+    amountMinor: "1000",
+    expectedBalanceMinor: "10000",
+    currency: "PKR",
+    method: "cash",
+    paidOn: "2000-02-01",
+  });
+  await corrections.record(owner, {
+    ...org,
+    invoiceId: oldInvoice,
+    paymentId: oldPayment.paymentId,
+    requestKey: randomUUID(),
+    kind: "refund",
+    amountMinor: "1000",
+    expectedBalanceMinor: "9000",
+    currency: "PKR",
+    cashOn: today,
+    method: "cash",
+    reason: "Refund historic cash today",
+  });
+  const afterRefund = await dashboard.get(owner, org);
+  assert.equal(afterRefund.finance.collections[0].netMinor, "18000");
+  assert.equal(afterRefund.finance.overdueCount, 1);
+  assert.deepEqual(afterRefund.finance.outstanding, [
+    { currency: "PKR", amountMinor: "10000" },
+  ]);
+  const daily = await dashboard.get(reception, org);
+  assert.equal(daily.finance.period, "today");
+  assert.equal(daily.finance.fromOn, today);
+  assert.equal(daily.finance.outstanding, null);
+  assert.equal(daily.finance.collections[0].netMinor, "18000");
+  assert.ok(daily.operational);
+  await admin.query(
+    "update gym.staff_memberships set role='accountant' where id=$1",
+    [f.memberships.reception],
+  );
+  const accountant = await dashboard.get(reception, org);
+  assert.equal(accountant.operational, null);
+  assert.equal(accountant.finance.period, "month");
+  assert.ok(!JSON.stringify(accountant).includes(owing.member.name));
+  await admin.query(
+    "update gym.staff_memberships set role='trainer' where id=$1",
+    [f.memberships.reception],
+  );
+  await deny(() => dashboard.get(reception, org), "FORBIDDEN");
+  await admin.query(
+    "update gym.staff_memberships set role='receptionist' where id=$1",
+    [f.memberships.reception],
+  );
+  console.log(
+    "PASS dashboard source reconciliation: known active/frozen/cancelled/archive/future/grace/benefit populations, branch isolation, Karachi visits/week, old-cash refund/current-month net, credit exclusion, overdue/current balances, reception daily-only, accountant no operational identity, trainer/anonymous/cross-gym denial.",
+  );
   console.log(
     "PASS attendance real-session registration/enrollment/payment/refund/credit/access integration; no-membership/pending/future/expired/frozen/cancelled/archived/debt/wrong-branch/class-only denial; saved grace; owner/manager override; minimal all-branch lookup; concurrent service scans and raw unique constraint; replay/conflicts/repeated checkout; retained visits; branch closure; audit rollback; fresh role/branch revocation and cross-gym denial; Karachi midnight; raw chronology/closed immutability and runtime RLS/grants.",
   );

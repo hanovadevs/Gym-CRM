@@ -20,7 +20,7 @@ Initial implementation tasks began NOT_STARTED. Current states below reflect ver
 | PAY-02 | M05 | PAY-01 | Partial/full payment/allocation/receipt/activation/retry safety | DONE | 0018/0019; atomic collection, immutable paid receipts/print/PDF, valid activation; 64 browser/36 units + serial real-DB/production checks PASS |
 | PAY-03 | M05 | PAY-02 | Owner refunds/credits/corrections/contention checks | DONE | Reviewed 0020–0022, raw DB caps/immutability, two correction browsers and production refund/credit/void/PDF flow pass; corrected void header rendered/reviewed |
 | ATT-01 | M06 | SUB-01 + PAY-03 | Eligibility/check-in/out/duplicate scan protection | DONE | Reviewed0026/0027 all3 DBs28; acceptance DB suite, full68 browsers, independent downloaded QR decode, responsive review and actual production attendance/replay/checkout/private QR PASS |
-| DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | NOT_STARTED | None yet |
+| DASH-01 | M07 | MEM-02 + PAY-03 + ATT-01 | Replace fixtures with persisted aggregates | DONE | One-snapshot persisted branch/local-date aggregates, refund/currency/source reconciliation, role limits;10 focused browsers/40 units/production/hosted checks and four widths PASS |
 | EXP-01 | M11 | SET-01 | Expenses/categories/reversals/private attachments | NOT_STARTED | None yet |
 | RPT-01 | M12 | DASH-01 + EXP-01 | Reports and source reconciliation | NOT_STARTED | None yet |
 | IMP-01 | M13 | MEM-02 + PAY-03 + EXP-01 | Previewed CSV import/scoped exports/file access/audit | NOT_STARTED | None yet |

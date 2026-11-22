@@ -230,3 +230,102 @@ test("reception sees denial without override and cannot admit an ineligible memb
     ).rows[0].n,
   ).toBe(0);
 });
+
+test("persisted dashboard reconciles attendance, refreshes and navigates within branch scope", async ({
+  page,
+}) => {
+  test.setTimeout(60000);
+  await session(page);
+  await page.goto(`/dashboard?organizationId=${f.orgA}&branchId=${f.a1}`);
+  await expect(
+    page.getByRole("heading", { name: "Gym overview", exact: true }),
+  ).toBeVisible();
+  const source = (
+    await (
+      await page.request.get(
+        `/api/attendance?organizationId=${f.orgA}&branchId=${f.a1}`,
+      )
+    ).json()
+  ).data;
+  await expect(page.getByTestId("today-visits")).toHaveText(
+    String(source.summary.checkIns),
+  );
+  await expect(
+    page.getByLabel("Daily check-ins for the last seven days").locator("li"),
+  ).toHaveCount(7);
+  await expect(
+    page.getByText("No collections in this period.", { exact: true }),
+  ).toBeVisible();
+  await mkdir(".local/dashboard-evidence", { recursive: true });
+  for (const width of [390, 768, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `.local/dashboard-evidence/dashboard-${width}.png`,
+      fullPage: true,
+    });
+  }
+  const marker = "dashboard-client-transition";
+  await page.evaluate((value) => {
+    (window as Window & { navigationMarker?: string }).navigationMarker = value;
+  }, marker);
+  await page
+    .getByRole("link", { name: "Review overdue invoices", exact: true })
+    .click();
+  await expect(page).toHaveURL(/status=overdue/);
+  await expect(
+    page.getByRole("heading", { name: "Invoices & balances", exact: true }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => (window as Window & { navigationMarker?: string }).navigationMarker,
+    ),
+  ).toBe(marker);
+  await page
+    .locator(".app-sidebar")
+    .getByRole("link", { name: "Dashboard", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Gym overview", exact: true }),
+  ).toBeVisible();
+  const fresh = await register(page, "Dashboard refreshed registration");
+  await page
+    .getByRole("button", { name: "Refresh overview", exact: true })
+    .click();
+  await expect(
+    page.getByRole("link", {
+      name: new RegExp("Dashboard refreshed registration"),
+    }),
+  ).toBeVisible();
+  expect(
+    (
+      await (
+        await page.request.get(`/api/dashboard?organizationId=${f.orgA}`)
+      ).json()
+    ).data.operational.recentMembers.map((m: { id: string }) => m.id),
+  ).toContain(fresh.id);
+  await page.getByLabel("Branch scope", { exact: true }).selectOption(f.a2);
+  await page.getByRole("button", { name: "Apply branch", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`branchId=${f.a2}`));
+  await expect(page.getByTestId("today-visits")).toHaveText("0");
+  await expect(
+    page.getByText("No members registered in this scope.", { exact: true }),
+  ).toBeVisible();
+  await session(page, "Reception A");
+  await page.goto(`/dashboard?organizationId=${f.orgA}`);
+  await expect(
+    page.getByRole("heading", { name: "Collected today", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Outstanding balances", exact: true }),
+  ).toHaveCount(0);
+  const forged = await page.request.get(
+    `/api/dashboard?organizationId=${f.orgA}&branchId=${f.a2}`,
+  );
+  expect(forged.status()).toBe(404);
+});

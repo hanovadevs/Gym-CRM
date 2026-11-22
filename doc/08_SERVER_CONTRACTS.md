@@ -116,3 +116,8 @@ Invoice list/detail and member profile now embed scoped payment history; other f
 - Profile DTO visits: latest20 visits/total scoped to authorized visit branches, retained on archival. Profile eligibility now uses the same live gym-floor benefit/debt/date policy as admission.
 
 All writes use central same-origin/body limits/error handling; member parent lock then visit lock, DB entry/exit times, immutable eligibility snapshot and auditable reason. Runtime cannot spoof entry timestamps or delete/rewrite visits; one-open-visit partial unique index is the final concurrency guard.
+
+
+## Implemented DASH-01 interface
+
+GET /api/dashboard (and protected /dashboard): strict optional organizationId/branchId; fresh dashboard.read permission and tenant/active-branch scope. One SQL snapshot returns active member counts, successful local-day visits/open/stale visits, seven local dates, recent6 member identities, upcoming8 renewals within14 days excluding an adjacent saved renewal, issued overdue count and exact balances, payments/refunds by their own cash dates/currencies/original invoice branch. Money serialized as decimal minor-unit strings; refunds may make net negative. Reception gets current-day collections only and no outstanding aggregate; accountant operational DTO is null; trainer generic dashboard forbidden. No expense/profit/class placeholders. Refresh uses current server records; branch and action navigation use Next Form/Link.
