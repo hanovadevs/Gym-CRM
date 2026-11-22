@@ -16,7 +16,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
 | M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | DONE | DONE | DONE | DONE | DONE | DASH-01 persisted branch/local-date aggregates, source reconciliation, browser/production/hosted verification; class feed added with CLS-01 |
-| M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | NOT_STARTED | IN_PROGRESS | NOT_STARTED | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
+| M08 | Trainers & PT | B | M03 + M02 | NOT_STARTED | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | TRN-01 directory/save service and raw scheduling checks pass; PT/API/UI still open |
 | M09 | Classes & bookings | B | M08 + M06 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | CLS-01 |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
