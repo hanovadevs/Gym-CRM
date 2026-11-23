@@ -166,6 +166,10 @@ export function MembershipsPanel({
       </div>
       {data.monthlyFee ? (
         <section className="membership-review" aria-label="Agreed monthly fee">
+          <SectionTitle
+            title="Monthly billing"
+            help="This member’s saved monthly rate applies to future renewals. Invoice due dates show unpaid charges; renewal dates show the next membership period. Payments are recorded separately."
+          />
           <strong>
             Agreed monthly fee:{" "}
             {money(

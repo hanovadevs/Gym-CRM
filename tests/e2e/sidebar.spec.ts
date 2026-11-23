@@ -276,6 +276,19 @@ test("compact phone and tablet workflows preserve scope, fit tables and keep nav
         expect(
           await drawer.evaluate((el) => el.scrollWidth <= el.clientWidth),
         ).toBe(true);
+        await drawer.evaluate((el) => { el.scrollTop = el.scrollHeight; });
+        const header = drawer.locator(":scope > header");
+        const headerBounds = await header.boundingBox();
+        const dialogBounds = await drawer.boundingBox();
+        expect(headerBounds!.y).toBeGreaterThanOrEqual(dialogBounds!.y);
+        expect(headerBounds!.y).toBeLessThanOrEqual(dialogBounds!.y + 2);
+        expect(headerBounds!.y + headerBounds!.height).toBeLessThanOrEqual(
+          dialogBounds!.y + dialogBounds!.height,
+        );
+        await expect(header.getByRole("button", { name: "Close drawer" })).toBeVisible();
+        expect(await drawer.locator('input:not([type="checkbox"])').first().evaluate(
+          (el) => parseFloat(getComputedStyle(el).fontSize),
+        )).toBeGreaterThanOrEqual(16);
         await page.keyboard.press("Escape");
         await expect(drawer).toHaveCount(0);
       }

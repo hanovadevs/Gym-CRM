@@ -103,7 +103,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
                 disabled={refreshing}
                 aria-busy={refreshing}
               >
-                {refreshing ? "RefreshingÃ¢â‚¬Â¦" : "Refresh directory"}
+                {refreshing ? "Refreshing..." : "Refresh directory"}
               </button>
               <button className="primary" onClick={() => setEditing("new")}>
                 Create gym
@@ -261,7 +261,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
             ) : null}
             <nav className="member-pagination" aria-label="Gym pages">
               <span>
-                {data.total} gyms Ã‚Â· Page {data.page}
+                {data.total} gyms / Page {data.page}
               </span>
               {data.page > 1 ? (
                 <Link href={href({ page: data.page - 1 })}>Previous</Link>
@@ -329,7 +329,7 @@ export function PlatformScreen({ initial }: { initial: PlatformData }) {
             ) : null}
             <nav className="member-pagination" aria-label="Activity pages">
               <span>
-                {data.activityTotal} events Ã‚Â· Page {data.activityPage}
+                {data.activityTotal} events / Page {data.activityPage}
               </span>
               {data.activityPage > 1 ? (
                 <Link href={href({ activityPage: data.activityPage - 1 })}>
@@ -737,7 +737,7 @@ function GymEditor({
           ) : (
             <button className="primary" type="submit" disabled={pending}>
               {pending
-                ? "SavingÃ¢â‚¬Â¦"
+                ? "Saving..."
                 : retry
                   ? "Retry saved request"
                   : creating

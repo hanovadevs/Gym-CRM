@@ -8,6 +8,7 @@ export default defineConfig([
     ".next/**",
     ".next-browser-tests/**",
     "test-results/**",
+    ".local/**",
     "next-env.d.ts",
   ]),
 ]);

@@ -1,0 +1,79 @@
+/* Shared finishing layer: preserve the palette and desktop layout. */
+.section-title h2 { line-height:1.35; letter-spacing:-.25px; font-weight:650; }
+.section-title { min-width:0; }
+.section-title .info-button { flex-shrink:0; }
+.info-popover { max-width:calc(100vw - 32px); max-height:calc(100dvh - 48px); overflow:auto; }
+.info-popover > button { min-height:44px; padding:10px 16px; }
+.page-heading h1 { text-wrap:balance; }
+.page-heading > div { min-width:0; }
+.table-scroll { scrollbar-width:thin; scrollbar-color:#aab9ca transparent; }
+.table-scroll th { font-weight:650; color:var(--accent); }
+.table-scroll td { line-height:1.55; font-variant-numeric:tabular-nums; }
+.table-scroll td strong { font-weight:650; }
+.table-scroll td small { line-height:1.55; }
+.table-scroll tbody tr { transition:background-color .15s ease; }
+@media (hover:hover) and (min-width:961px) {
+  .table-scroll tbody tr:hover { background:rgba(220,228,238,.36); }
+}
+.pt-controls .platform-heading-actions > a,
+.class-controls > a { display:inline-flex; align-items:center; min-height:44px; padding:8px 12px; font-weight:600; text-decoration:none; }
+.pt-controls .platform-heading-actions > a:hover { background:var(--selected); }
+dialog.drawer { background:#fff; padding-top:0; overscroll-behavior:contain; scrollbar-width:thin; padding-bottom:max(28px,env(safe-area-inset-bottom)); }
+dialog.drawer > header { position:sticky; top:0; z-index:5; margin:0 -28px 20px; padding:20px 28px; gap:16px; background:#fff; box-shadow:0 4px 16px #1e293708; }
+dialog.drawer > header h2 { min-width:0; font-size:20px; line-height:1.35; letter-spacing:-.35px; }
+dialog.drawer > header button { flex-shrink:0; min-height:44px; padding:10px 14px; background:var(--canvas); border:1px solid var(--border); }
+dialog.drawer :is(input,select,textarea) { scroll-margin-block:100px 24px; }
+dialog.drawer :is(input,select,textarea):focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+dialog.drawer textarea { width:100%; min-height:96px; resize:vertical; padding:12px; border:1px solid var(--border); border-radius:8px; font:inherit; }
+@media screen and (max-width:960px) {
+  .settings-main.members-main,.settings-main { padding:14px; }
+  .settings-main .page-heading { gap:12px; margin-bottom:20px; }
+  .settings-main .page-heading h1 { font-size:26px; line-height:1.2; letter-spacing:-.8px; }
+  .settings-main .page-heading p { font-size:13px; line-height:1.55; margin-top:6px; }
+  .settings-main .panel,.platform-main .panel { border-radius:14px; }
+  .section-title h2 { font-size:16px; }
+  .section-title .info-button { min-height:36px; min-width:36px; }
+  .settings-main :is(.trainer-filters,.class-filters) { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin:16px 0; }
+  .trainer-filters label:first-child,.class-filters label:last-of-type { grid-column:1/-1; }
+  .settings-main :is(.trainer-filters,.class-filters) button { min-height:44px; width:100%; }
+  .settings-main .class-filters > button { grid-column:1/-1; }
+  .settings-main :is(.trainer-filters,.class-filters) label { font-size:12px; gap:6px; }
+  .settings-main :is(.trainer-filters,.class-filters) :is(input,select) { min-height:44px; padding:10px; font-size:16px; }
+  .table-scroll tbody tr { gap:12px 16px; padding:14px; background:#fff; box-shadow:0 2px 12px #1e293708; }
+  .table-scroll tbody td:first-child { color:var(--text); }
+  .table-scroll tbody td:first-child strong { font-size:14px; }
+  .table-scroll tbody td::before { font-weight:600; font-size:11px; }
+  .table-scroll tbody td:last-child { gap:8px; }
+  .table-scroll td :is(.pt-row-actions,.expense-actions,.platform-row-actions) { gap:8px; }
+  .table-scroll td :is(.pt-row-actions,.expense-actions,.platform-row-actions) > :is(a,button) { padding:8px 12px; background:var(--canvas); border:1px solid var(--border); font-weight:600; text-decoration:none; }
+  .pt-sections,.employee-sections,.class-sections { gap:14px; }
+  .pt-controls .platform-heading-actions { gap:8px; }
+  .pt-controls .platform-heading-actions > * { font-size:12px; }
+  .pt-controls .platform-heading-actions > button { flex:1; }
+  .workspace-tool { min-height:0; padding:18px; }
+  .workspace-tool h3 { margin:14px 0 8px; }
+  .workspace-tool p { margin-bottom:16px; line-height:1.6; }
+  .membership-record { padding:16px; }
+  .membership-facts { gap:14px; margin:16px 0; }
+  dialog.drawer { padding:0 16px max(24px,env(safe-area-inset-bottom)); }
+  dialog.drawer > header { top:0; margin:0 -16px 16px; padding:14px 16px; }
+  dialog.drawer > header h2 { font-size:18px; }
+  dialog.drawer .field { margin:16px 0; gap:7px; }
+  dialog.drawer :is(input:not([type=checkbox]):not([type=radio]),select,textarea) { font-size:16px; }
+  dialog.drawer p { font-size:13px; line-height:1.6; }
+  dialog.drawer .drawer-intro { margin-top:8px; }
+  .mobile-bottom-nav { box-shadow:0 -3px 18px #1e29370d; }
+}
+@media screen and (max-width:359px) {
+  .settings-main :is(.trainer-filters,.class-filters) { grid-template-columns:minmax(0,1fr); }
+  .settings-main .page-heading h1 { font-size:24px; }
+}
+@media screen and (min-width:701px) and (max-width:960px) {
+  .class-week:not(.day-view) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .class-day { padding:12px; }
+  .class-day h2 { font-size:14px; }
+  .class-event { padding:12px; font-size:14px; }
+}
+@media (prefers-reduced-motion:reduce) { .table-scroll tbody tr { transition:none; } }
+@media (prefers-reduced-transparency:reduce) { dialog.drawer > header { background:#fff; } }
+@media print { dialog.drawer > header { position:static; box-shadow:none; } }

@@ -24,7 +24,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         : { dateStyle: "medium", timeZone: "UTC" },
     ).format(new Date(value + "T12:00:00Z"));
   const money = (value: string, currency: string) =>
-    (BigInt(value) < 0n ? "âˆ’" : "") +
+    (BigInt(value) < 0n ? "-" : "") +
     exactMoney(
       BigInt(value) < 0n ? (-BigInt(value)).toString() : value,
       currency,
@@ -47,13 +47,13 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
       <section className="page-heading dashboard-heading">
         <div>
           <h1>Gym overview</h1>
-          <p>Hereâ€™s whatâ€™s happening at {data.organization.name}.</p>
+          <p>Here’s what’s happening at {data.organization.name}.</p>
         </div>
         <button
           disabled={refreshing}
           onClick={() => startTransition(() => router.refresh())}
         >
-          {refreshing ? "Refreshingâ€¦" : "Refresh overview"}
+          {refreshing ? "Refreshing..." : "Refresh overview"}
         </button>
       </section>
       <Form action="/dashboard" className="dashboard-filters">
@@ -79,7 +79,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         </label>
         <button type="submit">Apply branch</button>
         <p>
-          {date(data.today)} Â· {data.organization.timeZone}
+          {date(data.today)} / {data.organization.timeZone}
         </p>
       </Form>
       <div className="dashboard-metrics" aria-busy={refreshing}>
@@ -97,8 +97,8 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
             </section>
             <section className="panel">
               <SectionTitle
-                title="Todayâ€™s check-ins"
-                help="Successful visit openings today in the gymâ€™s local time zone. Repeated visits after checkout count; duplicate scans do not."
+                title="Today's check-ins"
+                help="Successful visit openings today in the gym's local time zone. Repeated visits after checkout count; duplicate scans do not."
               />
               <p className="dashboard-number" data-testid="today-visits">
                 {data.operational.checkIns}
@@ -131,7 +131,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
                   {money(c.netMinor, c.currency)}
                 </p>
                 <p>
-                  {money(c.receivedMinor, c.currency)} received Â·{" "}
+                  {money(c.receivedMinor, c.currency)} received  / {" "}
                   {money(c.refundedMinor, c.currency)} refunded
                 </p>
               </div>
@@ -144,7 +144,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         <section className="panel">
           <SectionTitle
             title="Overdue invoices"
-            help="Issued invoices with a positive current balance and a due date before today in the gymâ€™s local calendar. Invoice amounts remain attributed to their original branch."
+            help="Issued invoices with a positive current balance and a due date before today in the gym's local calendar. Invoice amounts remain attributed to their original branch."
           />
           <p className="dashboard-number" data-testid="overdue-count">
             {data.finance.overdueCount}
@@ -161,7 +161,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
               title="Member activity"
               help="Successful visit openings by local calendar day over the last seven days, including today. Counts reconcile to attendance history for this branch scope."
             />
-            <p className="dashboard-caption">Last seven days Â· visits</p>
+            <p className="dashboard-caption">Last seven days / visits</p>
             <ol
               className="dashboard-chart"
               aria-label="Daily check-ins for the last seven days"
@@ -216,7 +216,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
                   <Link href={profile(m.id)}>
                     <strong>{m.name}</strong>
                     <span>
-                      {m.memberCode} Â· Joined {date(m.joinedOn)}
+                      {m.memberCode} / Joined {date(m.joinedOn)}
                     </span>
                   </Link>
                 </li>
@@ -240,7 +240,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
                   <Link href={profile(m.id)}>
                     <strong>{m.name}</strong>
                     <span>
-                      {m.memberCode} Â· Renew on {date(m.renewOn)}
+                      {m.memberCode} / Renew on {date(m.renewOn)}
                     </span>
                   </Link>
                 </li>

@@ -219,7 +219,7 @@ export function AuthForm({
             type="submit"
           >
             {pending
-              ? "Please waitâ€¦"
+              ? "Please wait..."
               : retrySeconds > 0
                 ? `Try again in ${retrySeconds}s`
                 : mode === "sign-in"
