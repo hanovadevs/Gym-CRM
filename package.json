@@ -37,6 +37,7 @@
     "test:attendance": "node --conditions=react-server --import tsx tests/integration/attendance.ts",
     "auth:platform-admin": "tsx scripts/bootstrap-platform-admin.ts",
     "test:expenses": "node --conditions=react-server --import tsx tests/integration/expenses.ts",
+    "test:personal-training": "node --conditions=react-server --import tsx tests/integration/personal-training.ts",
     "test:training": "node --conditions=react-server --import tsx tests/integration/training-storage.ts",
     "test:payroll": "node --conditions=react-server --import tsx tests/integration/payroll.ts",
     "test:classes": "node --conditions=react-server --import tsx tests/integration/classes.ts",

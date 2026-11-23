@@ -5,6 +5,8 @@ import { randomUUID } from "node:crypto";
 import { configureAuth } from "../../src/server/auth/configure";
 import { createSecurity } from "../../src/server/security/service";
 import { createMembersService } from "../../src/modules/members/service";
+import {createPlansService} from "../../src/modules/plans/service";
+import {createMembershipsService} from "../../src/modules/memberships/service";
 import { createTrainingService } from "../../src/modules/training/service";
 import { todayInZone, endOn } from "../../src/modules/plans/format";
 import { securityFixture } from "../helpers/security-fixture";
@@ -215,6 +217,9 @@ try {
         })
       ).member.id,
     );
+  const ptPlan=await createPlansService(security).create(headers,{organizationId:f.orgA,branchId:f.a1,code:"PT-ELIGIBLE",values:{name:"Personal coaching",amountMinor:0,currency:"PKR",durationCount:1,durationUnit:"months",accessMode:"home_branch",gymFloor:true,classes:true,personalTraining:true},requestKey:randomUUID(),reason:"PT eligibility fixture"});
+  const memberships=createMembershipsService(security);
+  for(const memberId of memberIds){const c=await memberships.get(headers,memberId,{organizationId:f.orgA});await memberships.enroll(headers,memberId,{organizationId:f.orgA,mode:"enroll",memberVersion:c.memberVersion,planVersionId:ptPlan.versionId,startOn:today,requestKey:randomUUID(),reason:"Eligible coaching fixture"})}
   const trainerIds = [randomUUID(), randomUUID()],
     roomIds = [randomUUID(), randomUUID()],
     assignments: Record<string, string> = {},
@@ -486,7 +491,7 @@ try {
   );
   assert.equal(filtered.rows[0].canEdit, true);
   console.log(
-    "PASS training: persisted trainer directory/create/update/replay/stale/branch/login/audit checks; raw concurrent trainer/room/member conflicts, adjacent/overnight coverage, DST gap/fold, cancellation, resource guards, deferred child integrity and RLS/no-delete. PT service/API/UI remain incomplete.",
+    "PASS training: persisted trainer directory/create/update/replay/stale/branch/login/audit checks; raw concurrent trainer/room/member conflicts, adjacent/overnight coverage, DST gap/fold, cancellation, resource guards, deferred child integrity and RLS/no-delete. Assignment/PT service acceptance is checked separately by test:personal-training and its browser workflow.",
   );
 } finally {
   await f.cleanup();

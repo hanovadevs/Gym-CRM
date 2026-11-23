@@ -198,6 +198,17 @@ export function TrainersScreen({ initial }: { initial: TrainingDirectory }) {
           <div className="platform-heading-actions">
             <Link
               href={
+                "/training?" +
+                new URLSearchParams({
+                  organizationId: data.organizationId,
+                  trainerId: view.id,
+                })
+              }
+            >
+              Assignments & PT sessions
+            </Link>
+            <Link
+              href={
                 "/classes?" +
                 new URLSearchParams({
                   organizationId: data.organizationId,

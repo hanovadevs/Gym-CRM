@@ -2586,3 +2586,6 @@ input[type="checkbox"] {
 @media(max-width:480px){#gym-settings .detail-grid{grid-template-columns:minmax(0,1fr);gap:14px}}
 
 .class-page-nav{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px}
+
+.pt-sections{display:grid;gap:24px;margin-top:24px}.pt-controls .platform-heading-actions{margin-top:16px}.pt-row-actions{display:flex;flex-wrap:wrap;gap:10px}.pt-sections td small{display:block;margin-top:5px;color:var(--muted);line-height:1.5}.pt-offsets{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pt-sections th{font-weight:600}
+@media(max-width:960px){.pt-sections{gap:16px;margin-top:16px}.pt-row-actions{gap:8px}.pt-row-actions .button{min-height:44px}.pt-offsets{grid-template-columns:minmax(0,1fr)}}
