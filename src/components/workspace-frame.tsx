@@ -3,6 +3,7 @@ import { SignOut } from "./sign-out";
 import { AppSidebar } from "./app-sidebar";
 export function WorkspaceFrame({
   organization,
+  canManageFees = false,
   canManageSettings,
   canManageMembers = true,
   canReadPlans = true,
@@ -11,6 +12,7 @@ export function WorkspaceFrame({
   children,
 }: {
   organization: { id: string; name: string };
+  canManageFees?: boolean;
   canManageSettings: boolean;
   canManageMembers?: boolean;
   canReadPlans?: boolean;
@@ -25,7 +27,8 @@ export function WorkspaceFrame({
     | "expenses"
     | "trainers"
     | "employees"
-    | "classes";
+    | "classes"
+    | "member-fees";
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;
@@ -34,6 +37,7 @@ export function WorkspaceFrame({
       <AppSidebar
         organization={organization}
         active={active}
+        canManageFees={canManageFees}
         canManageSettings={canManageSettings}
         canManageMembers={canManageMembers}
         canReadPlans={canReadPlans}

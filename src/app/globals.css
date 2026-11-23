@@ -2560,3 +2560,29 @@ input[type="checkbox"] {
 .dashboard-classes { margin-top:24px; }
 .dashboard-classes .dashboard-member-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; }
 @media(max-width:600px) { .dashboard-classes { margin-top:16px; } .dashboard-classes .dashboard-member-list { grid-template-columns:1fr; } }
+
+/* Monthly fee schedule uses the shared compact table and drawer layout. */
+.member-monthly-fee { display:grid; gap:14px; padding:18px; background:var(--selected); border-radius:12px; }
+.member-monthly-fee .section-title { margin-bottom:0; }
+.fee-actions { display:flex; flex-wrap:wrap; gap:10px; margin:16px 0; }
+.fee-reminder-settings { margin-top:20px; }
+.dashboard-fees { margin-top:20px; }
+.fee-reminder-settings form > label { display:flex; gap:10px; align-items:center; }
+@media(max-width:640px){.member-monthly-fee{padding:14px;gap:12px}.fee-actions .button{flex:1}.fee-reminder-settings{margin-top:14px}}
+
+.fee-reminder-settings p,.fee-reminder-settings strong { overflow-wrap:anywhere; }
+
+.fee-schedule td small { display:block; color:var(--muted); margin-top:4px; line-height:1.5; }
+
+@media(max-width:480px){.fee-actions{flex-direction:column}.fee-actions .button{flex:auto;min-height:44px}}
+
+.fee-reminder-settings > p { margin:12px 0; line-height:1.7; }
+.fee-schedule th { font-weight:600; }
+@media(min-width:961px){.fee-schedule td{font-size:14px;padding:16px 12px}.fee-schedule th{font-size:13px;padding:15px 12px}}
+#gym-settings > .panel:first-child { margin-bottom:20px; }
+#gym-settings .detail-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:16px; margin:16px 0; }
+#gym-settings .detail-grid dt { color:var(--muted); font-size:12px; margin-bottom:6px; }
+#gym-settings .detail-grid dd { margin:0; font-weight:600; overflow-wrap:anywhere; }
+@media(max-width:480px){#gym-settings .detail-grid{grid-template-columns:minmax(0,1fr);gap:14px}}
+
+.class-page-nav{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-top:16px}

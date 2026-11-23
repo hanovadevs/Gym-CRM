@@ -22,6 +22,17 @@ export type DashboardData = {
       renewOn: string;
     }[];
   };
+  feeReminders?: null | {
+    total: number;
+    rows: {
+      memberId: string;
+      name: string;
+      dueOn: string;
+      dueKind: "invoice" | "renewal";
+      amountMinor: string;
+      currency: string;
+    }[];
+  };
   classes:
     | null
     | {

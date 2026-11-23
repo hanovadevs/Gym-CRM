@@ -61,6 +61,7 @@ export function money(minor: number, currency: string, locale = "en-PK") {
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
+    minimumFractionDigits: fractionDigits(currency),
     maximumFractionDigits: fractionDigits(currency),
   }).format(minor / 10 ** fractionDigits(currency));
 }

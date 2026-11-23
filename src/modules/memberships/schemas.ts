@@ -34,6 +34,14 @@ export const enrollmentFields = z
     mode: z.enum(["enroll", "renew"]),
     planVersionId: z.uuid(),
     startOn: calendarDate.optional(),
+    useCatalogPrice: z.boolean().optional(),
+    monthlyFee: z
+      .object({
+        amountMinor: z.string().regex(/^(0|[1-9][0-9]{0,11})$/),
+        reminderDays: z.number().int().min(1).max(30),
+      })
+      .strict()
+      .optional(),
   })
   .strict();
 export const enrollmentSchema = enrollmentFields

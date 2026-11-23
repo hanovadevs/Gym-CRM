@@ -21,6 +21,7 @@ export const permissions = {
   "settings.read": ["owner", "manager"],
   "settings.manage": ["owner", "manager"],
   "staff.manage": ["owner"],
+  "fees.manage": ["owner"],
   "members.manage": ["owner", "manager", "receptionist"],
   "members.assigned.read": ["owner", "manager", "trainer"],
   "plans.manage": ["owner", "manager"],

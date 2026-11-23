@@ -43,6 +43,17 @@ export type MembershipContext = {
   timeZone: string;
   today: string;
   canOverride: boolean;
+  canSetMonthlyFee?: boolean;
+  monthlyFee?: {
+    id: string;
+    planId: string;
+    amountMinor: string;
+    currency: string;
+    startOn: string;
+    reminderDays: number;
+    dueOn: string | null;
+    dueKind: "invoice" | "renewal" | null;
+  } | null;
   paidActivation: boolean;
   debtBlocksAccess: boolean;
   graceDays: number;
@@ -54,6 +65,7 @@ export type MembershipContext = {
   nextStartOn: string;
   plans: {
     id: string;
+    planId?: string;
     name: string;
     amountMinor: number;
     currency: string;

@@ -38,6 +38,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
     <WorkspaceFrame
       organization={data.organization}
       active="dashboard"
+      canManageFees={Boolean(data.feeReminders)}
       canManageSettings={data.canManageSettings}
       canManageMembers={data.canManageMembers}
       canReadPlans={data.canReadPlans}
@@ -252,6 +253,39 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
             ) : null}
           </section>
         </div>
+      ) : null}
+      {data.feeReminders ? (
+        <section className="panel dashboard-fees">
+          <SectionTitle
+            title="Member fee reminders"
+            help="Your owner-only upcoming and overdue individual monthly fees. Unpaid invoice balances and unissued renewal reminders are listed separately. Dates include saved membership freezes; cancelled future renewals are excluded."
+          />
+          <p>
+            <strong>{data.feeReminders.total}</strong> member fee reminders in
+            this branch scope
+          </p>
+          <ul className="dashboard-member-list">
+            {data.feeReminders.rows.map((r) => (
+              <li key={r.memberId}>
+                <Link href={profile(r.memberId)}>
+                  <strong>{r.name}</strong>
+                  <span>
+                    {r.dueKind === "invoice" ? "Invoice due" : "Renewal due"}{" "}
+                    {date(r.dueOn)} / {money(r.amountMinor, r.currency)}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {!data.feeReminders.rows.length ? (
+            <p className="dashboard-empty">
+              No member fees need attention right now.
+            </p>
+          ) : null}
+          <Link className="button secondary" href={href("/member-fees")}>
+            View fee schedule & reminders
+          </Link>
+        </section>
       ) : null}
       {data.classes ? (
         <section className="panel dashboard-classes">

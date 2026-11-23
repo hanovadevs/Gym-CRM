@@ -231,7 +231,7 @@ export function createSettingsService(
       async (db, scope) => {
         const current = (
           await db.query(
-            "select id,role,active,version from gym.staff_memberships where id=$1 for update",
+            "select id,auth_user_id,role,active,version from gym.staff_memberships where id=$1 for update",
             [input.id],
           )
         ).rows[0];
@@ -241,6 +241,19 @@ export function createSettingsService(
           throw new BusinessError(
             "CONFLICT",
             "This staff record changed. Reload before saving.",
+          );
+        if (
+          (!input.active || input.role !== "owner") &&
+          (
+            await db.query(
+              "select 1 from gym.gym_accounts where organization_id=$1 and auth_user_id=$2",
+              [scope.organizationId, current.auth_user_id],
+            )
+          ).rowCount
+        )
+          throw new BusinessError(
+            "CONFLICT",
+            "The primary gym login must remain an active owner for recovery and notifications. A platform administrator can suspend the workspace.",
           );
         await checkGrants(db, input.role, input.active, input.branchIds);
         if (

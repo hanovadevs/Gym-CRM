@@ -38,8 +38,23 @@ const duplicate = {
   acknowledgeDuplicate: z.boolean().default(false),
   duplicateReason: text(300).default(""),
 };
+export const monthlyFeeFields = z
+  .object({
+    planVersionId: z.uuid(),
+    amountMinor: z
+      .string()
+      .regex(/^(0|[1-9][0-9]{0,11})$/, "Enter a valid monthly fee"),
+    startOn: z.iso.date(),
+    reminderDays: z.number().int().min(1).max(30).default(7),
+  })
+  .strict();
 export const createMember = memberFields
-  .extend({ organizationId: z.uuid(), registrationKey: z.uuid(), ...duplicate })
+  .extend({
+    organizationId: z.uuid(),
+    registrationKey: z.uuid(),
+    monthlyFee: monthlyFeeFields.optional(),
+    ...duplicate,
+  })
   .strict()
   .refine(contact, "Add a usable phone number or email")
   .refine(

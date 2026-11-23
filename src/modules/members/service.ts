@@ -4,6 +4,8 @@ import type { PoolClient } from "pg";
 import { z } from "zod";
 import type { createSecurity, Scope } from "@/server/security/service";
 import { can } from "@/server/security/permissions";
+import { enrollMemberInTransaction } from "@/modules/memberships/service";
+import { resolvePlanSnapshot } from "@/modules/plans/service";
 import { audit } from "@/server/audit";
 import { BusinessError } from "@/server/errors";
 import {
@@ -144,7 +146,19 @@ export function createMembersService(
             ],
           )
         ).rows[0];
+        const monthly =
+          scope.role === "owner"
+            ? (
+                await db.query(
+                  `with choices as(select v.id,v.name,p.branch_id as "branchId",v.amount_minor as "amountMinor",v.currency from gym.plans p join lateral(select * from gym.plan_versions v where v.organization_id=p.organization_id and v.plan_id=p.id order by v.version desc limit 1)v on true join gym.organizations o on o.id=p.organization_id where p.organization_id=$1 and p.branch_id=any($2::uuid[]) and p.archived_at is null and v.duration_unit='months' and v.duration_count=1 and v.currency=o.currency) select (select count(*)::int from choices) total,coalesce((select jsonb_agg(c) from(select * from choices order by name,id limit 200)c),'[]'::jsonb) plans`,
+                  [scope.organizationId, [...scope.authorizedBranchIds]],
+                )
+              ).rows[0]
+            : { total: 0, plans: [] };
         return {
+          canSetMonthlyFee: scope.role === "owner",
+          monthlyPlans: monthly.plans,
+          monthlyPlanCount: monthly.total,
           organization: org,
           branches,
           members: result.members,
@@ -172,6 +186,11 @@ export function createMembersService(
       async (db, scope) => {
         if (!scope.branchIds.includes(input.homeBranchId))
           throw new BusinessError("NOT_FOUND", "Branch not found.");
+        if (input.monthlyFee && scope.role !== "owner")
+          throw new BusinessError(
+            "FORBIDDEN",
+            "Only the gym owner can set an individual monthly fee.",
+          );
         const values = memberFields.parse({
           name: input.name,
           phone: input.phone,
@@ -180,7 +199,13 @@ export function createMembersService(
           joinedOn: input.joinedOn,
         });
         const hash = createHash("sha256")
-          .update(JSON.stringify(values))
+          .update(
+            JSON.stringify(
+              input.monthlyFee
+                ? { ...values, monthlyFee: input.monthlyFee }
+                : values,
+            ),
+          )
           .digest("hex");
         await db.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
           "registration:" +
@@ -240,6 +265,80 @@ export function createMembersService(
             ],
           )
         ).rows[0].id;
+        if (input.monthlyFee) {
+          const fee = input.monthlyFee,
+            plan = await resolvePlanSnapshot(db, scope, fee.planVersionId);
+          if (
+            plan.branchId !== input.homeBranchId ||
+            plan.durationUnit !== "months" ||
+            plan.durationCount !== 1
+          )
+            throw new BusinessError(
+              "VALIDATION_ERROR",
+              "Choose an active one-month plan in the member's home branch.",
+            );
+          const zone = (
+            await db.query(
+              "select time_zone from gym.organizations where id=$1",
+              [scope.organizationId],
+            )
+          ).rows[0].time_zone;
+          if (fee.startOn < localToday(zone) || fee.startOn < input.joinedOn)
+            throw new BusinessError(
+              "VALIDATION_ERROR",
+              "Monthly subscriptions must start today or later, after the joining date.",
+            );
+          const agreement = (
+            await db.query(
+              "insert into gym.member_fee_agreements(organization_id,member_id,branch_id,plan_id,amount_minor,currency,start_on,reminder_days,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id",
+              [
+                scope.organizationId,
+                id,
+                input.homeBranchId,
+                plan.planId,
+                fee.amountMinor,
+                plan.currency,
+                fee.startOn,
+                fee.reminderDays,
+                scope.userId,
+              ],
+            )
+          ).rows[0];
+          await enrollMemberInTransaction(
+            db,
+            scope,
+            await readMember(db, scope, id),
+            {
+              organizationId: scope.organizationId,
+              memberVersion: 1,
+              mode: "enroll",
+              planVersionId: fee.planVersionId,
+              startOn: fee.startOn,
+              requestKey: input.registrationKey,
+              reason: "Owner-set monthly fee at member registration",
+            },
+          );
+          await audit(
+            db,
+            scope,
+            "member.monthly_fee_agreed",
+            agreement.id,
+            "Owner-set monthly fee at member registration",
+            null,
+            {
+              memberId: id,
+              planId: plan.planId,
+              amountMinor: fee.amountMinor,
+              currency: plan.currency,
+              startOn: fee.startOn,
+              reminderDays: fee.reminderDays,
+            },
+          );
+          await db.query(
+            "update gym.members set version=version+1 where organization_id=$1 and id=$2",
+            [scope.organizationId, id],
+          );
+        }
         await audit(
           db,
           scope,

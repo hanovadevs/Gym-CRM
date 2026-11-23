@@ -134,6 +134,8 @@ try {
     ["/api/trainers", "GET"],
     ["/api/payroll", "GET"],
     ["/api/classes", "GET"],
+    ["/api/member-fees", "GET"],
+    ["/api/member-fees", "POST", {operation:"digest",organizationId:org}],
     ["/api/classes/members?organizationId="+org+"&classId="+org+"&q=member", "GET"],
     ["/api/classes", "POST", {operation:"room",organizationId:org,id:org,requestKey:org,branchId:org,name:"Anonymous room",capacity:10,active:true,reason:"Anonymous denial check"}],
     [
@@ -424,6 +426,7 @@ try {
     assert.equal((await result.json()).error.code, "UNAUTHENTICATED");
   }
   for (const path of [
+    "/member-fees",
     "/employees",
     "/trainers",
     "/workspace",

@@ -22,5 +22,14 @@ export type Directory = {
   today: string;
   canManageSettings: boolean;
   query: DirectoryQuery;
+  canSetMonthlyFee?: boolean;
+  monthlyPlans?: {
+    id: string;
+    name: string;
+    branchId: string;
+    amountMinor: number;
+    currency: string;
+  }[];
+  monthlyPlanCount?: number;
   requestId: string;
 };

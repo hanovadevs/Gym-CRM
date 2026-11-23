@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { invalidateMemberFeeViews } from "@/modules/member-fees/invalidate";
 import { useState } from "react";
 import { Drawer } from "@/components/ui/primitives";
 import { SectionTitle } from "@/components/ui/section-title";
@@ -131,6 +132,7 @@ export function PaymentDrawer({
               setResult(saved);
               try {
                 await onSaved(saved);
+                await invalidateMemberFeeViews(organizationId);
               } catch {
                 setError(
                   "Payment saved. The list could not refresh; use the paid receipt and reload the list before another payment.",

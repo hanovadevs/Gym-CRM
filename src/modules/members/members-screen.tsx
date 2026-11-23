@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { WorkspaceFrame } from "@/components/workspace-frame";
 import { SectionTitle } from "@/components/ui/section-title";
+import { invalidateMemberFeeViews } from "@/modules/member-fees/invalidate";
 import { MemberEditor } from "./member-editor";
 import { useHydrated } from "@/lib/use-hydrated";
 import type { Directory, Member } from "./types";
@@ -113,10 +114,16 @@ export function MembersScreen({ initial }: { initial: Directory }) {
           duplicates: result.error?.details?.duplicates,
           moreMatches: result.error?.details?.moreMatches,
         };
+      const cacheUpdated = await invalidateMemberFeeViews(
+        data.organization.id,
+      ).then(
+        () => true,
+        () => false,
+      );
       const member = result.data.member;
       setNextMemberId(editing ? "" : member.id);
       setNotice(
-        `${member.name} (${member.memberCode}) ${editing ? "updated" : "registered"}.`,
+        `${member.name} (${member.memberCode}) ${editing ? "updated" : "registered"}.${cacheUpdated ? "" : " Refresh the dashboard and fee schedule to see this change."}`,
       );
       setEditor(null);
       // A confirmed commit must never be retried because its following list refresh failed.
@@ -139,6 +146,7 @@ export function MembersScreen({ initial }: { initial: Directory }) {
     <WorkspaceFrame
       organization={data.organization}
       canManageSettings={data.canManageSettings}
+      canManageFees={data.canSetMonthlyFee}
     >
       <div className="page-heading">
         <div>

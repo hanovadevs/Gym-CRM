@@ -1,10 +1,18 @@
 "use client";
 import Link from "next/link";
+import { invalidateMemberFeeViews } from "@/modules/member-fees/invalidate";
 import { useState } from "react";
 import { SectionTitle } from "@/components/ui/section-title";
 import { Drawer } from "@/components/ui/primitives";
 import { useHydrated } from "@/lib/use-hydrated";
-import { money, term, endOn, previousDay } from "@/modules/plans/format";
+import {
+  money,
+  term,
+  endOn,
+  previousDay,
+  parseAmount,
+  amountInput,
+} from "@/modules/plans/format";
 import { daysBetween, eligibilityLabel } from "./state";
 import type {
   MembershipContext,
@@ -89,7 +97,17 @@ export function MembershipsPanel({
       setEditor(null);
       await fetchContext();
       await onChanged();
-      setMessage("Membership changes saved.");
+      const cacheUpdated = await invalidateMemberFeeViews(
+        data.organizationId,
+      ).then(
+        () => true,
+        () => false,
+      );
+      setMessage(
+        cacheUpdated
+          ? "Membership changes saved."
+          : "Membership changes saved. Refresh the dashboard and fee schedule to see this change.",
+      );
     } catch (e) {
       if (committed) {
         setEditor(null);
@@ -146,6 +164,31 @@ export function MembershipsPanel({
           {data.hasHistory ? "Renew membership" : "Enroll member"}
         </button>
       </div>
+      {data.monthlyFee ? (
+        <section className="membership-review" aria-label="Agreed monthly fee">
+          <strong>
+            Agreed monthly fee:{" "}
+            {money(
+              Number(data.monthlyFee.amountMinor),
+              data.monthlyFee.currency,
+              data.locale,
+            )}
+          </strong>
+          <p>
+            Starts {date(data.monthlyFee.startOn)}.{" "}
+            {data.monthlyFee.dueOn
+              ? (data.monthlyFee.dueKind === "invoice"
+                  ? "Invoice due "
+                  : "Renewal due ") + date(data.monthlyFee.dueOn)
+              : "No upcoming fee reminder."}
+          </p>
+          <p>
+            Reminders begin {data.monthlyFee.reminderDays} days before due.
+            Renewals retain this member’s agreed fee; existing invoices and
+            payments remain unchanged.
+          </p>
+        </section>
+      ) : null}
       {data.archived ? (
         <p className="support">
           Archived members cannot enroll or change access. Their membership and
@@ -225,7 +268,12 @@ export function MembershipsPanel({
                     <div>
                       <dt>Issued invoice</dt>
                       <dd>
-                        <Link className="text-action" href={`/payments?organizationId=${data.organizationId}&invoiceId=${m.invoice.id}`}>{m.invoice.number}</Link>
+                        <Link
+                          className="text-action"
+                          href={`/payments?organizationId=${data.organizationId}&invoiceId=${m.invoice.id}`}
+                        >
+                          {m.invoice.number}
+                        </Link>
                         <small>
                           {money(
                             m.invoice.totalMinor,
@@ -380,7 +428,8 @@ export function MembershipsPanel({
       ) : null}
       <p className="support">
         Invoices record charges. Open an issued invoice to record funds received
-        and view its paid receipts. Full settlement activates eligible pending memberships.
+        and view its paid receipts. Full settlement activates eligible pending
+        memberships.
       </p>
       {editor ? (
         <Drawer
@@ -476,7 +525,11 @@ function EnrollmentForm({
   ) => Promise<Pick<MembershipContext, "plans" | "planCount">>;
   onSave: (v: Record<string, unknown>) => void;
 }) {
-  const [planVersionId, setPlan] = useState(data.plans[0]?.id ?? ""),
+  const [planVersionId, setPlan] = useState(
+      data.plans.find((p) => p.planId === data.monthlyFee?.planId)?.id ??
+        data.plans[0]?.id ??
+        "",
+    ),
     [startOn, setStart] = useState(
       mode === "renew" ? data.nextStartOn : data.today,
     ),
@@ -484,7 +537,25 @@ function EnrollmentForm({
     [preview, setPreview] = useState<EnrollmentPreview | null>(null),
     [checking, setChecking] = useState(false),
     [localError, setError] = useState("");
-  const payload = { mode, planVersionId, startOn };
+  const [setMonthlyFee, setSetMonthlyFee] = useState(false),
+    [feeAmount, setFeeAmount] = useState(
+      data.monthlyFee
+        ? amountInput(
+            Number(data.monthlyFee.amountMinor),
+            data.monthlyFee.currency,
+          )
+        : "",
+    ),
+    [feeReminderDays, setFeeReminderDays] = useState(
+      data.monthlyFee?.reminderDays ?? 7,
+    );
+  const [useCatalogPrice, setUseCatalogPrice] = useState(false);
+  const payload = {
+    mode,
+    planVersionId,
+    startOn,
+    ...(useCatalogPrice ? { useCatalogPrice: true } : {}),
+  };
   const [planQuery, setPlanQuery] = useState(""),
     [choices, setChoices] = useState(data.plans),
     [planCount, setPlanCount] = useState(data.planCount);
@@ -494,13 +565,24 @@ function EnrollmentForm({
       onSubmit={async (e) => {
         e.preventDefault();
         setError("");
-        if (preview) {
-          onSave({ ...payload, reason });
-          return;
-        }
         setChecking(true);
         try {
-          setPreview(await onPreview(payload));
+          const submitted = {
+            ...payload,
+            ...(setMonthlyFee
+              ? {
+                  monthlyFee: {
+                    amountMinor: String(parseAmount(feeAmount, data.currency)),
+                    reminderDays: feeReminderDays,
+                  },
+                }
+              : {}),
+          };
+          if (preview) {
+            onSave({ ...submitted, reason });
+            return;
+          }
+          setPreview(await onPreview(submitted));
         } catch (e) {
           setError(e instanceof Error ? e.message : "Could not preview.");
         } finally {
@@ -584,6 +666,76 @@ function EnrollmentForm({
             }}
           />
         </label>
+        {data.canSetMonthlyFee ? (
+          <section className="membership-review">
+            <label>
+              <input
+                type="checkbox"
+                checked={setMonthlyFee}
+                onChange={(e) => {
+                  setSetMonthlyFee(e.target.checked);
+                  setUseCatalogPrice(false);
+                  setPreview(null);
+                }}
+              />{" "}
+              Set or change this member’s monthly fee
+            </label>
+            {data.monthlyFee ? (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={useCatalogPrice}
+                  onChange={(e) => {
+                    setUseCatalogPrice(e.target.checked);
+                    setSetMonthlyFee(false);
+                    setPreview(null);
+                  }}
+                />{" "}
+                Use catalog price and end the monthly fee agreement
+              </label>
+            ) : null}
+            {setMonthlyFee ? (
+              <>
+                <label>
+                  Agreed monthly fee ({data.currency})
+                  <input
+                    required
+                    inputMode="decimal"
+                    value={feeAmount}
+                    onChange={(e) => {
+                      setFeeAmount(e.target.value);
+                      setPreview(null);
+                    }}
+                  />
+                </label>
+                <label>
+                  Reminder days before due
+                  <input
+                    required
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={feeReminderDays}
+                    onChange={(e) => {
+                      setFeeReminderDays(Number(e.target.value));
+                      setPreview(null);
+                    }}
+                  />
+                </label>
+                <p>
+                  Requires a one-month plan. Applies to this new term and
+                  subsequent renewals, preserving earlier invoices and fee
+                  history.
+                </p>
+              </>
+            ) : data.monthlyFee && !useCatalogPrice ? (
+              <p>
+                The saved member fee is used for renewal, regardless of the
+                catalog price shown above.
+              </p>
+            ) : null}
+          </section>
+        ) : null}
         <label>
           Reason
           <textarea

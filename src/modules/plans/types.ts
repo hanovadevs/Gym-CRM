@@ -46,6 +46,8 @@ export type VersionHistory = {
 };
 export type PlanSnapshot = Readonly<
   VersionValues & {
+    feeAgreementId?: string;
+    catalogAmountMinor?: number;
     planId: string;
     planVersionId: string;
     planCode: string;

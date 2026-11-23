@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Drawer } from "@/components/ui/primitives";
 import { SectionTitle } from "@/components/ui/section-title";
+import { amountInput, parseAmount, money } from "@/modules/plans/format";
 import { createMember, updateMember } from "./schemas";
 import type { Directory, Member, DuplicateMatch } from "./types";
 type SaveResult =
@@ -19,7 +20,15 @@ export function MemberEditor({
   onSave,
   busy,
 }: {
-  data: Pick<Directory, "organization" | "branches" | "today"> & {
+  data: Pick<
+    Directory,
+    | "organization"
+    | "branches"
+    | "today"
+    | "canSetMonthlyFee"
+    | "monthlyPlans"
+    | "monthlyPlanCount"
+  > & {
     query?: { branchId?: string };
   };
   record?: Member;
@@ -36,6 +45,15 @@ export function MemberEditor({
       record?.homeBranchId ?? data.query?.branchId ?? data.branches[0].id,
     joinedOn: record?.joinedOn ?? data.today,
   });
+  const [includeFee, setIncludeFee] = useState(false),
+    [feePlanId, setFeePlanId] = useState(""),
+    [feeAmount, setFeeAmount] = useState(""),
+    [feeStart, setFeeStart] = useState(data.today),
+    [reminderDays, setReminderDays] = useState(7);
+  const monthlyPlans = (data.monthlyPlans ?? []).filter(
+    (p) => p.branchId === values.homeBranchId,
+  );
+  const feePlan = monthlyPlans.find((p) => p.id === feePlanId);
   const [step, setStep] = useState("details"),
     [reason, setReason] = useState(""),
     [error, setError] = useState(""),
@@ -45,6 +63,10 @@ export function MemberEditor({
     [more, setMore] = useState(false);
   function change(key: keyof typeof values, value: string) {
     setValues({ ...values, [key]: value });
+    if (key === "homeBranchId") {
+      setFeePlanId("");
+      setFeeAmount("");
+    }
     setDuplicates([]);
     setAck(false);
     setDuplicateReason("");
@@ -60,6 +82,24 @@ export function MemberEditor({
         onSubmit={async (e) => {
           e.preventDefault();
           setError("");
+          let monthlyFee;
+          if (!record && includeFee) {
+            try {
+              if (!feePlan)
+                throw Error("Choose an active one-month plan for this branch.");
+              monthlyFee = {
+                planVersionId: feePlan.id,
+                amountMinor: String(parseAmount(feeAmount, feePlan.currency)),
+                startOn: feeStart,
+                reminderDays,
+              };
+            } catch (e) {
+              setError(
+                e instanceof Error ? e.message : "Check the monthly fee.",
+              );
+              return;
+            }
+          }
           const body = {
             ...values,
             organizationId: data.organization.id,
@@ -67,7 +107,7 @@ export function MemberEditor({
             duplicateReason,
             ...(record
               ? { id: record.id, version: record.version, reason }
-              : { registrationKey }),
+              : { registrationKey, ...(monthlyFee ? { monthlyFee } : {}) }),
           };
           const parsed = (record ? updateMember : createMember).safeParse(body);
           if (!parsed.success) {
@@ -165,6 +205,99 @@ export function MemberEditor({
                   onChange={(e) => change("joinedOn", e.target.value)}
                 />
               </label>
+              {!record && data.canSetMonthlyFee ? (
+                <section className="member-monthly-fee">
+                  <SectionTitle
+                    title="Monthly subscription"
+                    help="Set this member’s agreed fee using a one-month plan for access benefits. Saving creates the first membership and issued invoice together. Future renewals retain the agreed rate; payments are recorded separately."
+                  />
+                  <label>
+                    <input
+                      type="checkbox"
+                      checked={includeFee}
+                      onChange={(e) => setIncludeFee(e.target.checked)}
+                    />{" "}
+                    Add monthly subscription
+                  </label>
+                  {includeFee ? (
+                    <>
+                      <label className="field">
+                        Monthly access plan
+                        <select
+                          required
+                          aria-label="Monthly access plan"
+                          value={feePlanId}
+                          onChange={(e) => {
+                            setFeePlanId(e.target.value);
+                            const p = monthlyPlans.find(
+                              (p) => p.id === e.target.value,
+                            );
+                            setFeeAmount(
+                              p ? amountInput(p.amountMinor, p.currency) : "",
+                            );
+                          }}
+                        >
+                          <option value="">Choose a monthly plan</option>
+                          {monthlyPlans.map((p) => (
+                            <option key={p.id} value={p.id}>
+                              {p.name} ({p.currency})
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      {!monthlyPlans.length ? (
+                        <p className="support">
+                          Create an active one-month plan for this branch in
+                          Plans first.
+                        </p>
+                      ) : null}
+                      {(data.monthlyPlanCount ?? 0) > 200 ? (
+                        <p className="support">
+                          Showing the first 200 monthly plans. Narrow the
+                          catalog before registering if your plan is missing.
+                        </p>
+                      ) : null}
+                      <label className="field">
+                        Member monthly fee
+                        {feePlan ? " (" + feePlan.currency + ")" : ""}
+                        <input
+                          required
+                          inputMode="decimal"
+                          value={feeAmount}
+                          onChange={(e) => setFeeAmount(e.target.value)}
+                        />
+                      </label>
+                      <label className="field">
+                        Subscription start date
+                        <input
+                          required
+                          type="date"
+                          min={data.today}
+                          value={feeStart}
+                          onChange={(e) => setFeeStart(e.target.value)}
+                        />
+                      </label>
+                      <label className="field">
+                        Remind before due date (days)
+                        <input
+                          required
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={reminderDays}
+                          onChange={(e) =>
+                            setReminderDays(Number(e.target.value))
+                          }
+                        />
+                      </label>
+                      <p className="support">
+                        Owner reminders appear inside Mojym and in the owner’s
+                        email summary. No payment is recorded by registration.
+                      </p>
+                    </>
+                  ) : null}
+                </section>
+              ) : null}
               {record ? (
                 <label className="field">
                   Reason for change
@@ -182,7 +315,7 @@ export function MemberEditor({
             <>
               <SectionTitle
                 title="Review registration"
-                help="Saving registers this person once and assigns a member code. Membership enrollment and payment are separate steps, available when those modules are connected."
+                help="Review contact details and any agreed monthly subscription before saving. Payment is always a separate confirmed action."
               />
               <dl className="registration-summary">
                 <dt>Name</dt>
@@ -201,10 +334,31 @@ export function MemberEditor({
                 <dt>Joined</dt>
                 <dd>{values.joinedOn}</dd>
               </dl>
-              <p className="registration-note">
-                Registration only. No membership, invoice or payment will be
-                created.
-              </p>
+              {includeFee && feePlan ? (
+                <section className="registration-note">
+                  <strong>
+                    Monthly subscription:{" "}
+                    {money(
+                      parseAmount(feeAmount, feePlan.currency),
+                      feePlan.currency,
+                      data.organization.locale,
+                    )}
+                  </strong>
+                  <p>
+                    {feePlan.name}; starts {feeStart}; reminders {reminderDays}{" "}
+                    days before due.
+                  </p>
+                  <p>
+                    Creates the member, agreed fee, first monthly membership and
+                    issued invoice together. No payment is recorded.
+                  </p>
+                </section>
+              ) : (
+                <p className="registration-note">
+                  Registration only. No membership, invoice or payment will be
+                  created.
+                </p>
+              )}
             </>
           )}
           {error ? (

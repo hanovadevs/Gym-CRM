@@ -191,6 +191,7 @@ export function SettingsScreen({ initial }: { initial: SettingsData }) {
       <AppSidebar
         organization={{ id: data.organizationId, name: data.values.name }}
         active="settings"
+        canManageFees={data.canManageStaff}
         canManageSettings
         canReadBilling
       />

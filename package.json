@@ -40,6 +40,7 @@
     "test:training": "node --conditions=react-server --import tsx tests/integration/training-storage.ts",
     "test:payroll": "node --conditions=react-server --import tsx tests/integration/payroll.ts",
     "test:classes": "node --conditions=react-server --import tsx tests/integration/classes.ts",
+    "test:member-fees": "node --conditions=react-server --import tsx tests/integration/member-fees.ts",
     "test:account-contact": "node --conditions=react-server --import tsx tests/integration/account-contact.ts"
   },
   "keywords": [],

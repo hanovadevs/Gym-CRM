@@ -96,7 +96,7 @@ export async function readMembershipContext(
   }
   const choices = (
     await db.query(
-      `with choices as(select v.id,v.name,v.amount_minor as "amountMinor",v.currency,v.duration_unit as "durationUnit",v.duration_count as "durationCount" from gym.plans p join lateral(select * from gym.plan_versions where organization_id=p.organization_id and plan_id=p.id order by version desc limit 1)v on true where p.organization_id=$1 and p.branch_id=$2 and p.archived_at is null and v.currency=$3 and (v.name ilike $4 or p.code ilike $4)) select (select count(*)::int from choices) total,coalesce((select jsonb_agg(c) from(select * from choices order by name,id limit 100)c),'[]'::jsonb) plans`,
+      `with choices as(select v.id,v.plan_id as "planId",v.name,v.amount_minor as "amountMinor",v.currency,v.duration_unit as "durationUnit",v.duration_count as "durationCount" from gym.plans p join lateral(select * from gym.plan_versions where organization_id=p.organization_id and plan_id=p.id order by version desc limit 1)v on true where p.organization_id=$1 and p.branch_id=$2 and p.archived_at is null and v.currency=$3 and (v.name ilike $4 or p.code ilike $4)) select (select count(*)::int from choices) total,coalesce((select jsonb_agg(c) from(select * from choices order by name,id limit 100)c),'[]'::jsonb) plans`,
       [
         s.organizationId,
         member.homeBranchId,
@@ -105,6 +105,13 @@ export async function readMembershipContext(
       ],
     )
   ).rows[0];
+  const monthlyFee =
+    (
+      await db.query(
+        `select a.id,a.plan_id as "planId",a.amount_minor::text as "amountMinor",a.currency,a.start_on::text as "startOn",a.reminder_days as "reminderDays",d.due_on::text as "dueOn",d.due_kind as "dueKind" from gym.member_fee_agreements a left join gym.member_fee_due d on d.organization_id=a.organization_id and d.agreement_id=a.id where a.organization_id=$1 and a.member_id=$2 and a.ended_at is null`,
+        [s.organizationId, member.id],
+      )
+    ).rows[0] ?? null;
   return {
     memberId: member.id,
     memberVersion: member.version,
@@ -113,6 +120,8 @@ export async function readMembershipContext(
     ...org,
     today,
     canOverride: can(s.role, "memberships.override"),
+    canSetMonthlyFee: s.role === "owner",
+    monthlyFee,
     memberships: result.rows.map((m: Membership) => ({
       ...m,
       status: status(m, today),
@@ -173,7 +182,57 @@ async function enrollmentPreview(
       "CONFLICT",
       "Membership history changed. Reload and choose the current enrollment action.",
     );
-  const plan = await resolvePlanSnapshot(db, s, input.planVersionId);
+  if ((input.monthlyFee || input.useCatalogPrice) && s.role !== "owner")
+    throw new BusinessError(
+      "FORBIDDEN",
+      "Only the gym owner can change monthly fee agreements.",
+    );
+  if (input.monthlyFee && input.useCatalogPrice)
+    throw new BusinessError(
+      "VALIDATION_ERROR",
+      "Choose an agreed fee or the catalog price.",
+    );
+  let plan = await resolvePlanSnapshot(db, s, input.planVersionId);
+  const fee = (
+    await db.query(
+      "select id,plan_id,amount_minor::text amount_minor,currency from gym.member_fee_agreements where organization_id=$1 and member_id=$2 and ended_at is null for share",
+      [s.organizationId, member.id],
+    )
+  ).rows[0];
+  if (input.monthlyFee) {
+    if (s.role !== "owner")
+      throw new BusinessError(
+        "FORBIDDEN",
+        "Only the gym owner can set an individual monthly fee.",
+      );
+    if (plan.durationUnit !== "months" || plan.durationCount !== 1)
+      throw new BusinessError(
+        "VALIDATION_ERROR",
+        "An individual monthly fee requires a one-month plan.",
+      );
+    plan = {
+      ...plan,
+      catalogAmountMinor: plan.amountMinor,
+      amountMinor: Number(input.monthlyFee.amountMinor),
+    };
+  } else if (fee && !input.useCatalogPrice) {
+    if (
+      fee.plan_id !== plan.planId ||
+      plan.durationUnit !== "months" ||
+      plan.durationCount !== 1 ||
+      fee.currency !== plan.currency
+    )
+      throw new BusinessError(
+        "CONFLICT",
+        "This member has an agreed monthly fee. Renew the same monthly plan, or ask the owner to change the fee or explicitly use the catalog price in the enrollment form.",
+      );
+    plan = {
+      ...plan,
+      catalogAmountMinor: plan.amountMinor,
+      amountMinor: Number(fee.amount_minor),
+      feeAgreementId: fee.id,
+    };
+  }
   if (plan.branchId !== member.homeBranchId)
     throw new BusinessError(
       "NOT_FOUND",
@@ -204,6 +263,127 @@ async function enrollmentPreview(
     requestId: s.requestId,
   };
 }
+export async function enrollMemberInTransaction(
+  db: PoolClient,
+  s: Scope,
+  member: Member,
+  input: z.infer<typeof enrollmentSchema>,
+) {
+  const p = await enrollmentPreview(db, s, member, input),
+    org = await orgValues(db, s);
+  if (input.monthlyFee || input.useCatalogPrice) {
+    await db.query(
+      "update gym.member_fee_agreements set ended_at=clock_timestamp(),ended_by=$3,end_reason=$4 where organization_id=$1 and member_id=$2 and ended_at is null",
+      [s.organizationId, member.id, s.userId, input.reason],
+    );
+    if (input.monthlyFee) {
+      const agreement = (
+        await db.query(
+          "insert into gym.member_fee_agreements(organization_id,member_id,branch_id,plan_id,amount_minor,currency,start_on,reminder_days,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id",
+          [
+            s.organizationId,
+            member.id,
+            member.homeBranchId,
+            p.plan.planId,
+            p.plan.amountMinor,
+            p.plan.currency,
+            p.startOn,
+            input.monthlyFee.reminderDays,
+            s.userId,
+          ],
+        )
+      ).rows[0];
+      p.plan = { ...p.plan, feeAgreementId: agreement.id };
+      await audit(
+        db,
+        s,
+        "member.monthly_fee_agreed",
+        agreement.id,
+        input.reason,
+        null,
+        {
+          memberId: member.id,
+          amountMinor: String(p.plan.amountMinor),
+          currency: p.plan.currency,
+          startOn: p.startOn,
+          reminderDays: input.monthlyFee.reminderDays,
+        },
+      );
+    }
+  }
+  const m = (
+    await db.query(
+      `insert into gym.memberships(organization_id,member_id,home_branch_id,plan_version_id,snapshot,amount_minor,currency,start_on,original_end_on_exclusive,end_on_exclusive,lifecycle,activated_at,created_by) values($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$9,$10,case when $10='active' then now() else null end,$11) returning id`,
+      [
+        s.organizationId,
+        member.id,
+        member.homeBranchId,
+        p.plan.planVersionId,
+        JSON.stringify(p.plan),
+        p.plan.amountMinor,
+        p.plan.currency,
+        p.startOn,
+        p.endOn,
+        p.activation,
+        s.userId,
+      ],
+    )
+  ).rows[0];
+  if (p.plan.feeAgreementId)
+    await db.query(
+      "insert into gym.member_fee_periods(organization_id,membership_id,agreement_id,member_id,branch_id,currency,amount_minor) values($1,$2,$3,$4,$5,$6,$7)",
+      [
+        s.organizationId,
+        m.id,
+        p.plan.feeAgreementId,
+        member.id,
+        member.homeBranchId,
+        p.plan.currency,
+        p.plan.amountMinor,
+      ],
+    );
+  const n = (
+    await db.query(
+      "insert into gym.number_counters(organization_id,kind,value) values($1,'invoice',1) on conflict(organization_id,kind) do update set value=gym.number_counters.value+1 returning value::text",
+      [s.organizationId],
+    )
+  ).rows[0].value;
+  const invoice = (
+    await db.query(
+      `insert into gym.invoices(organization_id,membership_id,member_id,originating_branch_id,number,description,total_minor,currency,issued_on,due_on,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id,number`,
+      [
+        s.organizationId,
+        m.id,
+        member.id,
+        member.homeBranchId,
+        org.receiptPrefix + "-INV-" + n.padStart(6, "0"),
+        p.plan.name,
+        p.plan.amountMinor,
+        p.plan.currency,
+        todayInZone(org.timeZone),
+        p.startOn,
+        s.userId,
+      ],
+    )
+  ).rows[0];
+  const result = {
+    membershipId: m.id,
+    invoiceId: invoice.id,
+    invoiceNumber: invoice.number,
+  };
+  await audit(db, s, "membership." + input.mode, m.id, input.reason, null, {
+    memberId: member.id,
+    planVersionId: p.plan.planVersionId,
+    startOn: p.startOn,
+    endOn: p.endOn,
+    amountMinor: p.plan.amountMinor,
+    currency: p.plan.currency,
+    invoiceId: invoice.id,
+    activation: p.activation,
+  });
+  return result;
+}
+
 export function createMembershipsService(
   security: ReturnType<typeof createSecurity>,
 ) {
@@ -256,6 +436,15 @@ export function createMembershipsService(
       { organizationId: input.organizationId },
       enrolling ? "memberships.manage" : "memberships.override",
       async (db, s) => {
+        if (
+          "mode" in input &&
+          (input.monthlyFee || input.useCatalogPrice) &&
+          s.role !== "owner"
+        )
+          throw new BusinessError(
+            "FORBIDDEN",
+            "Only the gym owner can change monthly fee agreements.",
+          );
         await db.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
           "membership-request:" +
             s.organizationId +
@@ -289,73 +478,7 @@ export function createMembershipsService(
           );
         let result: Record<string, unknown>;
         if ("mode" in input) {
-          const p = await enrollmentPreview(db, s, member, input),
-            org = await orgValues(db, s);
-          const m = (
-            await db.query(
-              `insert into gym.memberships(organization_id,member_id,home_branch_id,plan_version_id,snapshot,amount_minor,currency,start_on,original_end_on_exclusive,end_on_exclusive,lifecycle,activated_at,created_by) values($1,$2,$3,$4,$5::jsonb,$6,$7,$8,$9,$9,$10,case when $10='active' then now() else null end,$11) returning id`,
-              [
-                s.organizationId,
-                id,
-                member.homeBranchId,
-                p.plan.planVersionId,
-                JSON.stringify(p.plan),
-                p.plan.amountMinor,
-                p.plan.currency,
-                p.startOn,
-                p.endOn,
-                p.activation,
-                s.userId,
-              ],
-            )
-          ).rows[0];
-          const n = (
-            await db.query(
-              "insert into gym.number_counters(organization_id,kind,value) values($1,'invoice',1) on conflict(organization_id,kind) do update set value=gym.number_counters.value+1 returning value::text",
-              [s.organizationId],
-            )
-          ).rows[0].value;
-          const invoice = (
-            await db.query(
-              `insert into gym.invoices(organization_id,membership_id,member_id,originating_branch_id,number,description,total_minor,currency,issued_on,due_on,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) returning id,number`,
-              [
-                s.organizationId,
-                m.id,
-                id,
-                member.homeBranchId,
-                org.receiptPrefix + "-INV-" + n.padStart(6, "0"),
-                p.plan.name,
-                p.plan.amountMinor,
-                p.plan.currency,
-                todayInZone(org.timeZone),
-                p.startOn,
-                s.userId,
-              ],
-            )
-          ).rows[0];
-          result = {
-            membershipId: m.id,
-            invoiceId: invoice.id,
-            invoiceNumber: invoice.number,
-          };
-          await audit(
-            db,
-            s,
-            "membership." + operation,
-            m.id,
-            input.reason,
-            null,
-            {
-              memberId: id,
-              planVersionId: p.plan.planVersionId,
-              startOn: p.startOn,
-              endOn: p.endOn,
-              amountMinor: p.plan.amountMinor,
-              currency: p.plan.currency,
-              invoiceId: invoice.id,
-              activation: p.activation,
-            },
-          );
+          result = await enrollMemberInTransaction(db, s, member, input);
         } else {
           const org = await orgValues(db, s),
             today = todayInZone(org.timeZone);
