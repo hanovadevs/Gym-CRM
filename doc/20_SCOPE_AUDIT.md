@@ -4,7 +4,7 @@
 
 | Scope | Implemented evidence | Remaining gate |
 | --- | --- | --- |
-| Foundation / Mojym / UI | Shared responsive shell, user palette/glass/square buttons, help icons, collapsible sidebar, native SVG/PNG brand, Next client navigation, fictional dashboard removed | Keep new module layouts consistent; persisted dashboard now verified; keep new modules consistent |
+| Foundation / Mojym / UI | Shared responsive shell, user palette/glass/square buttons, help icons, collapsible sidebar, native SVG/PNG brand, Next client navigation, fictional dashboard removed | UI-06 existing screens polished and canonical live17routes/four widths verified63603f9; future enquiry/report/import screens must inherit shared patterns |
 | Authentication / tenant security | Maintained Better Auth, login/logout/reset/invitations, fresh role/branch checks, restricted SQL role/RLS, audit and real two-gym tests; hosted owner/admin browser checks pass after bounded pool adjustment | Deployed origin/mail operations/recovery checks |
 | Settings / staff | Versioned persisted gym configuration, roles/branches, last-owner controls, fixed mail sender | Attendance policy consumer verified; hosted release/mail maintenance |
 | Members / profiles | Registration/directory/search/paging, emergency contact, role-scoped notes/withdrawal, archive/restore, membership/invoice/payment history | Visits/archive admission denial and full68 browser regression verified; release operations remain |

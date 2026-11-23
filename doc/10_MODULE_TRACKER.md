@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 23 November 2026 (Asia/Karachi): HR-01 payroll, CLS-01 classes, AUTH-02 separate owner contact and MEM-03 individual monthly fees/reminders verified, including canonical live owner Inbox delivery. TRN-01 effective assignments/PT also verified live2612d67. All3 databases50 matching reviewed migrations. Enquiries, reports/imports, final UI/mobile and release gates remain open.
+Updated 23 November 2026 (Asia/Karachi): HR-01 payroll, CLS-01 classes, AUTH-02 separate owner contact and MEM-03 individual monthly fees/reminders verified, including canonical live owner Inbox delivery. TRN-01 effective assignments/PT also verified live2612d67. All3 databases50 matching reviewed migrations. UI-06 final polish verified live63603f9 across17screens/four widths. Enquiries, reports/imports and release gates remain open.
 
 ## State rules
 
@@ -8,7 +8,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 
 | ID | Module | Release | Dependencies | UI | Server/API | DB | QA | Overall | Next task |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | PERF-01/BRAND-01 Mojym/navigation DONE; preview removed |
+| M00 | Foundation & shell | A | None | DONE | DONE | N/A | DONE | DONE | UI-06 polished implemented screens/mobile/drawers; actual17routes x4width live PASS63603f9; new modules inherit shared styles |
 | M01 | Identity, org isolation & roles | A | M00 + DB-01/02 | DONE | DONE | DONE | DONE | DONE | Local SMTP verified; deployment operations in REL-01 |
 | M02 | Settings & staff | A | M01 | DONE | DONE | DONE | DONE | DONE | Saved activation/grace/debt and receipt policies exercised in real consumers; release operations separate |
 | M03 | Members & profiles | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | Connected membership/payment/visit history, QR, actual archival admission denial and retained history verified |
@@ -287,3 +287,6 @@ UI-06 populated review: .local/verify-ui-polish.mjs PASS17 actual Hanova/admin r
 
 
 UI-06 release candidate: final native production drawer strict flush-header/Close review PASS after explicit dialog.drawer specificity, opaque surface and zero top padding; final drawer screenshot opened and reviewed. Final build PASS31.5scompile, production35asset/anonymous/private/secret smoke PASS and lint PASS. Typecheck and40units earlier PASS; no TS changes after checks except CSS. Actual populated17routes x4widths PASS before final bounded drawer correction, strict production drawer-only rerun verifies final correction. Ready for GitHub/canonical release; retain honest earlier full79PASS/1corrected assertion and final focused4+strict1 evidence.
+
+
+UI-06 DONE: GitHub main63603f9cb4f3ba218eba4ba28f456cc3838b9d0c verified remotely; connected Vercel production READY. .local/verify-ui-polish.mjs --live PASS final exact canonical code on17retained Hanova/admin routes x320/390/768/1440(68route-width checks), flush sticky drawer header/Close, no horizontal overflow/corrupted punctuation/pageerrors/hydrationerrors. Final live drawer screenshot opened/reviewed, opaque and flush. Private .local/ui-polish/live-verification.json captures route-width evidence, no business writes/mail. Docs/tracker/backlog updated. Existing desktop layout/palette/squarebuttons/navigation preserved; no DB migrations or Hanova data changes. New unfinished modules must reuse this shared style layer. Next authorized functional task LEAD-01, then RPT-01/IMP-01/recovery/release/DATA-01; no whole-CRM completion claim.
