@@ -344,6 +344,13 @@
       "when": 1795387945981,
       "tag": "0048_agreed_fee_guard_variable",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1795413098663,
+      "tag": "0049_personal_training_eligibility",
+      "breakpoints": true
     }
   ]
 }
