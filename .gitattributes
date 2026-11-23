@@ -1,0 +1,2 @@
+# Reviewed PostgreSQL migrations retain their exact applied bytes across platforms.
+drizzle/*.sql -text
