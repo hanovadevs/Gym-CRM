@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 23 November 2026 (Asia/Karachi): HR-01 payroll, CLS-01 classes, AUTH-02 separate owner contact and MEM-03 individual monthly fees/reminders verified, including canonical live owner Inbox delivery. All3 databases49 matching reviewed migrations. Trainer assignments/PT, enquiries, reports/imports, final UI/mobile and release gates remain open.
+Updated 23 November 2026 (Asia/Karachi): HR-01 payroll, CLS-01 classes, AUTH-02 separate owner contact and MEM-03 individual monthly fees/reminders verified, including canonical live owner Inbox delivery. TRN-01 effective assignments/PT also verified live2612d67. All3 databases50 matching reviewed migrations. Enquiries, reports/imports, final UI/mobile and release gates remain open.
 
 ## State rules
 
@@ -16,7 +16,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M05 | Billing, payments & receipts | A | M04 | DONE | DONE | DONE | DONE | DONE | PAY-01/02/03 verified; financial report consumers and cloud release remain separate gates |
 | M06 | Attendance & access | A | M04 + M05 | DONE | DONE | DONE | DONE | DONE | ATT-01 PostgreSQL acceptance, full68 browsers, production attendance/QR/replay/checkout verified; release gates separate |
 | M07 | Operational dashboard | A | M03 + M05 + M06 | DONE | DONE | DONE | DONE | DONE | DASH-01 persisted branch/local-date aggregates, source reconciliation, browser/production/hosted verification; class feed added with CLS-01 |
-| M08 | Trainers & PT | B | M03 + M02 | VERIFYING | VERIFYING | VERIFYING | VERIFYING | VERIFYING | TRN-01 profiles/effective assignments/eligible conflict-safe PT implemented; all3DB50, integration/focused/full80 browsers/build/production PASS; retained hosted/live verification pending |
+| M08 | Trainers & PT | B | M03 + M02 | DONE | DONE | DONE | DONE | DONE | TRN-01 profiles/effective assignments/eligible conflict-safe PT; all3DB50, integration/full80 browsers/build/production/retained hosted and canonical live PASS2612d67 |
 | M09 | Classes & bookings | B | M08 + M06 | DONE | DONE | DONE | DONE | DONE | CLS-01 full78/production/actual live retained Hanova class booking verification PASS f439a4f; release gates separate |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
@@ -270,3 +270,6 @@ Full browser regression79PASS/1FAIL5.0m. Existing member refresh-error test repr
 
 
 TRN-01 production checkpoint: reviewed0049 applied sourceGYM/hostedSupabase after ACL-preserving consistent backup59tables/3gyms/33members/29payments/49migrations; all3 databases50 exact hashes. Full80 browser regression PASS8.0m after reproduced member refresh-remount fix; focused failed-refresh PASS31.4s. Final typecheck/lint PASS,40units PASS, raw training and classes integrations PASS, build PASS58scompile, production anonymous/private PT routes and35clientasset secret checks PASS. .local/verify-pt-hosted.mjs --seed PASS actual restricted hosted production:3 retained Hanova effective assignments,6eligible PT sessions with1retained cancellation,390/1440 UI nooverflow/pageerrors. One timeout retried unchanged persisted request key, no duplicate write. Private .local/hanova-pt-manifest.json10completed steps. No mail, staffaccounts or implicit fees. GitHub/live gate remains before TRN-01 DONE; next LEAD-01 enquiries/trials.
+
+
+TRN-01 DONE: GitHub main2612d67308b8350bee884ec910ea3d634790f251 verified via ls-remote; connected Vercel production READY. .local/verify-pt-hosted.mjs --live PASS canonical Mojym owner API plus390/1440 pages and retained3assignments/6PTsessions/1cancellation, no client errors/mail. Preserve private manifest/all Hanova data. Remaining four main workstreams LEAD-01, RPT-01, IMP-01, release/recovery; final UI-06 and DATA-01 reconciliation/removal of other gyms after backup remain. No whole-system completion or restore proof claimed. Next eligible LEAD-01 specifications/security/reference09_enquiries.png inspected; schema/service/UI not started yet.
