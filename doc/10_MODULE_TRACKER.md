@@ -1,6 +1,6 @@
 # Module tracker
 
-Updated 23 November 2026 (Asia/Karachi): payroll HR-01 verified; CLS-01 and separate owner-contact AUTH-02 implemented and hosted verified, final live release pending. SourceGYM, isolatedgym_test and hostedSupabase42 matching reviewed migrations. MEM-03 monthly member fees/reminders, PT, enquiries, reports/imports, final mobile/UI and release gates remain open.
+Updated 23 November 2026 (Asia/Karachi): HR-01 payroll, CLS-01 classes, AUTH-02 separate owner contact and MEM-03 individual monthly fees/reminders verified, including canonical live owner Inbox delivery. All3 databases49 matching reviewed migrations. Trainer assignments/PT, enquiries, reports/imports, final UI/mobile and release gates remain open.
 
 ## State rules
 
@@ -258,3 +258,5 @@ AUTH-02 separates primary gym login ID from real owner recovery contact. Committ
 ## MEM-03 - individual monthly fees and owner reminders, 23 November2026
 
 IN_PROGRESS: optional owner-only monthly fee/start/reminder setup at registration now commits member/agreement/membership/issued invoice/audits together. Saved rate reused on renewal, owner future-term repricing or explicit catalog opt-out retains history. Profile dates and fee schedule/dashboard distinguish invoice debt from renewal reminders. Owner email summaries use fixed sender and separate real contact, daily deduplication, safe retry/uncertainty hold and current-recipient/dues checks. Migrations0042-0046 committed before apply; all3 databases47 exact hashes. test:member-fees and existing member/membership/attendance/settings/contact suites PASS; focused responsive workflow PASS with4width captures. Full regression/build/production/live/actual retained fee data and scheduled-delivery proof remain open. Core M03/M04/M05 DONE cards describe earlier bounded functionality; this extension remains IN_PROGRESS until those gates pass. No hosted emails or monthly fee records created yet.
+
+MEM-03 DONE at2d377891860f36d46da3797c4a4924546502249b. Actual canonical live retained fee/profile/partial-full-unpaid/renewal/mobile/desktop/private invoice and paid-receipt PDFs PASS; no client errors. Real owner summary accepted once and independently found in Hostinger INBOX UID63 by exact Message-ID, from/to confirmed contact address. Actual machine-authenticated canonical cron PASS busyfalse/queued0/sent0/failed0/uncertain0/partialfalse, proving the accepted daily summary was not resent. No generated member emails sent. Scheduler Secret configured Production only; daily cron committed. All3 DBs49 hashes verified; no applied migration edited. Restore/preview isolation and full remaining scope still open. Next TRN-01 assignments/PT.
