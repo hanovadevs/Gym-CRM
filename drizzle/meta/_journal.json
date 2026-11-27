@@ -351,6 +351,13 @@
       "when": 1795413098663,
       "tag": "0049_personal_training_eligibility",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1795770377467,
+      "tag": "0050_odd_karnak",
+      "breakpoints": true
     }
   ]
 }
