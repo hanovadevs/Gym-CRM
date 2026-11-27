@@ -131,7 +131,7 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
                   {money(c.netMinor, c.currency)}
                 </p>
                 <p>
-                  {money(c.receivedMinor, c.currency)} received  / {" "}
+                  {money(c.receivedMinor, c.currency)} received /{" "}
                   {money(c.refundedMinor, c.currency)} refunded
                 </p>
               </div>
@@ -192,13 +192,25 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
           <div className="dashboard-actions">
             {data.canManageMembers ? (
               <>
-                <Link href={href("/members")}>Register a member</Link>
-                <Link href={href("/attendance")}>Check in a member</Link>
+                <Link href={href("/members")}>
+                  <ActionIcon path="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM19 8v6m-3-3h6" />
+                  Register a member
+                </Link>
+                <Link href={href("/attendance")}>
+                  <ActionIcon path="M5 5h14v16H5zM8 3v4m8-4v4M5 10h14m-10 5 2 2 4-4" />
+                  Check in a member
+                </Link>
               </>
             ) : null}
-            <Link href={href("/payments")}>Record a payment</Link>
+            <Link href={href("/payments")}>
+              <ActionIcon path="M3 5h18v14H3zM3 10h18m-14 5h4" />
+              Record a payment
+            </Link>
             {data.canReadPlans ? (
-              <Link href={href("/plans")}>View membership plans</Link>
+              <Link href={href("/plans")}>
+                <ActionIcon path="m12 3 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 16l9 5 9-5" />
+                View membership plans
+              </Link>
             ) : null}
           </div>
         </section>
@@ -352,5 +364,24 @@ export function DashboardScreen({ data }: { data: DashboardData }) {
         </section>
       ) : null}
     </WorkspaceFrame>
+  );
+}
+
+function ActionIcon({ path }: { path: string }) {
+  return (
+    <span className="dashboard-action-icon" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        width="28"
+        height="28"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d={path} />
+      </svg>
+    </span>
   );
 }

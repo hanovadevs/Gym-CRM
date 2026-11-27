@@ -668,3 +668,7 @@ Follow-up completed: added doc/MOJYM_HOW_TO_USE_WEBSITE_GUIDE.md and updated the
 
 Added /about with four existing Hanova product screenshots and a six-part usage walkthrough. Sign-in links to the public guide and WhatsApp registration, and /about links back to sign-in and to the full Hanova Devs guide. The WhatsApp link pre-fills an enquiry for +1 917 735 5385. Full guide URL returned HTTP 200. Automated visitor coverage checks navigation, image loading and four responsive widths.
 Final production build, lint, TypeScript and Playwright visitor flow passed. Production Playwright reused the test config with an alternate port after local dev startup failures.
+
+## 27 November 2026 - Dashboard Quick actions and LEAD-01 start
+
+Quick actions now uses a responsive icon grid with unchanged scoped destinations. Lint, TypeScript and production build passed. The persisted-dashboard Playwright test could not initialize because PostgreSQL refused the local connection. Starting postgresql-x64-18 failed because the session could not open the Windows service. LEAD-01 draft schema defines scoped enquiries and follow-up tasks. It is not wired into migrations. Next: reviewed migration with RLS and branch grants, then persisted pipeline and transactional conversion.
