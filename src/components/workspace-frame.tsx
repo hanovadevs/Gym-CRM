@@ -28,7 +28,9 @@ export function WorkspaceFrame({
     | "trainers"
     | "employees"
     | "classes"
-    | "member-fees";
+    | "member-fees"
+    | "reports";
+
   children: React.ReactNode;
 }) {
   const org = "?organizationId=" + organization.id;

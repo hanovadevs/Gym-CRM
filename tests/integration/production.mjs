@@ -132,6 +132,8 @@ try {
     ["/api/platform", "GET"],
     ["/api/platform/analytics", "GET"],
     ["/api/trainers", "GET"],
+    ["/api/reports", "GET"],
+    ["/api/reports/export", "GET"],
     ["/api/training", "GET"],
     ["/api/training/members?organizationId="+org+"&branchId="+org+"&trainerId="+org, "GET"],
     ["/api/training", "POST", {operation:"assignment",organizationId:org,id:org,requestKey:org,trainerId:org,branchId:org,memberId:org,startOn:"2026-11-23",endOn:null,active:true,reason:"Anonymous denial check"}],

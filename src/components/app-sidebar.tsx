@@ -17,7 +17,8 @@ type Page =
   | "employees"
   | "trainers"
   | "expenses"
-  | "attendance";
+  | "attendance"
+  | "reports";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
 function snapshot() {
@@ -137,6 +138,9 @@ export function AppSidebar({
           { name: "Expenses", page: "expenses", href: "/expenses" },
           { name: "Employees", page: "employees", href: "/employees" },
         ]
+      : []),
+    ...(canManageSettings || (canReadBilling && !canManageMembers)
+      ? [{ name: "Reports", page: "reports", href: "/reports" }]
       : []),
   ];
   const selection = useSearchParams();

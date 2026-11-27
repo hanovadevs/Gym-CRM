@@ -354,3 +354,8 @@ Accepted23 November2026 at user request to prioritize UI-06. Keep existing deskt
 ## ADR-052 - Public product information and assisted gym registration
 
 The public /about route provides a static screenshot walkthrough, links to the full Hanova Devs guide and sign-in, and uses WhatsApp for assisted workspace setup.
+
+
+## ADR-053 - Reports use source dates and a single statement snapshot
+
+Reports use cash dates for payments/refunds/expenses/reversals and originating branches. Attendance selects UTC timestamps using gym-local boundaries. Memberships use home branches and effective periods. Separate currencies and retain integer arithmetic until display/export. Summary and detail come from one statement; a fresh download may reflect later writes. Seven-day renewal rates use one latest ending per member in the range and show the denominator and provisional observation status. Current activation/archival attributes inform historical status. CSV/print export full matching results with an explicit10000row cap and no silent truncation. Access uses reports.financial; no new database tables.

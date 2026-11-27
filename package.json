@@ -42,7 +42,8 @@
     "test:payroll": "node --conditions=react-server --import tsx tests/integration/payroll.ts",
     "test:classes": "node --conditions=react-server --import tsx tests/integration/classes.ts",
     "test:member-fees": "node --conditions=react-server --import tsx tests/integration/member-fees.ts",
-    "test:account-contact": "node --conditions=react-server --import tsx tests/integration/account-contact.ts"
+    "test:account-contact": "node --conditions=react-server --import tsx tests/integration/account-contact.ts",
+    "test:reports": "node --conditions=react-server --import tsx tests/integration/reports.ts"
   },
   "keywords": [],
   "author": "",

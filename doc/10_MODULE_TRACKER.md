@@ -20,7 +20,7 @@ Allowed: NOT_STARTED, IN_PROGRESS, BLOCKED, VERIFYING, DONE, DEFERRED. UI/server
 | M09 | Classes & bookings | B | M08 + M06 | DONE | DONE | DONE | DONE | DONE | CLS-01 full78/production/actual live retained Hanova class booking verification PASS f439a4f; release gates separate |
 | M10 | Enquiries & trials | B | M03 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | LEAD-01 |
 | M11 | Expenses | A | M02 | DONE | DONE | DONE | DONE | DONE | EXP-01 categories/immutable postings/reversals/replacement/private receipts verified; RPT net-cash consumer separate |
-| M12 | Reports | A | M05 + M06 + M11 | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | RPT-01 |
+| M12 | Reports | A | M05 + M06 + M11 | VERIFYING | VERIFYING | DONE | VERIFYING | VERIFYING | RPT-01 collections/memberships/attendance, filters/reconciliation/CSV/full print implemented; isolated integration and production browser PASS; final publication/live gate pending |
 | M13 | Imports, exports & files | A | M03 + M05 | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | IN_PROGRESS | Private expense images/adapter/cleanup verified with EXP-01; CSV preview/import and scoped exports remain IMP-01 |
 | M14 | Release, recovery & migration | A/cloud | Core modules | NOT_STARTED | IN_PROGRESS | VERIFYING | VERIFYING | IN_PROGRESS | Hosted auth/config verified; restore/deployed/pilot and all remaining module gates open |
 | M15 | Platform administration | A | M01 + M02 | DONE | DONE | DONE | DONE | DONE | PLAT-01 verified; retained Hanova core account/data now verified, trainer/class extensions remain DATA-01 |
