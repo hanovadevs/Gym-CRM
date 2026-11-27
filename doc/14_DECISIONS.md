@@ -350,3 +350,7 @@ A full browser regression exposed member directory remounting when a cache notif
 ## ADR-051 - Shared UI finishing layer and mobile drawer continuity
 
 Accepted23 November2026 at user request to prioritize UI-06. Keep existing desktop layout and Silver & Midnight tokens; load a small finishing stylesheet after current theme/mobile layers rather than rewriting module-specific workflows. Improve section/table weight, compact schedule filters and explicit mobile row-action targets. Preserve44px controls and16px mobile entry text; keep narrow320px filters single-column. Drawers retain native dialog/focus/Escape behavior with sticky opaque-fallback headers so Close remains reachable after scrolling. Add geometry and mobile text-size checks to existing responsive workflow. No new animations, gradients, decorative indicators or data changes. Screenshot review also corrected previously corrupted dashboard/admin/auth punctuation. Private generated .local verification scripts are excluded from normal ESLint source traversal.
+
+## ADR-052 - Public product information and assisted gym registration
+
+The public /about route provides a static screenshot walkthrough, links to the full Hanova Devs guide and sign-in, and uses WhatsApp for assisted workspace setup.

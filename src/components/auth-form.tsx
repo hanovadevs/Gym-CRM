@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { BrandMark } from "./brand";
 import { SectionTitle } from "./ui/section-title";
+import { gymRegistrationUrl } from "@/lib/gym-registration";
+import styles from "./visitor-actions.module.css";
 export function AuthForm({
   mode = "sign-in",
 }: {
@@ -41,6 +43,12 @@ export function AuthForm({
         </Link>
         <h1>A better day at the gym starts here.</h1>
         <p>Members, payments and daily operations, in one calm workspace.</p>
+        {mode === "sign-in" && (
+          <nav className={styles.actions} aria-label="New to Mojym">
+            <Link href="/about">Explore the gym CRM</Link>
+            <a href={gymRegistrationUrl}>Register your gym on WhatsApp</a>
+          </nav>
+        )}
       </aside>
       <main className="auth-main">
         <form

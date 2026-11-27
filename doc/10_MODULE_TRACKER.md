@@ -293,3 +293,5 @@ UI-06 DONE: GitHub main63603f9cb4f3ba218eba4ba28f456cc3838b9d0c verified remotel
 
 
 Product documentation23 November2026: DOC-PRODUCT-01 DONE, doc/MOJYM_WEBSITE_PRODUCT_HANDOFF.md and doc/MOJYM_HOW_TO_USE_WEBSITE_GUIDE.md provide website-agent product copy/verified scope/assets and full current usage instructions. Agent explicitly asked to create linked product and How to use pages matching existing Hanova Devs products. Current control names/recovery fields, document links/assets/UTF-8 and staged secret scan verified; no CRM module state or website implementation changed.
+
+UI-07 (M00): Public Mojym guide and sign-in visitor links implemented. See session log for verification.
