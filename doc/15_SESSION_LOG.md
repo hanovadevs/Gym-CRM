@@ -672,3 +672,7 @@ Final production build, lint, TypeScript and Playwright visitor flow passed. Pro
 ## 27 November 2026 - Dashboard Quick actions and LEAD-01 start
 
 Quick actions now uses a responsive icon grid with unchanged scoped destinations. Lint, TypeScript and production build passed. The persisted-dashboard Playwright test could not initialize because PostgreSQL refused the local connection. Starting postgresql-x64-18 failed because the session could not open the Windows service. LEAD-01 draft schema defines scoped enquiries and follow-up tasks. It is not wired into migrations. Next: reviewed migration with RLS and branch grants, then persisted pipeline and transactional conversion.
+
+## LEAD-01 storage checkpoint
+
+PostgreSQL service is running again. Reviewed migration0050 committed6069051 before isolated application; gym_test51. Two tenant-scoped tables, same-organization branch/staff/member foreign keys, unique converted member and paired completion fields. Actual catalogue check PASS RLS enabled/runtime DELETE denied. Validated enquiry mutation schemas include explicit enroll/later conversion choice. Typecheck PASS. Source/host remain50. Service/API/UI and concurrency/rollback tests remain outstanding.

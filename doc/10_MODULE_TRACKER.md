@@ -297,3 +297,5 @@ Product documentation23 November2026: DOC-PRODUCT-01 DONE, doc/MOJYM_WEBSITE_PRO
 UI-07 (M00): Public Mojym guide and sign-in visitor links implemented. See session log for verification.
 
 Dashboard Quick actions refreshed with large outline icons and compact labels. LEAD-01 schema draft started. Existing module remains unavailable.
+
+LEAD-01 IN_PROGRESS: reviewed0050 applied isolated gym_test51, RLS/no-delete catalogue check and typecheck PASS. Validated inputs added. Service/API/UI/QA remain open.
