@@ -183,182 +183,7 @@ export function createMembersService(
       headers,
       { organizationId: input.organizationId },
       "members.manage",
-      async (db, scope) => {
-        if (!scope.branchIds.includes(input.homeBranchId))
-          throw new BusinessError("NOT_FOUND", "Branch not found.");
-        if (input.monthlyFee && scope.role !== "owner")
-          throw new BusinessError(
-            "FORBIDDEN",
-            "Only the gym owner can set an individual monthly fee.",
-          );
-        const values = memberFields.parse({
-          name: input.name,
-          phone: input.phone,
-          email: input.email,
-          homeBranchId: input.homeBranchId,
-          joinedOn: input.joinedOn,
-        });
-        const hash = createHash("sha256")
-          .update(
-            JSON.stringify(
-              input.monthlyFee
-                ? { ...values, monthlyFee: input.monthlyFee }
-                : values,
-            ),
-          )
-          .digest("hex");
-        await db.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
-          "registration:" +
-            scope.organizationId +
-            ":" +
-            scope.userId +
-            ":" +
-            input.registrationKey,
-        ]);
-        const existing = (
-          await db.query(
-            "select id,registration_hash from gym.members where organization_id=$1 and created_by=$2 and registration_key=$3",
-            [scope.organizationId, scope.userId, input.registrationKey],
-          )
-        ).rows[0];
-        if (existing) {
-          if (existing.registration_hash !== hash)
-            throw new BusinessError(
-              "CONFLICT",
-              "This registration was already saved with different details. Close the form and reload the directory before editing.",
-            );
-          return {
-            member: await readMember(db, scope, existing.id),
-            replayed: true,
-            requestId: scope.requestId,
-          };
-        }
-        await checkDate(db, scope, input.joinedOn);
-        const shared = await checkDuplicate(
-          db,
-          scope,
-          values,
-          input.acknowledgeDuplicate,
-        );
-        const count = (
-          await db.query(
-            "insert into gym.number_counters(organization_id,kind,value) values($1,'member',1) on conflict(organization_id,kind) do update set value=gym.number_counters.value+1 returning value::text",
-            [scope.organizationId],
-          )
-        ).rows[0].value;
-        const code = "M-" + count.padStart(6, "0");
-        const id = (
-          await db.query(
-            "insert into gym.members(organization_id,home_branch_id,member_code,name,phone,normalized_phone,email,joined_on,registration_key,registration_hash,created_by,updated_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11) returning id",
-            [
-              scope.organizationId,
-              input.homeBranchId,
-              code,
-              input.name,
-              input.phone,
-              normalizePhone(input.phone),
-              input.email,
-              input.joinedOn,
-              input.registrationKey,
-              hash,
-              scope.userId,
-            ],
-          )
-        ).rows[0].id;
-        if (input.monthlyFee) {
-          const fee = input.monthlyFee,
-            plan = await resolvePlanSnapshot(db, scope, fee.planVersionId);
-          if (
-            plan.branchId !== input.homeBranchId ||
-            plan.durationUnit !== "months" ||
-            plan.durationCount !== 1
-          )
-            throw new BusinessError(
-              "VALIDATION_ERROR",
-              "Choose an active one-month plan in the member's home branch.",
-            );
-          const zone = (
-            await db.query(
-              "select time_zone from gym.organizations where id=$1",
-              [scope.organizationId],
-            )
-          ).rows[0].time_zone;
-          if (fee.startOn < localToday(zone) || fee.startOn < input.joinedOn)
-            throw new BusinessError(
-              "VALIDATION_ERROR",
-              "Monthly subscriptions must start today or later, after the joining date.",
-            );
-          const agreement = (
-            await db.query(
-              "insert into gym.member_fee_agreements(organization_id,member_id,branch_id,plan_id,amount_minor,currency,start_on,reminder_days,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id",
-              [
-                scope.organizationId,
-                id,
-                input.homeBranchId,
-                plan.planId,
-                fee.amountMinor,
-                plan.currency,
-                fee.startOn,
-                fee.reminderDays,
-                scope.userId,
-              ],
-            )
-          ).rows[0];
-          await enrollMemberInTransaction(
-            db,
-            scope,
-            await readMember(db, scope, id),
-            {
-              organizationId: scope.organizationId,
-              memberVersion: 1,
-              mode: "enroll",
-              planVersionId: fee.planVersionId,
-              startOn: fee.startOn,
-              requestKey: input.registrationKey,
-              reason: "Owner-set monthly fee at member registration",
-            },
-          );
-          await audit(
-            db,
-            scope,
-            "member.monthly_fee_agreed",
-            agreement.id,
-            "Owner-set monthly fee at member registration",
-            null,
-            {
-              memberId: id,
-              planId: plan.planId,
-              amountMinor: fee.amountMinor,
-              currency: plan.currency,
-              startOn: fee.startOn,
-              reminderDays: fee.reminderDays,
-            },
-          );
-          await db.query(
-            "update gym.members set version=version+1 where organization_id=$1 and id=$2",
-            [scope.organizationId, id],
-          );
-        }
-        await audit(
-          db,
-          scope,
-          "member.registered",
-          id,
-          shared ? input.duplicateReason : "Member registration",
-          null,
-          {
-            memberCode: code,
-            homeBranchId: input.homeBranchId,
-            version: 1,
-            sharedContactConfirmed: shared,
-          },
-        );
-        return {
-          member: await readMember(db, scope, id),
-          replayed: false,
-          requestId: scope.requestId,
-        };
-      },
+      (db, scope) => registerMemberInTransaction(db, scope, input),
     );
   }
   async function update(headers: Headers, raw: unknown) {
@@ -445,4 +270,182 @@ export function createMembersService(
     );
   }
   return { list, create, update };
+}
+
+export async function registerMemberInTransaction(
+  db: PoolClient,
+  scope: Scope,
+  input: z.infer<typeof createMember>,
+) {
+  if (!scope.branchIds.includes(input.homeBranchId))
+    throw new BusinessError("NOT_FOUND", "Branch not found.");
+  if (input.monthlyFee && scope.role !== "owner")
+    throw new BusinessError(
+      "FORBIDDEN",
+      "Only the gym owner can set an individual monthly fee.",
+    );
+  const values = memberFields.parse({
+    name: input.name,
+    phone: input.phone,
+    email: input.email,
+    homeBranchId: input.homeBranchId,
+    joinedOn: input.joinedOn,
+  });
+  const hash = createHash("sha256")
+    .update(
+      JSON.stringify(
+        input.monthlyFee ? { ...values, monthlyFee: input.monthlyFee } : values,
+      ),
+    )
+    .digest("hex");
+  await db.query("select pg_advisory_xact_lock(hashtextextended($1,0))", [
+    "registration:" +
+      scope.organizationId +
+      ":" +
+      scope.userId +
+      ":" +
+      input.registrationKey,
+  ]);
+  const existing = (
+    await db.query(
+      "select id,registration_hash from gym.members where organization_id=$1 and created_by=$2 and registration_key=$3",
+      [scope.organizationId, scope.userId, input.registrationKey],
+    )
+  ).rows[0];
+  if (existing) {
+    if (existing.registration_hash !== hash)
+      throw new BusinessError(
+        "CONFLICT",
+        "This registration was already saved with different details. Close the form and reload the directory before editing.",
+      );
+    return {
+      member: await readMember(db, scope, existing.id),
+      replayed: true,
+      requestId: scope.requestId,
+    };
+  }
+  await checkDate(db, scope, input.joinedOn);
+  const shared = await checkDuplicate(
+    db,
+    scope,
+    values,
+    input.acknowledgeDuplicate,
+  );
+  const count = (
+    await db.query(
+      "insert into gym.number_counters(organization_id,kind,value) values($1,'member',1) on conflict(organization_id,kind) do update set value=gym.number_counters.value+1 returning value::text",
+      [scope.organizationId],
+    )
+  ).rows[0].value;
+  const code = "M-" + count.padStart(6, "0");
+  const id = (
+    await db.query(
+      "insert into gym.members(organization_id,home_branch_id,member_code,name,phone,normalized_phone,email,joined_on,registration_key,registration_hash,created_by,updated_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$11) returning id",
+      [
+        scope.organizationId,
+        input.homeBranchId,
+        code,
+        input.name,
+        input.phone,
+        normalizePhone(input.phone),
+        input.email,
+        input.joinedOn,
+        input.registrationKey,
+        hash,
+        scope.userId,
+      ],
+    )
+  ).rows[0].id;
+  if (input.monthlyFee) {
+    const fee = input.monthlyFee,
+      plan = await resolvePlanSnapshot(db, scope, fee.planVersionId);
+    if (
+      plan.branchId !== input.homeBranchId ||
+      plan.durationUnit !== "months" ||
+      plan.durationCount !== 1
+    )
+      throw new BusinessError(
+        "VALIDATION_ERROR",
+        "Choose an active one-month plan in the member's home branch.",
+      );
+    const zone = (
+      await db.query("select time_zone from gym.organizations where id=$1", [
+        scope.organizationId,
+      ])
+    ).rows[0].time_zone;
+    if (fee.startOn < localToday(zone) || fee.startOn < input.joinedOn)
+      throw new BusinessError(
+        "VALIDATION_ERROR",
+        "Monthly subscriptions must start today or later, after the joining date.",
+      );
+    const agreement = (
+      await db.query(
+        "insert into gym.member_fee_agreements(organization_id,member_id,branch_id,plan_id,amount_minor,currency,start_on,reminder_days,created_by) values($1,$2,$3,$4,$5,$6,$7,$8,$9) returning id",
+        [
+          scope.organizationId,
+          id,
+          input.homeBranchId,
+          plan.planId,
+          fee.amountMinor,
+          plan.currency,
+          fee.startOn,
+          fee.reminderDays,
+          scope.userId,
+        ],
+      )
+    ).rows[0];
+    await enrollMemberInTransaction(
+      db,
+      scope,
+      await readMember(db, scope, id),
+      {
+        organizationId: scope.organizationId,
+        memberVersion: 1,
+        mode: "enroll",
+        planVersionId: fee.planVersionId,
+        startOn: fee.startOn,
+        requestKey: input.registrationKey,
+        reason: "Owner-set monthly fee at member registration",
+      },
+    );
+    await audit(
+      db,
+      scope,
+      "member.monthly_fee_agreed",
+      agreement.id,
+      "Owner-set monthly fee at member registration",
+      null,
+      {
+        memberId: id,
+        planId: plan.planId,
+        amountMinor: fee.amountMinor,
+        currency: plan.currency,
+        startOn: fee.startOn,
+        reminderDays: fee.reminderDays,
+      },
+    );
+    await db.query(
+      "update gym.members set version=version+1 where organization_id=$1 and id=$2",
+      [scope.organizationId, id],
+    );
+  }
+  await audit(
+    db,
+    scope,
+    "member.registered",
+    id,
+    shared ? input.duplicateReason : "Member registration",
+    null,
+    {
+      memberCode: code,
+      homeBranchId: input.homeBranchId,
+      version: 1,
+      sharedContactConfirmed: shared,
+    },
+  );
+  return {
+    member: await readMember(db, scope, id),
+    replayed: false,
+    requestId: scope.requestId,
+  };
 }

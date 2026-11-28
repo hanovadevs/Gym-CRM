@@ -29,7 +29,8 @@ export function WorkspaceFrame({
     | "employees"
     | "classes"
     | "member-fees"
-    | "reports";
+    | "reports"
+    | "enquiries";
 
   children: React.ReactNode;
 }) {

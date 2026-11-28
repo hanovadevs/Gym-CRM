@@ -38,6 +38,8 @@ export async function securityFixture(
         [[orgA, orgB]],
       );
     for (const table of [
+      "follow_up_tasks",
+      "enquiries",
       "fee_reminder_deliveries",
       "fee_reminder_settings",
       "gym_accounts",

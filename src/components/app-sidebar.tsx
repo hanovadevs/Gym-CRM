@@ -18,7 +18,8 @@ type Page =
   | "trainers"
   | "expenses"
   | "attendance"
-  | "reports";
+  | "reports"
+  | "enquiries";
 const key = "jym.sidebar.collapsed.v1";
 let transient: boolean | undefined;
 function snapshot() {
@@ -141,6 +142,9 @@ export function AppSidebar({
       : []),
     ...(canManageSettings || (canReadBilling && !canManageMembers)
       ? [{ name: "Reports", page: "reports", href: "/reports" }]
+      : []),
+    ...(canManageMembers
+      ? [{ name: "Enquiries", page: "enquiries", href: "/enquiries" }]
       : []),
   ];
   const selection = useSearchParams();
