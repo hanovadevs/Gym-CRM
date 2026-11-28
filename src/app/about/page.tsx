@@ -12,6 +12,26 @@ export const metadata: Metadata = {
 
 const workflows = [
   {
+    id: "enquiries",
+    title: "Turn enquiries and trials into members",
+    steps: [
+      "Open More → Enquiries on mobile, or Enquiries in the desktop sidebar. Add the prospect’s contact details, interests, branch and contact permission.",
+      "Use Pipeline or List to review new, contacted, trial booked, joined and lost enquiries. Filter by branch, stage or search text, then open Details.",
+      "Assign an authorized staff member, book a trial and add dated follow-up tasks. Mark a follow-up complete after the conversation; the history remains available.",
+      "Choose Convert to member after a successful trial. Review contact matches and the joining date. Register only, or select a membership plan and review its dates and invoice before confirming.",
+    ],
+    note: "Follow-up tasks stay inside Mojym; adding a task does not send a message to the prospect.",
+  },
+  {
+    id: "reports",
+    title: "Reconcile collections, memberships and attendance",
+    steps: [
+      "Open Reports and choose Collections, Memberships or Attendance. Set the branch and date range before applying filters.",
+      "Review collections, refunds and operating expenses together. Recorded payments reflect money your gym has already received.",
+      "Use the membership and attendance views to review renewals and visits. Download the scoped CSV or use Print for the selected report.",
+    ],
+  },
+  {
     id: "setup",
     title: "Set up your gym and membership plans",
     image: "plans",

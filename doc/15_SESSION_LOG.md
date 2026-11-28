@@ -714,3 +714,8 @@ Implementation5ebf3ef3ef7e4b64fe97e47e639157843a2d53d7 pushed to origin/main; Ve
 ## IMP-01 CSV transport checkpoint - 28 November 2026
 
 Inspected module contract, permission/export rules and member registration validation. Added src/modules/imports/csv.ts: bounded1MB/500row CSV parser, BOM/quoted comma/newline/escaped quote handling, duplicate/empty heading and ragged/malformed input rejection; formula-neutralizing export cell encoding. tests/unit/import-csv.test.ts:4PASS via npm.cmd run test:unit -- tests/unit/import-csv.test.ts. Initial test under src was outside configured include; moved to tests/unit and passed. No database writes/migrations/deployment. IMP-01 remains IN_PROGRESS: authorized preview/commit journal, mapping UI, duplicate strategies, repeat safety and scoped export interfaces still required. No completion claim.
+
+
+## GitHub showcase refresh - 28 November 2026
+
+Replaced outdated Jym README with Mojym showcase: existing brand/product images, implemented modules, architecture/safeguards, local setup and bootstrap, real package scripts, documentation links and explicit unfinished CSV/release gates. Updated /about with enquiry/trial and report usage instructions. Prior release run evidence:44unit tests and13 security/financial module integration suites PASS; typecheck/lint/build logs completed. Backup/restore, browser full regression and other-gym deletion are not claimed complete. No credentials or private manifests included. README local links/assets and staged secret/whitespace checks required before push.

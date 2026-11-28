@@ -1,82 +1,178 @@
-# Jym CRM
+<div align="center">
 
-Gym administration on local PostgreSQL: staff authentication, scoped workspaces, settings/staff administration, member profiles/notes/archival, immutable plans and membership enrollment/renewal/freeze/cancellation. Invoices include persisted drafts, issued line snapshots, balances and downloadable PDFs. SMTP recovery/invitations use the shared sender. Enrollment issues an invoice atomically. Manual payments update balances, produce printable/downloadable paid receipts and activate eligible pending memberships; attendance is upcoming. The development dashboard uses fictional data.
+<img src="public/brand/mojym-wordmark.svg" alt="Mojym" width="210" />
 
-Run npm.cmd ci, then npm.cmd run dev. Open http://localhost:3000/sign-in after owner setup below. The dashboard reference preview is at /dashboard.
+# Your gym. One clear workspace.
 
-Local development also accepts http://127.0.0.1:3000 on the same configured port. Production trusts only the configured APP_URL origin. Sign-in respects the server's retry delay and shows a countdown after throttling.
+**Members · Memberships · Collections · Coaching · Daily operations**
 
-Node 24 and PostgreSQL are required. This workstation uses PostgreSQL 18.4. Generated credentials are in ignored .env.local. Never commit or print it. On another machine copy .env.example and provision separate migration/runtime roles. The one-time scripts/provision-local.mjs helper refuses existing roles; do not rerun it here.
+A thoughtfully designed gym management platform by **Hanova Devs**.
+Built for independent gyms, branch teams and the people behind the front desk.
 
-Checks: npm.cmd run lint, npm.cmd run typecheck, npm.cmd test, npm.cmd run test:integration, npm.cmd run test:e2e, npm.cmd run build. Install browser once using npx.cmd playwright install chromium.
+[Explore Mojym](https://mojym.hanovadevs.com/about) · [Usage guide](https://www.hanovadevs.com/products/mojym/how-to-use) · [Request your gym workspace](https://wa.me/19177355385)
 
-Migrations: npm.cmd run db:generate; review SQL; npm.cmd run db:migrate. Apply separately to isolated tests using node scripts/migrate.mjs --test. Never edit applied migrations. db:seed deliberately refuses generic seeding; use controlled auth:bootstrap for first-owner setup.
+![Next.js](https://img.shields.io/badge/Next.js-16-1E2937?style=flat-square)
+![TypeScript](https://img.shields.io/badge/TypeScript-typed-253C58?style=flat-square)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-tenant_scoped-253C58?style=flat-square)
+![Status](https://img.shields.io/badge/Status-active_development-DCE4EE?style=flat-square)
 
-Set DEMO_MODE=false to disable fictional UI. Production plus demo mode fails validation. No database error falls back to demo rows.
+</div>
 
-Schemas: gym for business, app_auth for Better Auth, drizzle for migration history. Runtime has no ownership, DDL, superuser or RLS bypass. Tenant context must be transaction-local. Application session, active membership, role and branch authorization are required before protected operations are exposed.
+---
 
-No Supabase account, keys, Docker or cloud database needed. Future hosting changes retain services and IDs. See doc/ for scope and verification evidence.
+## A calmer way to run a busy gym
 
-Authentication is implemented locally. This workstation's first owner was created under the user's explicit setup instruction; access details are private in ignored .local/owner-access.json. Do not rerun bootstrap here. For a NEW database, set OWNER_NAME, OWNER_EMAIL, GYM_NAME and GYM_SLUG to your chosen values in PowerShell. Read OWNER_PASSWORD securely, then run npm.cmd run auth:bootstrap:
+Mojym brings member records, recurring fees, attendance and coaching into a shared workspace. Reception teams can check people in, owners can follow outstanding balances, and managers can organize their team without juggling disconnected spreadsheets.
 
-    $ownerSecret = Read-Host 'Choose owner password (12–128 characters)' -AsSecureString
-    $env:OWNER_PASSWORD = [System.Net.NetworkCredential]::new('', $ownerSecret).Password
-    try { npm.cmd run auth:bootstrap } finally { Remove-Item Env:OWNER_PASSWORD }
+The **Silver & Midnight** interface pairs readable glass surfaces with restrained icons and sharp action buttons. Desktop navigation collapses when you need more room; compact mobile screens use bottom navigation and a More menu.
 
-The CLI uses separate migration credentials and refuses an initialized workspace. Visit http://localhost:3000/sign-in. Organization, role and active-branch authorization is connected; /workspace shows your permitted workspace scope. SMTP recovery is configured privately on this workstation. The owner login remains intentionally local-only by the user's choice; it is not a deliverable recovery mailbox. Run npm.cmd run test:auth for the isolated auth lifecycle; browser tests use gym_test and clean their own fixtures. Run database suites and browser tests serially because they share gym_test.
+<p align="center"><img src="public/product/dashboard.webp" alt="Mojym dashboard product overview" width="100%" /></p>
 
+*Product overview imagery. Operational verification and implementation evidence live in [doc/](doc/00_START_HERE.md).*
 
-SEC-01 is now connected: /workspace and GET /api/workspace revalidate staff membership, action permission, organization and active branch scope against PostgreSQL on every operation. Owners have all active branches in their gym; other roles need explicit branch grants. Inaccessible selections return non-disclosing errors. Organization/branch selectors are kept in the URL. No role or scope supplied by the browser is trusted.
+## What you can do
 
-Run npm.cmd run test:security for the real-session two-gym suite. Its react-server condition respects the server-only package boundary; the test uses only guarded gym_test fixtures. Future business services must use getSecurity().run with a fixed server action, then filter repository rows by Scope.branchIds and validate resource-specific ownership/assignments. Runtime RLS is tenant defense in depth, not automatic branch filtering or protection against arbitrary SQL using compromised runtime credentials. Deployment-specific HTTPS/proxy/recovery reachability still requires release verification.
+| Workspace | Capabilities |
+| :--- | :--- |
+| **Members & profiles** | Register members, search the directory, maintain contact details and notes, archive records and retain history. |
+| **Plans & memberships** | Versioned plans, enrollment, renewal, freeze and cancellation with reviewed dates and pricing. |
+| **Member fees** | Agree individual monthly fees, track dated invoices and upcoming renewals, and deliver owner summaries through the configured email workflow. |
+| **Invoices & collections** | Draft and issue invoices, allocate partial or full payments, review balances, download invoice and paid-receipt PDFs, and record authorized financial corrections. |
+| **Attendance** | Look up members, review eligibility, check in and out, and inspect branch-scoped visit history. |
+| **Trainers & classes** | Coaching profiles, trainer assignments, personal training sessions, rooms, availability, timetables and capacity-aware bookings. |
+| **Employees & expenses** | Employee profiles, salary rates and payments, operating expenses, reversals and private receipt images. |
+| **Enquiries & trials** | Five-stage pipeline, trial dates, staff assignments, dated follow-ups, retained activity and conversion into a member with optional enrollment. |
+| **Reports** | Collections, membership and attendance reports with branch/date filters, reconciliation, CSV and print exports. |
+| **Platform administration** | Separately authorized gym provisioning, contact details, suspension/reactivation, activity visibility and gym subscription-payment tracking. |
 
-SET-01 is connected at /settings through Open settings in the workspace. Owners manage settings, branches and staff grants; managers have a contact/footer allowlist. Writes require a reason and reject stale versions. New staff can use an owner-chosen initial password or receive an emailed, one-use password setup link. An existing global identity cannot be claimed or have its password replaced from another gym. Staff access is checked again on the next operation. Invitation delivery status is shown separately from the saved staff record.
+**Payments are records of funds received through the gym’s own payment methods. Mojym does not charge cards or process online payments.** Enquiry follow-up tasks do not automatically send messages.
 
-Migrations 0004_settings_staff_audit and 0005_settings_audit_security added configuration versions, policies and tenant-scoped audit. Apply all committed migrations on a new database using the existing scripts. No schema push/reset is used. Run npm.cmd run test:settings for real database settings/permission/rollback/concurrency checks. All test suites use gym_test and clean their fictional data; GYM is never seeded by the suite.
+<details>
+<summary><strong>See coaching and attendance</strong></summary>
 
-Branding currently uses saved gym name and derived initials. Private logo uploads belong to the file workflow. Saved access policies reach membership eligibility; actual attendance is upcoming. Saved issuer details are preserved on issued invoices, and on paid receipts when funds are recorded. SaaS billing and notifications controls are hidden.
+### Classes & scheduling
 
-MEM-01 is connected at /members. Owners, managers and receptionists register/edit members in permitted active branches. Review then save assigns an org-unique member code. Shared contacts require reasoned confirmation. Registration creates no membership, invoice, payment or account login.
+![Classes and scheduling overview](public/product/classes.webp)
 
-Directory search, branch/record/sort filters, 25/page pagination and counts are server-side. Search stays in the tab; other filters are in the URL. Registration retry uses an actor-scoped key, so a lost response does not duplicate the person. Member/counter/audit commit atomically. Run npm.cmd run test:members for the real-session PostgreSQL suite.
+### Attendance
 
-MEM-02 profiles open through View in the directory. Emergency contacts use the member version; operational notes are visible to permitted branch staff, management notes only to owners/managers. Reception can withdraw its own notes; owners/managers can withdraw permitted notes. Originals remain stored and withdrawn bodies are hidden. Archiving/restoring requires owner/manager, reason, confirmation and version; archive keeps contacts/notes/history and blocks profile edits/new notes. Registered/archived/all filters retain access to history. Restoration does not create enrollment or payment. Membership and payment history are connected; visit history awaits attendance. Run npm.cmd run test:profiles.
+![Attendance overview](public/product/attendance.webp)
 
-All account mail uses contact@hanovadevs.com; gyms cannot override the sender. .env.example documents private SMTP settings; this workstation uses Hostinger TLS on port 465. New staff invitations queue atomically with auth identity/grants/audit and are delivered after commit. Recovery uses maintained Better Auth one-use links (30 minutes). SMTP acceptance is a delivery attempt, not proof of receipt: actual inbox receipt and single-use reset were verified, with token-free metadata in doc/evidence/mail-delivery.json.
+</details>
 
-Private app_auth.mail_outbox records pending/sending/sent/failed/uncertain/expired status. Successful sends clear the reset payload. Failed invitations can be retried by an authorized owner; uncertain sends are held for provider/inbox reconciliation, never automatically retried. Expired links can be replaced through normal staff password recovery. Run npm.cmd run mail:deliver to drain up to 20 pending jobs, classify interrupted sends and clear expired link payloads; schedule this maintenance on a deployment before live rollout. No generic browser send/outbox endpoint exists. Automated tests force MAIL_TRANSPORT=capture and never send real test traffic. Capture is forbidden in production.
+## Designed around real operational safeguards
 
-Migrations 0008_member_profiles_and_mail and 0009_profile_mail_security add profiles and mail. Run npm.cmd run test:mail for transactional invitation/delivery/uncertainty tests. SMTP credentials and private owner access must remain ignored.
+- **Tenant and branch boundaries:** protected operations revalidate the session, active organization membership, action permission and branch scope.
+- **Financial consistency:** integer minor-unit amounts, atomic transactions, retry-safe request keys and retained invoice/receipt snapshots.
+- **Reliable workflows:** service/database enforcement for booking capacity, duplicate check-ins and concurrent member conversion.
+- **Private by default:** server-only database access, a restricted runtime role, protected attachments and separate migration credentials.
+- **Portable PostgreSQL:** app-managed authentication and business IDs remain independent of Supabase Auth. Local PostgreSQL and hosted Supabase PostgreSQL share the application services.
 
-PLAN-01 is connected at /plans (Open plans in the workspace). Owners/managers publish branch-scoped plans, new immutable versions and reasoned archive/restore. Reception/accountants have assigned-branch read-only access. Every version preserves its integer rate/currency, calendar-month or fixed-day term, branch access and benefits. Only owners publish all-gym-branch access. Stable plan codes cannot be reused after archive. Same save key safely replays a lost response; stale edits cannot overwrite newer publications.
+## Built with
 
-Migrations 0010_plan_catalog and 0011_plan_security add the plan catalog. Runtime cannot update/delete published versions or change plan code/branch identity. Run npm.cmd run test:plans for real-session PostgreSQL scope/concurrency/rollback/snapshot checks. Exact decimal parsing follows ISO accounting units (PKR has two) independently of locale display defaults. Plan preview/publication never creates an enrollment.
+| Layer | Technology |
+| :--- | :--- |
+| Application | Next.js App Router, React, TypeScript |
+| Database | PostgreSQL, Drizzle schema and reviewed SQL migrations |
+| Authentication | Better Auth with application role/branch authorization |
+| Validation | Zod and server-side business rules |
+| Documents | Server-rendered PDF invoices and receipts with embedded fonts |
+| Verification | Vitest, PostgreSQL integration suites and Playwright |
+| Hosting | Vercel application with hosted PostgreSQL support |
 
-SUB-01 is connected in each member profile's Overview/Memberships section. Registration success links to the profile. Search current home-branch plans, review charge/exact dates, then confirm enrollment or renewal. A membership, immutable plan snapshot, numbered issued invoice, request result and audit commit together. Same-key retries return the original result; stale or simultaneous confirmations cannot charge twice. Dates are inclusive start/exclusive end. Existing rates/access remain unchanged when a plan is edited or archived.
+## Run locally
 
-Default paid activation leaves a nonzero charge pending. Owner/manager can explicitly activate with debt and reason; reception can enroll/renew only. Configured unpaid activation/free plans may start active. Separate due-debt blocking, grace, freezes, future start, cancellation and archival still govern access. Freeze extends once and rejects collision with future renewal; prospective reversal removes its extension once. Cancellation preserves the invoice and debt, with no automatic refund/credit. Full payment activates eligible pending memberships through PAY-02. Attendance visit enforcement is ATT-01 work.
+Use **Node.js 24**, npm and PostgreSQL. PowerShell examples use `npm.cmd`; other shells can use `npm`.
 
-Migrations 0012_membership_lifecycle, 0013_membership_security and 0014_membership_snapshot_shape bring the journal to fifteen entries. No prior migration is edited. Runtime cannot change issued invoices, plan snapshots or original membership dates; tenant constraints/RLS and a member-locking overlap trigger protect stored data. Run npm.cmd run test:memberships for the real-session concurrency/policy/rollback/ledger suite. Tests use isolated gym_test and run serially. PAY-01 provides invoice lists/lines/balances/PDFs; PAY-02 adds actual collection and paid receipts. Never call an issued unpaid invoice a receipt.
+```powershell
+git clone https://github.com/hanovadevs/Gym-CRM.git
+cd Gym-CRM
+npm.cmd ci
+Copy-Item .env.example .env.local
+```
 
-Shared navigation has outline icons, a collapsible desktop rail and mobile Menu drawer. The non-sensitive collapse preference is saved in your browser. Unauthorized links stay hidden. No decorative dot or blinking indicator is used. Next task: ATT-01; see doc/20_SCOPE_AUDIT.md for the complete remaining scope.
+Configure `.env.local` using the documented variables. Provision a restricted application role for `DATABASE_URL` and separate migration credentials for `MIGRATION_DATABASE_URL`. Keep test credentials pointed at an isolated `gym_test` database. Never commit environment files or reuse production data for automated tests.
 
-PAY-01 is available at /payments through the Payments sidebar option. Filter invoice/outstanding/overdue/draft/issued records by permitted branch, member, search and local issue dates. Drafts support 1–30 exact item lines, whole quantities and fixed line discounts; review, save, revise, then explicitly issue. Only issuance assigns a number and creates debt. Issued headers, line charges and billing identity are preserved. Membership cancellation never erases a charge. Monetary summaries keep currencies separate. Accountants have scoped billing access and minimum recipient search, with no full profile/notes access.
+```powershell
+# Apply the committed, reviewed migrations.
+npm.cmd run db:migrate
 
-To save/share an invoice PDF: open an issued invoice, select Download PDF, and share the downloaded file with the member. Drafts must be issued first. The PDF includes saved gym/member/branch details, invoice number, original enrollment period when relevant, itemized quantities/prices/discounts, due date, total and outstanding balance. Download is private/no-store, rechecks permission and cannot charge again. It sends no email automatically. This invoice is not a paid receipt.
+# Start the application.
+npm.cmd run dev
+```
 
-New migrations 0015_invoice_drafts_and_lines, 0016_invoice_security and 0017_invoice_currency bring the journal to eighteen entries. Existing issued enrollment amounts/numbers/dates are preserved. Run npm.cmd run test:billing for real-session PostgreSQL checks; npm.cmd run test:billing:production after building verifies actual production issuance/PDF rendering and retained font assets on isolated gym_test (port3201). PDFKit 0.21.0 with licensed embedded Noto fonts runs server-side; no cloud renderer or font fetch at download time. Unit/browser/DB suites share gym_test and run serially. PAY-02 provides payments/allocations/paid receipts/valid paid activation; PAY-03 corrections/refunds/credits is next.
+Open the address printed by Next.js. Set `APP_URL` and `BETTER_AUTH_URL` to that exact origin. Production accepts the configured origin; same-port loopback aliases are a local-development convenience.
 
+For a **new, empty installation**, set `OWNER_NAME`, `OWNER_EMAIL`, `GYM_NAME` and `GYM_SLUG`, then bootstrap the first owner:
 
-## PAY-02 collections and paid receipts
+```powershell
+$ownerSecret = Read-Host 'Owner password (12–128 characters)' -AsSecureString
+$env:OWNER_PASSWORD = [System.Net.NetworkCredential]::new('', $ownerSecret).Password
+try { npm.cmd run auth:bootstrap }
+finally { Remove-Item Env:OWNER_PASSWORD }
+```
 
-Apply committed migrations normally with db:migrate; 0018_payments_and_allocations and 0019_payment_security bring both databases to 20 entries. Preserve valued GYM. Select Payments > Record payment, search an outstanding invoice, enter actual received amount/method/date/reference and review before confirmation. Partial payments reduce its balance; full payment activates an eligible pending membership. Other access rules and archived/cancelled/expired status still apply. Cash, bank transfer (reference required) and Other are manual records. No payment provider or online charge.
+Bootstrap refuses an initialized workspace. Subsequent gyms are created through the separately authorized platform console. Gym login identifiers and real owner recovery addresses are distinct; configure the owner’s reachable email for recovery and notifications.
 
-Payments & receipts shows collections filtered by received date, branch, method and literal search, with currencies separate. Profile Payments and invoice detail link to receipts. View the saved paid receipt, then Print receipt or Download receipt PDF for sharing. A partial-payment receipt preserves the balance immediately after that payment even after later installments. Viewing/downloading never records another payment. A confirmed save whose refresh fails preserves the receipt and requires list reload; uncertain response retry retains the same request key. Receipt PDFs use embedded fonts on the server, no new secret/cloud service. Automated mail remains capture-only in tests.
+SMTP settings stay server-side. All gym transactional mail uses the configured shared sender. Automated tests capture mail rather than contacting members. Keep `DEMO_MODE=false` for normal operation; production rejects demo mode.
 
-Run test:payments for real-PG financial/authorization/rollback/race/receipt/correction checks; run test:e2e for UI and test:billing:production after build for production invoice/payment/receipt/refund/credit/void/PDF checks. Suites sharing gym_test run serially because negative tests temporarily revoke runtime grants. PAY-03 owner corrections are implemented. No cancellation/archive implicitly refunds or deletes a payment.
+## Verification
 
-UI-04 applies the user's Silver & Midnight palette globally (ADR-030), restrained translucent glass surfaces, square button corners, unchanged accessible sidebar icons/collapse and small section help icons. Reduced transparency uses opaque surfaces; print removes navigation/actions. No gradients or decorative/blinking indicators.
+```powershell
+npm.cmd run lint
+npm.cmd run typecheck
+npm.cmd run test:unit
+npm.cmd run test:integration
+npm.cmd run test:security
+npm.cmd run test:payments
+npm.cmd run test:reports
+npm.cmd run test:enquiries
+npm.cmd run build
+npm.cmd run test:production
 
+# Install Chromium once before browser testing.
+npx.cmd playwright install chromium
+npm.cmd run test:e2e
+```
 
-Current verified milestone (22 November2026): persisted attendance/access/QR and operational dashboard implemented; source/test/host migrations28. See doc/10_MODULE_TRACKER.md and doc/20_SCOPE_AUDIT.md for acceptance evidence and unfinished modules. Next EXP-01; full production release and retained Hanova walkthrough dataset remain open.
+Additional module suites are listed in [package.json](package.json). Run PostgreSQL and browser suites **serially** against the isolated test database: some negative tests temporarily alter test grants. A passing unit suite does not establish production readiness; release evidence is tracked separately.
+
+## Project map
+
+```text
+src/app/          Pages and server route handlers
+src/modules/      Business workflows, validation, services and screens
+src/server/       Authentication, authorization and server infrastructure
+src/components/   Shared responsive UI
+src/db/           Database schema definitions
+drizzle/         Committed SQL migrations and snapshots
+tests/           Unit, integration and browser verification
+public/          Brand assets and product imagery
+doc/             Scope, decisions, module status and session evidence
+```
+
+## Current delivery status
+
+The core operational modules, reports and enquiry pipeline are implemented. **Bulk CSV import is still in progress:** transport parsing and formula-safe encoding exist; upload/mapping, preview, duplicate policy and repeat-safe commit are not yet a complete user workflow.
+
+Final backup/restore rehearsal, preview/production isolation, complete release regression and retained walkthrough-data reconciliation remain release gates. Do not interpret the live application or this showcase as a claim that every release gate has passed.
+
+| Read next | Purpose |
+| :--- | :--- |
+| [Start here](doc/00_START_HERE.md) | Product and documentation map |
+| [Module tracker](doc/10_MODULE_TRACKER.md) | Current implementation and verification status |
+| [Backlog](doc/11_BACKLOG.md) | Remaining work and acceptance evidence |
+| [Architecture](doc/03_ARCHITECTURE.md) | Application and database boundaries |
+| [Security](doc/07_SECURITY_AND_PERMISSIONS.md) | Permissions and isolation requirements |
+| [Decisions](doc/14_DECISIONS.md) | Material design and implementation choices |
+| [Session log](doc/15_SESSION_LOG.md) | Reproducible checks and handoff notes |
+
+---
+
+<div align="center">
+
+**Mojym — built by Hanova Devs**
+
+[Website](https://www.hanovadevs.com) · [Discover Mojym](https://mojym.hanovadevs.com/about) · [Talk to us](https://wa.me/19177355385)
+
+</div>
